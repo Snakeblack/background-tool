@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generador de Fondos WebGL (OKLCH + Shaders)</title>
+    
+    <!-- Estilos externos -->
+    <link rel="stylesheet" href="styles/main.css">
+</head>
+<body>
+
+    <canvas id="bg-canvas"></canvas>
+
+    <!-- Botón de Toggle (oculto cuando paneles visibles) -->
+    <button id="toggle-panels-btn" class="toggle-panels-btn" title="Mostrar paneles">
+        <span class="toggle-icon">☰</span>
+    </button>
+
+    <!-- Panel Lateral Izquierdo: Controles Generales -->
+    <floating-panel id="left-panel" title="Configuración" position="left">
+            <!-- Selector de Tipo de Fondo -->
+            <div class="control-section">
+                <h3 class="section-title">Tipo de Fondo</h3>
+                <label for="shader-type" class="block text-sm font-medium text-gray-300 mb-2">Shader</label>
+                <select id="shader-type" class="w-full bg-gray-700 border border-gray-600 rounded-md px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <!-- Opciones generadas dinámicamente por JavaScript -->
+                </select>
+            </div>
+
+            <!-- Presets de Colores -->
+            <div class="control-section">
+                <h3 class="section-title">Presets de Colores</h3>
+                <div class="preset-grid">
+                    <button data-preset="sunset" class="preset-btn">
+                        <span class="preset-icon">🌅</span>
+                        <span>Sunset</span>
+                    </button>
+                    <button data-preset="ocean" class="preset-btn">
+                        <span class="preset-icon">🌊</span>
+                        <span>Ocean</span>
+                    </button>
+                    <button data-preset="forest" class="preset-btn">
+                        <span class="preset-icon">🌲</span>
+                        <span>Forest</span>
+                    </button>
+                    <button data-preset="purple" class="preset-btn">
+                        <span class="preset-icon">💜</span>
+                        <span>Purple</span>
+                    </button>
+                    <button data-preset="neon" class="preset-btn">
+                        <span class="preset-icon">⚡</span>
+                        <span>Neon</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Controles Generales -->
+            <div class="control-section">
+                <button class="collapsible-header" id="general-controls-header">
+                    <span class="collapse-icon">▼</span>
+                    <span>Controles Generales</span>
+                </button>
+                <div class="collapsible-content" id="general-controls-content">
+                    <div class="control-item">
+                        <label for="speed" class="text-sm font-medium text-gray-300">
+                            Velocidad Global: <span id="speed-value">0.5</span>
+                        </label>
+                        <input type="range" id="speed" min="0.0" max="3.0" step="0.1" value="0.5" class="w-full">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Controles Específicos del Shader -->
+            <div class="control-section">
+                <button class="collapsible-header" id="shader-controls-header">
+                    <span class="collapse-icon">▼</span>
+                    <span>Controles Específicos</span>
+                </button>
+                <div class="collapsible-content" id="shader-controls-content">
+                    <!-- Controles generados dinámicamente según el shader seleccionado -->
+                </div>
+            </div>
+    </floating-panel>
+
+    <!-- Panel Lateral Derecho: Colores -->
+    <floating-panel id="right-panel" title="Colores (OKLCH)" position="right">
+            <!-- Controles de Colores usando Web Components -->
+            <color-control color-index="1" label="Color 1" l-value="0.7" c-value="0.25" h-value="330"></color-control>
+            <color-control color-index="2" label="Color 2" l-value="0.6" c-value="0.3" h-value="280"></color-control>
+            <color-control color-index="3" label="Color 3" l-value="0.8" c-value="0.2" h-value="150"></color-control>
+            <color-control color-index="4" label="Color 4" l-value="0.65" c-value="0.28" h-value="60"></color-control>
+    </floating-panel>
+
+    <!-- Botón de Exportar Flotante -->
+    <button id="export-btn" class="export-btn-floating">
+        <span class="export-icon">📦</span>
+        <span class="export-text">Exportar a tu Proyecto</span>
+    </button>
+
+    <!-- Export Modal -->
+    <export-modal id="export-modal"></export-modal>
+
+    <!-- Script principal -->
+    <script type="module" src="main.js"></script>
+</body>
+</html>
