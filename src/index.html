@@ -12,10 +12,28 @@
 
     <canvas id="bg-canvas"></canvas>
 
+    <!-- Logo MMRG -->
+    <div class="logo-mmrg">MMRG</div>
+
     <!-- Botón de Toggle (oculto cuando paneles visibles) -->
     <button id="toggle-panels-btn" class="toggle-panels-btn" title="Mostrar paneles">
         <span class="toggle-icon">☰</span>
     </button>
+
+    <!-- Contenedor de Acordeón para Móviles -->
+    <div id="mobile-accordion" class="mobile-accordion">
+        <div class="accordion-tabs">
+            <button class="accordion-tab active" data-panel="left">
+                <span class="tab-icon">⚙️</span>
+                <span class="tab-label">Configuración</span>
+            </button>
+            <button class="accordion-tab" data-panel="right">
+                <span class="tab-icon">🎨</span>
+                <span class="tab-label">Colores</span>
+            </button>
+        </div>
+        <div class="accordion-content" id="accordion-content"></div>
+    </div>
 
     <!-- Panel Lateral Izquierdo: Controles Generales -->
     <floating-panel id="left-panel" title="Configuración" position="left">

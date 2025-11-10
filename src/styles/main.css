@@ -55,6 +55,154 @@ body {
 }
 
 /* ============================================
+   Logo MMRG
+   ============================================ */
+
+@property --gradient-angle {
+    syntax: '<angle>';
+    initial-value: 0deg;
+    inherits: false;
+}
+
+@property --gradient-color-1 {
+    syntax: '<color>';
+    initial-value: rgba(59, 130, 246, 0.8);
+    inherits: false;
+}
+
+@property --gradient-color-2 {
+    syntax: '<color>';
+    initial-value: rgba(147, 51, 234, 0.8);
+    inherits: false;
+}
+
+.logo-mmrg {
+    position: fixed;
+    top: 2rem;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 200;
+    font-size: 2rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    font-family: 'Space Grotesk', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    
+    /* OKLCH vibrant colors with fallback */
+    --gradient-color-1: oklch(0.72 0.25 290 / 0.95);
+    --gradient-color-1-fallback: rgba(147, 51, 234, 0.95);
+    --gradient-color-2: oklch(0.65 0.22 250 / 0.95);
+    --gradient-color-2-fallback: rgba(59, 130, 246, 0.95);
+    --gradient-color-3: oklch(0.85 0.15 180 / 0.5);
+    --gradient-color-3-fallback: rgba(200, 230, 255, 0.5);
+    
+    /* Text gradient with vibrant OKLCH colors */
+    background: linear-gradient(
+        var(--gradient-angle),
+        var(--gradient-color-1-fallback),
+        var(--gradient-color-2-fallback),
+        var(--gradient-color-3-fallback),
+        var(--gradient-color-1-fallback)
+    );
+    background: linear-gradient(
+        var(--gradient-angle),
+        var(--gradient-color-1),
+        var(--gradient-color-2),
+        var(--gradient-color-3),
+        var(--gradient-color-1)
+    );
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-size: 300% 300%;
+    
+    /* Layered shadows (dark) and glows (bright) */
+    filter: 
+        /* Dark shadows for depth */
+        drop-shadow(0 2px 4px rgba(0, 0, 0, 0.4))
+        drop-shadow(0 4px 12px rgba(0, 0, 0, 0.3))
+        /* Bright glows for vibrancy */
+        drop-shadow(0 0 20px oklch(0.72 0.25 290 / 0.4))
+        drop-shadow(0 0 40px oklch(0.65 0.22 250 / 0.3))
+        drop-shadow(0 0 60px oklch(0.85 0.15 180 / 0.2));
+    
+    /* Fallback for filter with rgb */
+    filter: 
+        drop-shadow(0 2px 4px rgba(0, 0, 0, 0.4))
+        drop-shadow(0 4px 12px rgba(0, 0, 0, 0.3))
+        drop-shadow(0 0 20px rgba(147, 51, 234, 0.4))
+        drop-shadow(0 0 40px rgba(59, 130, 246, 0.3))
+        drop-shadow(0 0 60px rgba(200, 230, 255, 0.2));
+    
+    cursor: default;
+    user-select: none;
+    transition: 
+        transform 0.8s cubic-bezier(0.34, 1.56, 0.64, 1),
+        filter 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    --gradient-angle: 45deg;
+}
+
+.logo-mmrg:hover {
+    transform: translateX(-50%) translateY(-4px) scale(1.05);
+    
+    /* OKLCH vibrant hover colors with fallback */
+    --gradient-color-1: oklch(0.75 0.28 195 / 1);
+    --gradient-color-1-fallback: rgba(6, 182, 212, 1);
+    --gradient-color-2: oklch(0.68 0.26 340 / 1);
+    --gradient-color-2-fallback: rgba(236, 72, 153, 1);
+    --gradient-color-3: oklch(0.88 0.18 270 / 0.6);
+    --gradient-color-3-fallback: rgba(220, 200, 255, 0.6);
+    
+    /* Enhanced layered shadows and glows on hover */
+    filter: 
+        /* Stronger dark shadows */
+        drop-shadow(0 4px 8px rgba(0, 0, 0, 0.5))
+        drop-shadow(0 8px 20px rgba(0, 0, 0, 0.4))
+        /* Intense bright glows */
+        drop-shadow(0 0 30px oklch(0.75 0.28 195 / 0.6))
+        drop-shadow(0 0 60px oklch(0.68 0.26 340 / 0.5))
+        drop-shadow(0 0 90px oklch(0.88 0.18 270 / 0.4))
+        /* Extra bright outer glow */
+        drop-shadow(0 0 120px oklch(0.75 0.28 195 / 0.3));
+    
+    /* Fallback for filter with rgb */
+    filter: 
+        drop-shadow(0 4px 8px rgba(0, 0, 0, 0.5))
+        drop-shadow(0 8px 20px rgba(0, 0, 0, 0.4))
+        drop-shadow(0 0 30px rgba(6, 182, 212, 0.6))
+        drop-shadow(0 0 60px rgba(236, 72, 153, 0.5))
+        drop-shadow(0 0 90px rgba(220, 200, 255, 0.4))
+        drop-shadow(0 0 120px rgba(6, 182, 212, 0.3));
+    
+    animation: gradient-rotate 6s ease-in-out infinite;
+}
+
+@keyframes gradient-rotate {
+    0% {
+        --gradient-angle: 45deg;
+    }
+    100% {
+        --gradient-angle: 405deg;
+    }
+}
+
+/* Responsive logo */
+@media (max-width: 768px) {
+    .logo-mmrg {
+        font-size: 1.5rem;
+        top: 1rem;
+        letter-spacing: 0.06em;
+    }
+}
+
+@media (max-width: 480px) {
+    .logo-mmrg {
+        font-size: 1.25rem;
+        top: 0.75rem;
+        letter-spacing: 0.05em;
+    }
+}
+
+/* ============================================
    Paneles Laterales Flotantes
    ============================================ */
 
@@ -300,7 +448,7 @@ label {
 /* Export Button Floating - Centro Inferior */
 .export-btn-floating {
     position: fixed;
-    bottom: 1.5rem;
+    bottom: calc(1.5rem + env(safe-area-inset-bottom, 0rem));
     left: 50%;
     transform: translateX(-50%);
     display: flex;
@@ -319,6 +467,7 @@ label {
     z-index: 100;
     box-shadow: 0 8px 32px rgba(59, 130, 246, 0.4);
     backdrop-filter: blur(10px);
+    touch-action: manipulation;
 }
 
 .export-btn-floating:hover {
@@ -633,6 +782,7 @@ input[type="range"]::-moz-range-track {
     justify-content: center;
     opacity: 0;
     pointer-events: none;
+    padding-bottom: env(safe-area-inset-bottom, 0);
 }
 
 .toggle-panels-btn:hover {
@@ -670,6 +820,107 @@ input[type="range"]::-moz-range-track {
 
 .side-panel::-webkit-scrollbar-thumb:hover {
     background: rgba(255, 255, 255, 0.3);
+}
+
+/* ============================================
+   Mobile Accordion
+   ============================================ */
+
+.mobile-accordion {
+    display: none;
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, rgba(30, 30, 50, 0.98) 0%, rgba(20, 20, 35, 0.98) 100%);
+    backdrop-filter: blur(12px);
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    border-top-left-radius: 20px;
+    border-top-right-radius: 20px;
+    z-index: 150;
+    max-height: 70vh;
+    transition: transform 0.3s ease;
+    clip-path: border-box;
+}
+
+.mobile-accordion.hidden {
+    transform: translateY(100%);
+}
+
+.accordion-tabs {
+    display: flex;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(0, 0, 0, 0.2);
+}
+
+.accordion-tab {
+    flex: 1;
+    padding: 1rem;
+    background: transparent;
+    border: none;
+    color: rgba(255, 255, 255, 0.6);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    position: relative;
+}
+
+.accordion-tab::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: var(--color-blue-500);
+    transform: scaleX(0);
+    transition: transform 0.3s ease;
+}
+
+.accordion-tab.active {
+    color: white;
+}
+
+.accordion-tab.active::after {
+    transform: scaleX(1);
+}
+
+.accordion-tab:hover {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.tab-icon {
+    font-size: 1.25rem;
+}
+
+.tab-label {
+    display: inline;
+}
+
+.accordion-content {
+    padding: 1rem;
+    overflow-y: auto;
+    max-height: calc(70vh - 4rem);
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+}
+
+.accordion-content::-webkit-scrollbar {
+    width: 6px;
+}
+
+.accordion-content::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.2);
+}
+
+.accordion-content::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 3px;
 }
 
 /* ============================================
@@ -721,33 +972,14 @@ input[type="range"]::-moz-range-track {
         --panel-width: calc(100vw - 1rem);
     }
 
-    .side-panel {
-        top: 0.5rem;
-        width: var(--panel-width);
-        max-height: calc(100vh - 6rem);
-        left: 0.5rem !important;
-        right: auto !important;
-        overflow-y: auto !important;
-        overflow-x: hidden;
-        -webkit-overflow-scrolling: touch;
+    /* Ocultar paneles flotantes en móvil */
+    floating-panel {
+        display: none !important;
     }
 
-    /* Panel derecho debajo del izquierdo con espacio */
-    .side-panel.right-panel {
-        top: auto;
-        bottom: 0.5rem;
-        left: 0.5rem !important;
-        max-height: 45vh;
-        overflow-y: auto !important;
-    }
-
-    /* Cuando están ocultos */
-    .side-panel.left-panel.hidden {
-        transform: translateX(-120%);
-    }
-
-    .side-panel.right-panel.hidden {
-        transform: translateY(120%);
+    /* Mostrar acordeón en móvil */
+    .mobile-accordion {
+        display: block;
     }
 
     .panel-header {
@@ -777,8 +1009,8 @@ input[type="range"]::-moz-range-track {
 
     /* Botón de toggle en la esquina superior derecha */
     .toggle-panels-btn {
-        top: 0.5rem;
-        right: 0.5rem;
+        top: calc(env(safe-area-inset-top, 0.5rem) + 0.25rem);
+        right: 0.75rem;
         bottom: auto;
         left: auto;
         width: 3rem;
@@ -811,14 +1043,25 @@ input[type="range"]::-moz-range-track {
 
     /* Export button floating responsive */
     .export-btn-floating {
-        bottom: 1rem;
+        bottom: calc(70vh + env(safe-area-inset-bottom, 0.5rem) + 0.5rem);
         padding: 0.875rem 1.75rem;
         font-size: 0.9375rem;
         gap: 0.625rem;
+        z-index: 140;
     }
 
     .export-icon {
         font-size: 1.375rem;
+    }
+
+    /* Adjust accordion for export button */
+    .mobile-accordion {
+        max-height: 70vh;
+        padding-bottom: env(safe-area-inset-bottom, 0);
+    }
+
+    .accordion-content {
+        max-height: calc(70vh - 3.5rem);
     }
 }
 
@@ -909,7 +1152,7 @@ input[type="range"]::-moz-range-track {
 
     /* Export button floating responsive */
     .export-btn-floating {
-        bottom: 0.875rem;
+        bottom: calc(70vh + env(safe-area-inset-bottom, 0.5rem) + 0.5rem);
         padding: 0.75rem 1.5rem;
         font-size: 0.875rem;
         gap: 0.5rem;
@@ -923,6 +1166,14 @@ input[type="range"]::-moz-range-track {
         width: 2.75rem;
         height: 2.75rem;
         font-size: 1.125rem;
+    }
+
+    .mobile-accordion {
+        max-height: 70vh;
+    }
+
+    .accordion-content {
+        max-height: calc(70vh - 3.5rem);
     }
 }
 
@@ -1022,7 +1273,7 @@ input[type="range"]::-moz-range-track {
 
     /* Export button floating responsive */
     .export-btn-floating {
-        bottom: 0.75rem;
+        bottom: calc(70vh + env(safe-area-inset-bottom, 0.5rem) + 0.5rem);
         padding: 0.625rem 1.25rem;
         font-size: 0.8125rem;
         gap: 0.375rem;
@@ -1041,6 +1292,26 @@ input[type="range"]::-moz-range-track {
         width: 2.5rem;
         height: 2.5rem;
         font-size: 1rem;
+    }
+
+    .mobile-accordion {
+        max-height: 70vh;
+    }
+
+    .accordion-content {
+        max-height: calc(70vh - 3.5rem);
+    }
+
+    .tab-label {
+        font-size: 0.75rem;
+    }
+
+    .tab-icon {
+        font-size: 1.125rem;
+    }
+
+    .accordion-tabs {
+        padding-top: env(safe-area-inset-top, 0);
     }
 }
 
