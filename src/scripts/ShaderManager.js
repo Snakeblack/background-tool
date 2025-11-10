@@ -2,7 +2,7 @@
  * Shader Manager - Gestiona los shaders y materiales
  */
 
-import * as THREE from 'three';
+import { ShaderMaterial, Color, Vector2 } from 'three';
 import { SHADERS } from './shaders/index.js';
 
 export class ShaderManager {
@@ -25,11 +25,11 @@ export class ShaderManager {
         return {
             u_time: { value: 0.0 },
             u_resolution: { value: this.renderer.getResolution() },
-            u_mouse: { value: new THREE.Vector2(0.5, 0.5) },
-            u_color1: { value: new THREE.Color(1, 0.7, 0.8) },
-            u_color2: { value: new THREE.Color(0.5, 0.3, 0.8) },
-            u_color3: { value: new THREE.Color(0.2, 0.8, 0.7) },
-            u_color4: { value: new THREE.Color(1, 0.9, 0.3) },
+            u_mouse: { value: new Vector2(0.5, 0.5) },
+            u_color1: { value: new Color(1, 0.7, 0.8) },
+            u_color2: { value: new Color(0.5, 0.3, 0.8) },
+            u_color3: { value: new Color(0.2, 0.8, 0.7) },
+            u_color4: { value: new Color(1, 0.9, 0.3) },
             u_speed: { value: 0.5 },
             u_scale: { value: 1.0 },
             u_intensity: { value: 1.0 },
@@ -61,7 +61,7 @@ export class ShaderManager {
         this.currentShader = shaderName;
         const shaderConfig = SHADERS[shaderName];
 
-        this.material = new THREE.ShaderMaterial({
+        this.material = new ShaderMaterial({
             uniforms: this.uniforms,
             vertexShader: shaderConfig.vertex,
             fragmentShader: shaderConfig.fragment,

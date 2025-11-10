@@ -2,7 +2,7 @@
  * Core Renderer - Gestiona Three.js y la escena WebGL
  */
 
-import * as THREE from 'three';
+import { Scene, OrthographicCamera, WebGLRenderer, PlaneGeometry, Mesh, Clock, Vector2 } from 'three';
 
 export class Renderer {
     /**
@@ -15,7 +15,7 @@ export class Renderer {
         this.camera = null;
         this.renderer = null;
         this.mesh = null;
-        this.clock = new THREE.Clock();
+        this.clock = new Clock();
         
         this.init();
     }
@@ -24,15 +24,15 @@ export class Renderer {
      * Inicializa la escena, cámara, renderer y geometría
      */
     init() {
-        this.scene = new THREE.Scene();
+        this.scene = new Scene();
 
         const aspect = window.innerWidth / window.innerHeight;
-        this.camera = new THREE.OrthographicCamera(
+        this.camera = new OrthographicCamera(
             -aspect, aspect, 1, -1, 0.1, 10
         );
         this.camera.position.z = 1;
 
-        this.renderer = new THREE.WebGLRenderer({ 
+        this.renderer = new WebGLRenderer({ 
             canvas: this.canvas, 
             antialias: true, 
             alpha: false 
@@ -40,8 +40,8 @@ export class Renderer {
         this.renderer.setSize(window.innerWidth, window.innerHeight);
         this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 
-        const geometry = new THREE.PlaneGeometry(2 * aspect, 2);
-        this.mesh = new THREE.Mesh(geometry);
+        const geometry = new PlaneGeometry(2 * aspect, 2);
+        this.mesh = new Mesh(geometry);
         this.scene.add(this.mesh);
 
         window.addEventListener('resize', () => this.onWindowResize());
@@ -60,7 +60,7 @@ export class Renderer {
         
         if (this.mesh && this.mesh.geometry) {
             this.mesh.geometry.dispose();
-            this.mesh.geometry = new THREE.PlaneGeometry(2 * aspect, 2);
+            this.mesh.geometry = new PlaneGeometry(2 * aspect, 2);
         }
     }
 
@@ -89,9 +89,9 @@ export class Renderer {
 
     /**
      * Obtiene la resolución actual de la ventana
-     * @returns {THREE.Vector2} Resolución en píxeles
+     * @returns {Vector2} Resolución en píxeles
      */
     getResolution() {
-        return new THREE.Vector2(window.innerWidth, window.innerHeight);
+        return new Vector2(window.innerWidth, window.innerHeight);
     }
 }

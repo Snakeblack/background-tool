@@ -2,8 +2,6 @@
  * Main App - Orquesta todos los módulos de la aplicación
  */
 
-import '@fontsource/space-grotesk/700.css';
-import '@fontsource/space-grotesk/600.css';
 import './scripts/components/index.js';
 import { Renderer } from './scripts/Renderer.js';
 import { ShaderManager } from './scripts/ShaderManager.js';
