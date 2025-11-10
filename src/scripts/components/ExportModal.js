@@ -6,6 +6,7 @@ export class ExportModal extends HTMLElement {
     constructor() {
         super();
         this.attachShadow({ mode: 'open' });
+        this.codeBlocks = new Map(); // Almacenar códigos sin escapar
     }
 
     connectedCallback() {
@@ -176,6 +177,11 @@ export class ExportModal extends HTMLElement {
                     background: rgba(34, 197, 94, 0.2);
                     border-color: rgba(34, 197, 94, 0.3);
                     color: #4ade80;
+                }
+                .copy-btn.copy-error {
+                    background: rgba(239, 68, 68, 0.2);
+                    border-color: rgba(239, 68, 68, 0.3);
+                    color: #f87171;
                 }
                 pre {
                     margin: 0;
@@ -454,6 +460,20 @@ export class ExportModal extends HTMLElement {
 
         // Prevent clicks inside modal from closing
         modalContainer.addEventListener('click', (e) => {
+            let target = e.target;
+            if (target && typeof target.closest !== 'function' && target.parentElement) {
+                target = target.parentElement;
+            }
+
+            const copyBtn = typeof target?.closest === 'function'
+                ? target.closest('.copy-btn')
+                : null;
+            if (copyBtn) {
+                this.copyCode(copyBtn);
+                e.stopPropagation();
+                return;
+            }
+
             e.stopPropagation();
         });
 
@@ -471,17 +491,11 @@ export class ExportModal extends HTMLElement {
                 this.shadowRoot.getElementById(`${tabId}-content`).classList.add('active');
             });
         });
-
-        // Copy buttons (delegated)
-        this.shadowRoot.addEventListener('click', (e) => {
-            if (e.target.classList.contains('copy-btn')) {
-                this.copyCode(e.target);
-            }
-        });
     }
 
     open(config) {
         this.config = config;
+        this.codeBlocks = new Map();
         this.generateContent();
         this.classList.add('open');
     }
@@ -690,11 +704,20 @@ export class ExportModal extends HTMLElement {
     }
 
     createCodeBlock(language, code, title) {
+        // Generar un ID único para cada bloque de código
+        const blockId = `code-${Math.random().toString(36).substr(2, 9)}`;
+        
+        // Almacenar el código sin escapar en un Map
+        if (!this.codeBlocks) {
+            this.codeBlocks = new Map();
+        }
+        this.codeBlocks.set(blockId, code);
+        
         return `
             <div class="code-block">
                 <div class="code-header">
                     <span class="code-title">${title}</span>
-                    <button class="copy-btn" data-code="${this.escapeHtml(code)}">
+                    <button class="copy-btn" data-block-id="${blockId}">
                         📋 Copiar
                     </button>
                 </div>
@@ -703,24 +726,187 @@ export class ExportModal extends HTMLElement {
         `;
     }
 
-    copyCode(button) {
-        const code = button.dataset.code;
-        navigator.clipboard.writeText(code).then(() => {
-            const originalText = button.textContent;
-            button.textContent = '✅ Copiado!';
-            button.classList.add('copied');
-            
-            setTimeout(() => {
-                button.textContent = originalText;
-                button.classList.remove('copied');
-            }, 2000);
-        });
+    async copyCode(button) {
+        const blockId = button.getAttribute('data-block-id');
+        const code = this.codeBlocks.get(blockId);
+        
+        if (!code) {
+            console.error('No se encontró el código para copiar');
+            this.showCopyError(button);
+            return;
+        }
+
+        let success = false;
+
+        // Intentar copiar usando la API moderna
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            try {
+                await navigator.clipboard.writeText(code);
+                success = true;
+            } catch (err) {
+                console.error('Clipboard API error:', err);
+            }
+        }
+
+        // Fallback: usar copy event con execCommand
+        if (!success) {
+            success = this.copyUsingCopyEvent(code);
+        }
+
+        // Último recurso: textarea temporal
+        if (!success) {
+            success = this.copyUsingTextarea(code);
+        }
+
+        if (success) {
+            this.showCopySuccess(button);
+        } else {
+            this.showCopyError(button);
+        }
+    }
+    
+    copyUsingCopyEvent(text) {
+        if (typeof document === 'undefined') {
+            return false;
+        }
+
+        const handleCopy = (event) => {
+            if (!event.clipboardData) {
+                return;
+            }
+            event.preventDefault();
+            event.clipboardData.setData('text/plain', text);
+        };
+
+        document.addEventListener('copy', handleCopy, { once: true });
+
+        let successful = false;
+        try {
+            successful = document.execCommand('copy');
+        } catch (err) {
+            console.error('execCommand copy error:', err);
+            successful = false;
+        }
+
+        if (!successful) {
+            document.removeEventListener('copy', handleCopy);
+        }
+
+        return successful;
+    }
+
+    copyUsingTextarea(text) {
+        if (typeof document === 'undefined' || !document.body) {
+            return false;
+        }
+
+        const textArea = document.createElement('textarea');
+        textArea.value = text;
+        textArea.setAttribute('readonly', '');
+        textArea.style.position = 'fixed';
+        textArea.style.left = '-9999px';
+        textArea.style.top = '-9999px';
+
+        document.body.appendChild(textArea);
+
+        try {
+            if (typeof textArea.focus === 'function') {
+                try {
+                    textArea.focus({ preventScroll: true });
+                } catch (_) {
+                    textArea.focus();
+                }
+            }
+            textArea.select();
+            const successful = document.execCommand('copy');
+            document.body.removeChild(textArea);
+            return successful;
+        } catch (err) {
+            console.error('Textarea copy error:', err);
+            document.body.removeChild(textArea);
+            return false;
+        }
+    }
+    
+    showCopySuccess(button) {
+        const originalText = button.innerHTML;
+        button.innerHTML = '✅ Copiado!';
+        button.classList.add('copied');
+        
+        setTimeout(() => {
+            button.innerHTML = originalText;
+            button.classList.remove('copied');
+        }, 2000);
+    }
+
+    showCopyError(button) {
+        const originalText = button.innerHTML;
+        button.innerHTML = '⚠️ Error';
+        button.classList.add('copy-error');
+
+        setTimeout(() => {
+            button.innerHTML = originalText;
+            button.classList.remove('copy-error');
+        }, 2500);
     }
 
     escapeHtml(text) {
         const div = document.createElement('div');
         div.textContent = text;
         return div.innerHTML;
+    }
+
+    normalizeColors(colors = []) {
+        const defaults = [
+            { l: 0.7, c: 0.25, h: 330 },
+            { l: 0.6, c: 0.3, h: 280 },
+            { l: 0.8, c: 0.2, h: 150 },
+            { l: 0.65, c: 0.28, h: 60 },
+        ];
+
+        const parseChannel = (value, fallbackValue) => {
+            const numeric = Number.parseFloat(value);
+            return Number.isFinite(numeric) ? numeric : fallbackValue;
+        };
+
+        return defaults.map((fallback, index) => {
+            const entry = colors[index];
+            const oklch = entry?.oklch ?? entry;
+            if (!oklch) {
+                return { ...fallback };
+            }
+
+            return {
+                l: parseChannel(oklch.l, fallback.l),
+                c: parseChannel(oklch.c, fallback.c),
+                h: parseChannel(oklch.h, fallback.h),
+            };
+        });
+    }
+
+    formatColorForExport(color) {
+        return `{ l: ${color.l.toFixed(3)}, c: ${color.c.toFixed(3)}, h: ${color.h.toFixed(1)} }`;
+    }
+
+    formatUniformValue(value) {
+        if (typeof value === 'number') {
+            return Number.isInteger(value) ? value : Number(value);
+        }
+
+        const numeric = Number(value);
+        if (Number.isFinite(numeric)) {
+            return Number.isInteger(numeric) ? numeric : numeric;
+        }
+
+        if (typeof value === 'boolean') {
+            return value ? 'true' : 'false';
+        }
+
+        if (Array.isArray(value)) {
+            return `[${value.map(item => this.formatUniformValue(item)).join(', ')}]`;
+        }
+
+        return JSON.stringify(value);
     }
 
     // Code generators
@@ -757,18 +943,26 @@ export class ExportModal extends HTMLElement {
     }
 
     generateVanillaJS() {
-        const { shader, colors, speed, parameters, shaderCode, vertexCode } = this.config;
-        
-        // Generar uniforms del shader
-        const shaderUniforms = Object.entries(parameters || {})
-            .map(([key, value]) => `                u_${key}: { value: ${value} }`)
-            .join(',\n');
-        
-        // Convertir colores OKLCH a string formateado
-        const colorStrings = colors.map(c => 
-            `{ l: ${c.oklch.l.toFixed(3)}, c: ${c.oklch.c.toFixed(3)}, h: ${c.oklch.h.toFixed(1)} }`
-        );
-        
+        const { colors, speed, parameters, shaderCode, vertexCode } = this.config;
+
+        const normalizedColors = this.normalizeColors(colors);
+        const colorStrings = normalizedColors.map(color => this.formatColorForExport(color));
+        const baseUniformLines = [
+            '                u_time: { value: 0 }',
+            '                u_resolution: { value: new THREE.Vector2(window.innerWidth, window.innerHeight) }',
+            `                u_speed: { value: ${this.formatUniformValue(speed ?? 0.5)} }`,
+            `                u_color1: { value: this.oklchToThree(${colorStrings[0]}) }`,
+            `                u_color2: { value: this.oklchToThree(${colorStrings[1]}) }`,
+            `                u_color3: { value: this.oklchToThree(${colorStrings[2]}) }`,
+            `                u_color4: { value: this.oklchToThree(${colorStrings[3]}) }`,
+        ];
+
+        const parameterUniformLines = Object.entries(parameters || {})
+            .map(([key, value]) => `                u_${key}: { value: ${this.formatUniformValue(value)} }`);
+
+        const uniformLines = [...baseUniformLines, ...parameterUniformLines];
+        const uniformsBlock = uniformLines.join(',\n');
+
         return `import * as THREE from 'three';
 import * as culori from 'culori';
 
@@ -815,14 +1009,7 @@ class GradientBackground {
     createMaterial() {
         this.material = new THREE.ShaderMaterial({
             uniforms: {
-                u_time: { value: 0 },
-                u_resolution: { value: new THREE.Vector2(window.innerWidth, window.innerHeight) },
-                u_speed: { value: ${speed || 0.5} },
-                u_color1: { value: this.oklchToThree(${colorStrings[0]}) },
-                u_color2: { value: this.oklchToThree(${colorStrings[1]}) },
-                u_color3: { value: this.oklchToThree(${colorStrings[2]}) },
-                u_color4: { value: this.oklchToThree(${colorStrings[3]}) },
-${shaderUniforms}
+${uniformsBlock}
             },
             vertexShader: \`${vertexCode}\`,
             fragmentShader: \`${shaderCode}\`
@@ -1024,16 +1211,23 @@ const { canvasRef } = useGradientBackground({
     }
 
     generateAngularService() {
-        const { shader, colors, speed, parameters, shaderCode, vertexCode } = this.config;
-        
-        const colorStrings = colors.map(c => 
-            `{ l: ${c.oklch.l.toFixed(3)}, c: ${c.oklch.c.toFixed(3)}, h: ${c.oklch.h.toFixed(1)} }`
-        );
-        
-        const shaderUniforms = Object.entries(parameters || {})
-            .map(([key, value]) => `                u_${key}: { value: ${value} }`)
-            .join(',\n');
-        
+        const { colors, speed, parameters, shaderCode, vertexCode } = this.config;
+
+        const normalizedColors = this.normalizeColors(colors);
+        const colorStrings = normalizedColors.map(color => this.formatColorForExport(color));
+        const baseUniformLines = [
+            '                u_time: { value: 0 }',
+            '                u_resolution: { value: new THREE.Vector2(window.innerWidth, window.innerHeight) }',
+            `                u_speed: { value: ${this.formatUniformValue(speed ?? 0.5)} }`,
+            `                u_color1: { value: this.oklchToThree(${colorStrings[0]}) }`,
+            `                u_color2: { value: this.oklchToThree(${colorStrings[1]}) }`,
+            `                u_color3: { value: this.oklchToThree(${colorStrings[2]}) }`,
+            `                u_color4: { value: this.oklchToThree(${colorStrings[3]}) }`,
+        ];
+        const parameterUniformLines = Object.entries(parameters || {})
+            .map(([key, value]) => `                u_${key}: { value: ${this.formatUniformValue(value)} }`);
+        const uniformsBlock = [...baseUniformLines, ...parameterUniformLines].join(',\n');
+
         return `import { Injectable, signal, effect } from '@angular/core';
 import * as THREE from 'three';
 import * as culori from 'culori';
@@ -1092,14 +1286,7 @@ export class GradientBackgroundService {
     private createMaterial() {
         this.material = new THREE.ShaderMaterial({
             uniforms: {
-                u_time: { value: 0 },
-                u_resolution: { value: new THREE.Vector2(window.innerWidth, window.innerHeight) },
-                u_speed: { value: ${speed || 0.5} },
-                u_color1: { value: this.oklchToThree(${colorStrings[0]}) },
-                u_color2: { value: this.oklchToThree(${colorStrings[1]}) },
-                u_color3: { value: this.oklchToThree(${colorStrings[2]}) },
-                u_color4: { value: this.oklchToThree(${colorStrings[3]}) },
-${shaderUniforms}
+${uniformsBlock}
             },
             vertexShader: \`${vertexCode}\`,
             fragmentShader: \`${shaderCode}\`
