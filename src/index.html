@@ -52,12 +52,6 @@
     <link rel="apple-touch-icon" href="/logo-img.jpg">
     <link rel="manifest" href="/site.webmanifest">
     
-    <!-- Preconnect for Performance -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link rel="preload" as="font" type="font/woff2" href="https://fonts.gstatic.com/s/spacegrotesk/v16/V8mDoQDjQSkFtoMM3T6r8E7mF71Q-gOoraIAEj7oUUsjNsFjTDJK.woff2" crossorigin>
-    <link rel="preconnect" href="https://cdn.jsdelivr.net">
-    
     <!-- Structured Data -->
     <script type="application/ld+json">
     {
@@ -209,14 +203,5 @@
 
     <!-- Script principal -->
     <script type="module" src="main.js"></script>
-    
-    <!-- Service Worker - Async, non-blocking -->
-    <script>
-      if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-          navigator.serviceWorker.register('/registerSW.js');
-        });
-      }
-    </script>
 </body>
 </html>
