@@ -10,58 +10,70 @@ export default defineConfig({
     transformer: 'lightningcss',
     lightningcss: {
       targets: {
-        chrome: 90,
-        firefox: 90,
-        safari: 14,
-        edge: 90,
+        chrome: 107,
+        firefox: 104,
+        safari: 16,
+        edge: 107,
       },
       drafts: {
         customMedia: true,
       },
     },
+    devSourcemap: false,
   },
   
   build: {
+    target: 'baseline-widely-available',
     outDir: '../dist',
     emptyOutDir: true,
     sourcemap: false,
-    minify: 'terser',
+    minify: 'esbuild',
     cssMinify: 'lightningcss',
-    terserOptions: {
-      compress: {
-        drop_console: true,
-        drop_debugger: true,
-        pure_funcs: ['console.log', 'console.info', 'console.debug'],
-        passes: 2,
-      },
-      mangle: {
-        safari10: true,
-      },
-      format: {
-        comments: false,
-      },
-    },
     rollupOptions: {
       output: {
-        manualChunks: {
-          'three': ['three'],
-          'culori': ['culori'],
+        manualChunks: (id) => {
+          if (id.includes('node_modules')) {
+            if (id.includes('three')) return 'three';
+            if (id.includes('culori')) return 'culori';
+            return 'vendor';
+          }
         },
         chunkFileNames: 'assets/[name]-[hash].js',
         entryFileNames: 'assets/[name]-[hash].js',
-        assetFileNames: 'assets/[name]-[hash].[ext]',
+        assetFileNames: (assetInfo) => {
+          const info = assetInfo.name.split('.');
+          const ext = info[info.length - 1];
+          if (/\.(png|jpe?g|svg|gif|tiff|bmp|ico|webp)$/i.test(assetInfo.name)) {
+            return `assets/images/[name]-[hash].${ext}`;
+          }
+          if (/\.(woff2?|eot|ttf|otf)$/i.test(assetInfo.name)) {
+            return `assets/fonts/[name]-[hash].${ext}`;
+          }
+          return `assets/[name]-[hash].${ext}`;
+        },
       },
     },
     chunkSizeWarningLimit: 600,
-    reportCompressedSize: true,
-    cssCodeSplit: true,
+    reportCompressedSize: false,
+    cssCodeSplit: false,
     assetsInlineLimit: 4096,
+    modulePreload: {
+      polyfill: true,
+    },
   },
   
   server: {
     port: 3000,
     open: true,
     host: true,
+    warmup: {
+      clientFiles: [
+        './main.js',
+        './scripts/ColorManager.js',
+        './scripts/Renderer.js',
+        './scripts/ShaderManager.js',
+      ],
+    },
   },
   
   preview: {
@@ -74,6 +86,13 @@ export default defineConfig({
   optimizeDeps: {
     include: ['three', 'culori'],
     exclude: [],
+    esbuildOptions: {
+      target: 'esnext',
+    },
+  },
+  
+  resolve: {
+    extensions: ['.js', '.glsl', '.json'],
   },
   
   plugins: [
