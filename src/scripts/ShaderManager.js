@@ -90,16 +90,25 @@ export class ShaderManager {
 
     getShaderParameters(shaderName) {
         const shader = SHADERS[shaderName || this.currentShader];
-        if (!shader || !shader.parameters) {
+        if (!shader || !shader.controls) {
             return {};
         }
 
         const parameters = {};
-        shader.parameters.forEach(param => {
-            const uniformName = `u_${param.uniform}`;
-            if (this.uniforms[uniformName]) {
-                parameters[param.uniform] = this.uniforms[uniformName].value;
+        shader.controls.forEach(control => {
+            const configuredUniform = control.uniform;
+            const uniformKey = configuredUniform.startsWith('u_')
+                ? configuredUniform
+                : `u_${configuredUniform}`;
+            const uniform = this.uniforms[uniformKey];
+            if (!uniform) {
+                return;
             }
+
+            const exportKey = configuredUniform.startsWith('u_')
+                ? configuredUniform.slice(2)
+                : configuredUniform;
+            parameters[exportKey] = uniform.value;
         });
 
         return parameters;
