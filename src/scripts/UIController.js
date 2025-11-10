@@ -20,28 +20,104 @@ export class UIController {
         const leftPanel = document.getElementById('left-panel');
         const rightPanel = document.getElementById('right-panel');
         const toggleBtn = document.getElementById('toggle-panels-btn');
+        const mobileAccordion = document.getElementById('mobile-accordion');
+        const accordionTabs = document.querySelectorAll('.accordion-tab');
+        const accordionContent = document.getElementById('accordion-content');
 
         let panelsVisible = true;
 
+        // Desktop: Toggle panels behavior
         const togglePanels = () => {
             panelsVisible = !panelsVisible;
             if (panelsVisible) {
-                leftPanel.classList.remove('hidden');
-                rightPanel.classList.remove('hidden');
-                toggleBtn.classList.remove('visible');
+                leftPanel?.classList.remove('hidden');
+                rightPanel?.classList.remove('hidden');
+                toggleBtn?.classList.remove('visible');
             } else {
-                leftPanel.classList.add('hidden');
-                rightPanel.classList.add('hidden');
-                toggleBtn.classList.add('visible');
+                leftPanel?.classList.add('hidden');
+                rightPanel?.classList.add('hidden');
+                toggleBtn?.classList.add('visible');
             }
         };
 
-        // Toggle button
-        toggleBtn?.addEventListener('click', togglePanels);
+        let currentActivePanelId = null;
 
-        // Listen to panel close events
-        leftPanel?.addEventListener('panel-close', togglePanels);
-        rightPanel?.addEventListener('panel-close', togglePanels);
+        // Mobile: Accordion behavior
+        const switchAccordionTab = (panelId) => {
+            // Return current accordion content to its original panel first
+            if (currentActivePanelId && accordionContent) {
+                const currentPanel = document.getElementById(`${currentActivePanelId}-panel`);
+                if (currentPanel) {
+                    const currentChildren = Array.from(accordionContent.children);
+                    currentChildren.forEach(child => {
+                        currentPanel.appendChild(child);
+                    });
+                }
+            }
+
+            // Update tabs
+            accordionTabs.forEach(tab => {
+                tab.classList.toggle('active', tab.dataset.panel === panelId);
+            });
+
+            // Clear accordion content
+            if (accordionContent) {
+                accordionContent.innerHTML = '';
+            }
+
+            // Move new panel content to accordion
+            const panel = document.getElementById(`${panelId}-panel`);
+            if (panel && accordionContent) {
+                const children = Array.from(panel.children);
+                children.forEach(child => {
+                    accordionContent.appendChild(child);
+                });
+            }
+
+            // Update current active panel
+            currentActivePanelId = panelId;
+        };
+
+        // Setup accordion tabs
+        accordionTabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                switchAccordionTab(tab.dataset.panel);
+            });
+        });
+
+        // Initialize accordion with left panel content
+        if (window.innerWidth <= 768) {
+            switchAccordionTab('left');
+        }
+
+        // Toggle button
+        toggleBtn?.addEventListener('click', () => {
+            if (window.innerWidth <= 768) {
+                mobileAccordion?.classList.toggle('hidden');
+            } else {
+                togglePanels();
+            }
+        });
+
+        // Listen to panel close events (desktop only)
+        leftPanel?.addEventListener('panel-close', () => {
+            if (window.innerWidth > 768) {
+                togglePanels();
+            }
+        });
+
+        rightPanel?.addEventListener('panel-close', () => {
+            if (window.innerWidth > 768) {
+                togglePanels();
+            }
+        });
+
+        // Handle window resize
+        window.addEventListener('resize', () => {
+            if (window.innerWidth <= 768) {
+                switchAccordionTab(accordionTabs[0]?.dataset.panel || 'left');
+            }
+        });
     }
 
     setupCollapsible() {
@@ -126,6 +202,12 @@ export class UIController {
             this.handleColorChange(colorIndex, channel, value);
         });
 
+        // Listen to request-preview-update events
+        document.addEventListener('request-preview-update', (e) => {
+            const { colorIndex } = e.detail;
+            this.initializeColorComponent(colorIndex);
+        });
+
         // Velocidad global
         document.getElementById('speed')?.addEventListener('input', (e) => {
             const value = parseFloat(e.target.value);
@@ -133,10 +215,13 @@ export class UIController {
             document.getElementById('speed-value').textContent = value.toFixed(1);
         });
 
-        // Inicializar previews
-        for (let i = 1; i <= 4; i++) {
-            this.initializeColorComponent(i);
-        }
+        // Inicializar previews cuando los componentes estén listos
+        // Usar setTimeout para asegurar que los componentes están montados
+        setTimeout(() => {
+            for (let i = 1; i <= 4; i++) {
+                this.initializeColorComponent(i);
+            }
+        }, 100);
     }
 
     handleColorChange(colorIndex, channel, value) {
@@ -215,16 +300,17 @@ export class UIController {
 
     getCurrentConfiguration() {
         const shaderName = this.shaderManager.currentShader;
-        const speed = this.shaderManager.speed;
+        const speedUniform = this.shaderManager?.uniforms?.u_speed;
+        const speed = typeof speedUniform?.value === 'number' ? speedUniform.value : 0.5;
         
         // Obtener colores actuales
         const colors = [];
         for (let i = 1; i <= 4; i++) {
-            const colorControl = document.querySelector(`color-control[color-id="color${i}"]`);
-            if (colorControl) {
+            const color = this.colorManager.getColor(i);
+            if (color) {
                 colors.push({
                     id: i,
-                    oklch: colorControl.getColorOKLCH()
+                    oklch: { ...color }
                 });
             }
         }
