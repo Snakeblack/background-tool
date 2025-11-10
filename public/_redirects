@@ -1,0 +1,14 @@
+# Redirect rules for Vercel
+# These rules will make your site more SEO friendly
+
+# Redirect default Vercel subdomain to primary domain
+https://background-tool-chi.vercel.app/* https://background.mretamozo.com/:splat 301!
+
+# Redirect www to non-www
+https://www.background.mretamozo.com/* https://background.mretamozo.com/:splat 301!
+
+# Redirect old paths (if any)
+# /old-path /new-path 301
+
+# SPA fallback
+/* /index.html 200

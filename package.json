@@ -2,24 +2,47 @@
   "name": "gradient-generator-webgl",
   "version": "1.0.0",
   "description": "Generador de fondos WebGL con espacio de color OKLCH y shaders avanzados",
-  "author": "Developer",
+  "author": "Manuel Retamozo <hello@mretamozo.com>",
   "license": "MIT",
+  "homepage": "https://background.mretamozo.com",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Snakeblack/background-tool.git"
+  },
+  "keywords": [
+    "webgl",
+    "shaders",
+    "three.js",
+    "oklch",
+    "gradient",
+    "background",
+    "generator",
+    "animation",
+    "design-tool"
+  ],
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "build:analyze": "vite build --mode analyze",
     "preview": "vite preview",
     "lint": "eslint src --ext .js,.ts",
     "format": "prettier --write src",
-    "format:check": "prettier --check src"
+    "format:check": "prettier --check src",
+    "clean": "rm -rf dist node_modules/.vite",
+    "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
     "@typescript-eslint/eslint-plugin": "^8.0.0",
     "@typescript-eslint/parser": "^8.0.0",
     "eslint": "^9.0.0",
+    "lightningcss": "^1.30.2",
     "prettier": "^3.3.0",
     "typescript": "^5.6.0",
-    "vite": "^6.0.0"
+    "vite": "^6.0.0",
+    "vite-plugin-compression": "^0.5.1",
+    "vite-plugin-pwa": "^1.1.0",
+    "workbox-window": "^7.3.0"
   },
   "dependencies": {
     "@fontsource/space-grotesk": "^5.2.10",

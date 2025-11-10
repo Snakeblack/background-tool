@@ -1,6 +1,24 @@
-# 🎨 Gradient Generator WebGL - OKLCH
+# 🎨 MMRG Background Generator | Generador de Fondos WebGL
 
-Generador de fondos vanguardista usando **WebGL**, **Three.js** y espacio de color **OKLCH** con shaders avanzados.
+[![Live Demo](https://img.shields.io/badge/demo-online-brightgreen.svg)](https://background.mretamozo.com)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![Made with Three.js](https://img.shields.io/badge/Made%20with-Three.js-black.svg)](https://threejs.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.6-blue.svg)](https://www.typescriptlang.org/)
+
+Generador profesional de fondos animados con **WebGL**, **Three.js** y espacio de color **OKLCH**. Crea fondos únicos con 8 shaders personalizables y exporta el código listo para React, Vue, Angular o Vanilla JS.
+
+🌐 **[Ver Demo en Vivo](https://background.mretamozo.com)** | 📖 **[Documentación](docs/)** | 🚀 **[Guía de Uso](docs/GUIA_USO.md)**
+
+---
+
+## 🌟 ¿Por qué usar MMRG Background Generator?
+
+✅ **Sin suscripciones ni límites** - 100% gratuito y open source  
+✅ **Exportación inteligente** - Código optimizado para tu framework favorito  
+✅ **Colores vibrantes** - Espacio OKLCH para colores perceptualmente uniformes  
+✅ **8 efectos únicos** - Aurora, Waves, Liquid, Mesh, Stripes, Geometric, Particles  
+✅ **Responsive por defecto** - Optimizado para desktop, tablet y móvil  
+✅ **Rendimiento** - WebGL acelerado por GPU para animaciones fluidas
 
 ## ✨ Características
 

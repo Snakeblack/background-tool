@@ -1,9 +1,96 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="es" prefix="og: https://ogp.me/ns#">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Generador de Fondos WebGL (OKLCH + Shaders)</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+    
+    <!-- Primary Meta Tags -->
+    <title>MMRG Background Generator | Generador de Fondos WebGL con Shaders Personalizables</title>
+    <meta name="title" content="MMRG Background Generator | Generador de Fondos WebGL con Shaders Personalizables">
+    <meta name="description" content="Crea fondos animados únicos con WebGL y shaders personalizables. Editor de colores OKLCH, 8 efectos únicos y exportación de código para React, Vue, Angular. Gratis y open source.">
+    <meta name="keywords" content="generador de fondos webgl, shaders personalizables, three.js backgrounds, oklch color space, animated backgrounds, gradient generator, react background, vue background, angular background, herramienta desarrollo web, fondos animados, webgl generator, shader editor online, css gradients, animated gradients">
+    <meta name="author" content="Manuel Retamozo - MMRG">
+    <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
+    <meta name="googlebot" content="index, follow">
+    <meta name="language" content="Spanish">
+    <meta name="revisit-after" content="7 days">
+    <meta name="generator" content="Vite + Three.js">
+    <link rel="canonical" href="https://background.mretamozo.com/">
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://background.mretamozo.com/">
+    <meta property="og:site_name" content="MMRG Background Generator">
+    <meta property="og:title" content="MMRG Background Generator | Generador de Fondos WebGL con Shaders">
+    <meta property="og:description" content="Crea fondos animados únicos con WebGL y shaders personalizables. Editor OKLCH, 8 efectos únicos y exportación de código para React, Vue, Angular. Gratis y open source.">
+    <meta property="og:image" content="https://background.mretamozo.com/logo-img.jpg">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="1200">
+    <meta property="og:image:alt" content="MMRG Background Generator - Generador de fondos WebGL con shaders personalizables">
+    <meta property="og:locale" content="es_ES">
+    
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:url" content="https://background.mretamozo.com/">
+    <meta name="twitter:title" content="MMRG Background Generator | Generador de Fondos WebGL">
+    <meta name="twitter:description" content="Crea fondos animados únicos con WebGL y shaders personalizables. Editor OKLCH, 8 efectos y exportación de código. Gratis y open source.">
+    <meta name="twitter:image" content="https://background.mretamozo.com/logo-img.jpg">
+    <meta name="twitter:image:alt" content="MMRG Background Generator interface">
+    <meta name="twitter:creator" content="@mretamozo">
+    <meta name="twitter:site" content="@mmrg_tools">
+    
+    <!-- Additional SEO -->
+    <meta name="theme-color" content="#1e1e32">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="BG Generator">
+    <meta name="application-name" content="MMRG Background Generator">
+    <meta name="msapplication-TileColor" content="#1e1e32">
+    <meta name="format-detection" content="telephone=no">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <link rel="apple-touch-icon" href="/logo-img.jpg">
+    <link rel="manifest" href="/site.webmanifest">
+    
+    <!-- Preconnect for Performance -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://cdn.jsdelivr.net">
+    
+    <!-- Structured Data -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "MMRG Background Generator",
+      "alternateName": "Generador de Fondos WebGL",
+      "url": "https://background.mretamozo.com",
+      "description": "Generador de fondos animados WebGL con shaders personalizables, espacio de color OKLCH y exportación de código para React, Vue, Angular y Vanilla JS.",
+      "applicationCategory": "DesignApplication",
+      "operatingSystem": "Web Browser",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "EUR"
+      },
+      "creator": {
+        "@type": "Person",
+        "name": "Manuel Retamozo",
+        "url": "https://mretamozo.com",
+        "jobTitle": "Full Stack Developer"
+      },
+      "softwareVersion": "1.0.0",
+      "featureList": [
+        "8 shaders WebGL únicos",
+        "Editor de colores OKLCH",
+        "Exportación de código",
+        "Diseño responsive",
+        "Tiempo real"
+      ],
+      "inLanguage": "es-ES",
+      "isAccessibleForFree": true
+    }
+    </script>
     
     <!-- Estilos externos -->
     <link rel="stylesheet" href="styles/main.css">
