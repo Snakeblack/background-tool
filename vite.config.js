@@ -23,7 +23,7 @@ export default defineConfig({
   },
   
   build: {
-    target: 'baseline-widely-available',
+    target: ['chrome107', 'edge107', 'firefox104', 'safari16'],
     outDir: '../dist',
     emptyOutDir: true,
     sourcemap: false,
