@@ -6,7 +6,6 @@
     
     <!-- Primary Meta Tags -->
     <title>MMRG Background Generator | Generador de Fondos WebGL con Shaders Personalizables</title>
-    <meta name="title" content="MMRG Background Generator | Generador de Fondos WebGL con Shaders Personalizables">
     <meta name="description" content="Crea fondos animados únicos con WebGL y shaders personalizables. Editor de colores OKLCH, 8 efectos únicos y exportación de código para React, Vue, Angular. Gratis y open source.">
     <meta name="keywords" content="generador de fondos webgl, shaders personalizables, three.js backgrounds, oklch color space, animated backgrounds, gradient generator, react background, vue background, angular background, herramienta desarrollo web, fondos animados, webgl generator, shader editor online, css gradients, animated gradients">
     <meta name="author" content="Manuel Retamozo - MMRG">
@@ -41,7 +40,7 @@
     
     <!-- Additional SEO -->
     <meta name="theme-color" content="#1e1e32">
-    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="BG Generator">
     <meta name="application-name" content="MMRG Background Generator">
@@ -127,8 +126,8 @@
             <!-- Selector de Tipo de Fondo -->
             <div class="control-section">
                 <h3 class="section-title">Tipo de Fondo</h3>
-                <label for="shader-type" class="block text-sm font-medium text-gray-300 mb-2">Shader</label>
-                <select id="shader-type" class="w-full bg-gray-700 border border-gray-600 rounded-md px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <label for="shader-type" class="block text-sm font-medium text-gray-300 mb-2">Selecciona un Shader</label>
+                <select id="shader-type" class="w-full bg-gray-700 border border-gray-600 rounded-md px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500" aria-label="Selector de tipo de shader">
                     <!-- Opciones generadas dinámicamente por JavaScript -->
                 </select>
             </div>
@@ -171,7 +170,7 @@
                         <label for="speed" class="text-sm font-medium text-gray-300">
                             Velocidad Global: <span id="speed-value">0.5</span>
                         </label>
-                        <input type="range" id="speed" min="0.0" max="3.0" step="0.1" value="0.5" class="w-full">
+                        <input type="range" id="speed" min="0.0" max="3.0" step="0.1" value="0.5" class="w-full" aria-label="Control de velocidad global de animación" aria-valuemin="0" aria-valuemax="3" aria-valuenow="0.5">
                     </div>
                 </div>
             </div>
