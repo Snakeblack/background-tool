@@ -55,7 +55,7 @@ export default defineConfig({
     chunkSizeWarningLimit: 600,
     reportCompressedSize: true,
     cssCodeSplit: true,
-    assetsInlineLimit: 4096, // inline assets < 4kb
+    assetsInlineLimit: 4096,
   },
   
   server: {
@@ -77,15 +77,13 @@ export default defineConfig({
   },
   
   plugins: [
-    // Gzip compression
     compress({
       algorithm: 'gzip',
       ext: '.gz',
-      threshold: 1024, // only compress files > 1kb
+      threshold: 1024,
       deleteOriginFile: false,
     }),
     
-    // Brotli compression (better than gzip)
     compress({
       algorithm: 'brotliCompress',
       ext: '.br',
@@ -93,7 +91,6 @@ export default defineConfig({
       deleteOriginFile: false,
     }),
     
-    // PWA Support
     VitePWA({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.svg', 'logo-img.jpg', 'robots.txt'],
@@ -108,7 +105,7 @@ export default defineConfig({
               cacheName: 'google-fonts-cache',
               expiration: {
                 maxEntries: 10,
-                maxAgeSeconds: 60 * 60 * 24 * 365, // 1 year
+                maxAgeSeconds: 60 * 60 * 24 * 365,
               },
               cacheableResponse: {
                 statuses: [0, 200],
