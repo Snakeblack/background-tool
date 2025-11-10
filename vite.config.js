@@ -112,6 +112,7 @@ export default defineConfig({
     
     VitePWA({
       registerType: 'autoUpdate',
+      injectRegister: null,
       includeAssets: ['favicon.svg', 'logo-img.jpg', 'robots.txt'],
       manifestFilename: 'site.webmanifest',
       workbox: {
@@ -124,6 +125,20 @@ export default defineConfig({
               cacheName: 'google-fonts-cache',
               expiration: {
                 maxEntries: 10,
+                maxAgeSeconds: 60 * 60 * 24 * 365,
+              },
+              cacheableResponse: {
+                statuses: [0, 200],
+              },
+            },
+          },
+          {
+            urlPattern: /^https:\/\/fonts\.gstatic\.com\/.*/i,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'gstatic-fonts-cache',
+              expiration: {
+                maxEntries: 20,
                 maxAgeSeconds: 60 * 60 * 24 * 365,
               },
               cacheableResponse: {
