@@ -10,25 +10,37 @@
   "trailingSlash": false,
   "rewrites": [
     {
-      "source": "/(.*)",
+      "source": "/:path*",
       "destination": "/index.html"
     }
   ],
   "redirects": [
     {
-      "source": "https://background-tool-chi.vercel.app/:path*",
+      "source": "/:path*",
+      "has": [
+        {
+          "type": "host",
+          "value": "background-tool-chi.vercel.app"
+        }
+      ],
       "destination": "https://background.mretamozo.com/:path*",
       "permanent": true
     },
     {
-      "source": "https://www.background.mretamozo.com/:path*",
+      "source": "/:path*",
+      "has": [
+        {
+          "type": "host",
+          "value": "www.background.mretamozo.com"
+        }
+      ],
       "destination": "https://background.mretamozo.com/:path*",
       "permanent": true
     }
   ],
   "headers": [
     {
-      "source": "/(.*)",
+      "source": "/:path*",
       "headers": [
         {
           "key": "X-Content-Type-Options",
@@ -53,7 +65,7 @@
       ]
     },
     {
-      "source": "/assets/(.*)",
+      "source": "/assets/:path*",
       "headers": [
         {
           "key": "Cache-Control",
@@ -62,7 +74,7 @@
       ]
     },
     {
-      "source": "/(.*)\\.css",
+      "source": "/:path*.css",
       "headers": [
         {
           "key": "Cache-Control",
@@ -71,7 +83,7 @@
       ]
     },
     {
-      "source": "/(.*)\\.js",
+      "source": "/:path*.js",
       "headers": [
         {
           "key": "Cache-Control",
@@ -80,7 +92,7 @@
       ]
     },
     {
-      "source": "/(.*)\\.glsl",
+      "source": "/:path*.glsl",
       "headers": [
         {
           "key": "Cache-Control",
@@ -93,7 +105,7 @@
       ]
     },
     {
-      "source": "/(.*)\\.woff2",
+      "source": "/:path*.woff2",
       "headers": [
         {
           "key": "Cache-Control",
@@ -102,7 +114,7 @@
       ]
     },
     {
-      "source": "/(.*)\\.html",
+      "source": "/:path*.html",
       "headers": [
         {
           "key": "Cache-Control",
@@ -111,7 +123,7 @@
       ]
     },
     {
-      "source": "/(.*)",
+      "source": "/:path*",
       "headers": [
         {
           "key": "Cache-Control",
