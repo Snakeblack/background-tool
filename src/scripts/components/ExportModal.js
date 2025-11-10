@@ -3,16 +3,25 @@
  */
 
 export class ExportModal extends HTMLElement {
+    /**
+     * Constructor del componente ExportModal
+     */
     constructor() {
         super();
         this.attachShadow({ mode: 'open' });
-        this.codeBlocks = new Map(); // Almacenar códigos sin escapar
+        this.codeBlocks = new Map();
     }
 
+    /**
+     * Callback ejecutado cuando el componente se conecta al DOM
+     */
     connectedCallback() {
         this.render();
     }
 
+    /**
+     * Renderiza el modal con su estructura HTML y estilos
+     */
     render() {
         this.shadowRoot.innerHTML = `
             <style>
@@ -235,7 +244,6 @@ export class ExportModal extends HTMLElement {
                     margin-right: 0.5rem;
                 }
 
-                /* Responsive Design */
                 @media (max-width: 768px) {
                     .modal-container {
                         width: 95%;
@@ -402,7 +410,6 @@ export class ExportModal extends HTMLElement {
                     }
                 }
 
-                /* Landscape móvil */
                 @media (max-height: 600px) and (orientation: landscape) {
                     .modal-container {
                         max-height: 98vh;
@@ -445,20 +452,21 @@ export class ExportModal extends HTMLElement {
         this.setupEventListeners();
     }
 
+    /**
+     * Configura todos los event listeners del modal
+     */
     setupEventListeners() {
         const closeBtn = this.shadowRoot.getElementById('close-btn');
         closeBtn.addEventListener('click', () => this.close());
 
         const modalContainer = this.shadowRoot.querySelector('.modal-container');
         
-        // Click outside modal-container to close
         this.addEventListener('click', (e) => {
             if (e.target === this) {
                 this.close();
             }
         });
 
-        // Prevent clicks inside modal from closing
         modalContainer.addEventListener('click', (e) => {
             let target = e.target;
             if (target && typeof target.closest !== 'function' && target.parentElement) {
@@ -477,7 +485,6 @@ export class ExportModal extends HTMLElement {
             e.stopPropagation();
         });
 
-        // Tabs
         const tabs = this.shadowRoot.querySelectorAll('.tab');
         tabs.forEach(tab => {
             tab.addEventListener('click', () => {
@@ -493,6 +500,10 @@ export class ExportModal extends HTMLElement {
         });
     }
 
+    /**
+     * Abre el modal con la configuración proporcionada
+     * @param {Object} config - Configuración del gradiente a exportar
+     */
     open(config) {
         this.config = config;
         this.codeBlocks = new Map();
@@ -500,10 +511,16 @@ export class ExportModal extends HTMLElement {
         this.classList.add('open');
     }
 
+    /**
+     * Cierra el modal
+     */
     close() {
         this.classList.remove('open');
     }
 
+    /**
+     * Genera el contenido de todas las pestañas del modal
+     */
     generateContent() {
         this.generateVanillaContent();
         this.generateReactContent();
@@ -703,11 +720,16 @@ export class ExportModal extends HTMLElement {
         `;
     }
 
+    /**
+     * Crea un bloque de código con botón de copiar
+     * @param {string} language - Lenguaje del código
+     * @param {string} code - Código a mostrar
+     * @param {string} title - Título del bloque
+     * @returns {string} HTML del bloque de código
+     */
     createCodeBlock(language, code, title) {
-        // Generar un ID único para cada bloque de código
         const blockId = `code-${Math.random().toString(36).substr(2, 9)}`;
         
-        // Almacenar el código sin escapar en un Map
         if (!this.codeBlocks) {
             this.codeBlocks = new Map();
         }
@@ -726,6 +748,10 @@ export class ExportModal extends HTMLElement {
         `;
     }
 
+    /**
+     * Copia el código al portapapeles usando múltiples métodos de fallback
+     * @param {HTMLButtonElement} button - Botón que desencadenó la acción
+     */
     async copyCode(button) {
         const blockId = button.getAttribute('data-block-id');
         const code = this.codeBlocks.get(blockId);
@@ -738,7 +764,6 @@ export class ExportModal extends HTMLElement {
 
         let success = false;
 
-        // Intentar copiar usando la API moderna
         if (navigator.clipboard && navigator.clipboard.writeText) {
             try {
                 await navigator.clipboard.writeText(code);
@@ -748,12 +773,10 @@ export class ExportModal extends HTMLElement {
             }
         }
 
-        // Fallback: usar copy event con execCommand
         if (!success) {
             success = this.copyUsingCopyEvent(code);
         }
 
-        // Último recurso: textarea temporal
         if (!success) {
             success = this.copyUsingTextarea(code);
         }
@@ -795,6 +818,11 @@ export class ExportModal extends HTMLElement {
         return successful;
     }
 
+    /**
+     * Método de fallback para copiar usando textarea temporal
+     * @param {string} text - Texto a copiar
+     * @returns {boolean} True si tuvo éxito
+     */
     copyUsingTextarea(text) {
         if (typeof document === 'undefined' || !document.body) {
             return false;
@@ -828,6 +856,10 @@ export class ExportModal extends HTMLElement {
         }
     }
     
+    /**
+     * Muestra feedback visual de copiado exitoso
+     * @param {HTMLButtonElement} button - Botón a actualizar
+     */
     showCopySuccess(button) {
         const originalText = button.innerHTML;
         button.innerHTML = '✅ Copiado!';
@@ -839,6 +871,10 @@ export class ExportModal extends HTMLElement {
         }, 2000);
     }
 
+    /**
+     * Muestra feedback visual de error al copiar
+     * @param {HTMLButtonElement} button - Botón a actualizar
+     */
     showCopyError(button) {
         const originalText = button.innerHTML;
         button.innerHTML = '⚠️ Error';
@@ -850,12 +886,22 @@ export class ExportModal extends HTMLElement {
         }, 2500);
     }
 
+    /**
+     * Escapa caracteres HTML para mostrar código de forma segura
+     * @param {string} text - Texto a escapar
+     * @returns {string} Texto escapado
+     */
     escapeHtml(text) {
         const div = document.createElement('div');
         div.textContent = text;
         return div.innerHTML;
     }
 
+    /**
+     * Normaliza el array de colores asegurando valores válidos
+     * @param {Array} colors - Array de colores a normalizar
+     * @returns {Array} Array de colores normalizados
+     */
     normalizeColors(colors = []) {
         const defaults = [
             { l: 0.7, c: 0.25, h: 330 },
@@ -884,10 +930,20 @@ export class ExportModal extends HTMLElement {
         });
     }
 
+    /**
+     * Formatea un color OKLCH para exportar como código
+     * @param {Object} color - Color en formato OKLCH
+     * @returns {string} Color formateado como código JavaScript
+     */
     formatColorForExport(color) {
         return `{ l: ${color.l.toFixed(3)}, c: ${color.c.toFixed(3)}, h: ${color.h.toFixed(1)} }`;
     }
 
+    /**
+     * Formatea un valor de uniform para exportar como código
+     * @param {*} value - Valor a formatear
+     * @returns {string|number} Valor formateado
+     */
     formatUniformValue(value) {
         if (typeof value === 'number') {
             return Number.isInteger(value) ? value : Number(value);
@@ -942,6 +998,10 @@ export class ExportModal extends HTMLElement {
 </html>`;
     }
 
+    /**
+     * Genera código JavaScript vanilla para el gradiente
+     * @returns {string} Código JavaScript completo
+     */
     generateVanillaJS() {
         const { colors, speed, parameters, shaderCode, vertexCode } = this.config;
 
@@ -974,10 +1034,8 @@ class GradientBackground {
     }
 
     init() {
-        // Scene
         this.scene = new THREE.Scene();
         
-        // Camera
         const aspect = window.innerWidth / window.innerHeight;
         this.camera = new THREE.OrthographicCamera(-aspect, aspect, 1, -1, 0.1, 10);
         this.camera.position.z = 1;
@@ -991,18 +1049,14 @@ class GradientBackground {
         this.renderer.setSize(window.innerWidth, window.innerHeight);
         this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
         
-        // Shader Material
         this.createMaterial();
         
-        // Geometry
         const geometry = new THREE.PlaneGeometry(2 * aspect, 2);
         this.mesh = new THREE.Mesh(geometry, this.material);
         this.scene.add(this.mesh);
         
-        // Clock
         this.clock = new THREE.Clock();
         
-        // Resize handler
         window.addEventListener('resize', this.onResize.bind(this), { passive: true });
     }
 
@@ -1030,7 +1084,6 @@ ${uniformsBlock}
         this.renderer.setSize(window.innerWidth, window.innerHeight);
         this.material.uniforms.u_resolution.value.set(window.innerWidth, window.innerHeight);
         
-        // Update geometry
         this.mesh.geometry.dispose();
         this.mesh.geometry = new THREE.PlaneGeometry(2 * aspect, 2);
     }
@@ -1049,7 +1102,6 @@ ${uniformsBlock}
     }
 }
 
-// Initialize
 new GradientBackground('gradient-canvas');`;
     }
 
@@ -1066,7 +1118,6 @@ export function useGradientBackground(config = {}) {
     useEffect(() => {
         if (!canvasRef.current) return;
 
-        // Setup Three.js scene
         const scene = new THREE.Scene();
         const aspect = window.innerWidth / window.innerHeight;
         const camera = new THREE.OrthographicCamera(-aspect, aspect, 1, -1, 0.1, 10);
@@ -1081,10 +1132,6 @@ export function useGradientBackground(config = {}) {
         renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
         rendererRef.current = renderer;
 
-        // Material and geometry setup...
-        // (Similar to vanilla implementation)
-
-        // Animation loop
         const clock = new THREE.Clock();
         const animate = () => {
             animationRef.current = requestAnimationFrame(animate);
@@ -1093,7 +1140,6 @@ export function useGradientBackground(config = {}) {
         };
         animate();
 
-        // Cleanup
         return () => {
             if (animationRef.current) {
                 cancelAnimationFrame(animationRef.current);
@@ -1151,9 +1197,7 @@ export function useGradientBackground(config = {}) {
     let animationId;
 
     const init = () => {
-        // Setup similar to vanilla implementation
         scene = new THREE.Scene();
-        // ... setup code
         
         animate();
     };
@@ -1185,7 +1229,6 @@ export function useGradientBackground(config = {}) {
         return `<template>
     <div class="app">
         <canvas ref="canvasRef" class="gradient-bg" />
-        <!-- Your content here -->
     </div>
 </template>
 
@@ -1389,7 +1432,6 @@ import { GradientBackgroundDirective } from './gradient-background.directive';
             
             <div class="content">
                 <h1>Mi Aplicación</h1>
-                <!-- Tu contenido aquí -->
             </div>
         </div>
     \`,
@@ -1425,8 +1467,7 @@ export const appConfig: ApplicationConfig = {
     }
 
     generateLazyLoading() {
-        return `// Load gradient only when visible
-const observer = new IntersectionObserver((entries) => {
+        return `const observer = new IntersectionObserver((entries) => {
     entries.forEach(entry => {
         if (entry.isIntersecting) {
             import('./gradient.js').then(module => {
@@ -1441,16 +1482,13 @@ observer.observe(document.getElementById('canvas-container'));`;
     }
 
     generateMobileOptimization() {
-        return `// Reduce quality on mobile devices
-const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+        return `const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 const pixelRatio = isMobile ? 1 : Math.min(window.devicePixelRatio, 2);
 
 renderer.setPixelRatio(pixelRatio);
 
-// Simplify shader on low-end devices
 const isLowEnd = navigator.hardwareConcurrency <= 4;
 if (isLowEnd) {
-    // Use simpler shader variant
     material.uniforms.u_quality.value = 0.5;
 }`;
     }
@@ -1461,10 +1499,8 @@ if (isLowEnd) {
 document.addEventListener('visibilitychange', () => {
     if (document.hidden) {
         isPaused = true;
-        // Pause animation loop
     } else {
         isPaused = false;
-        // Resume animation
         clock.start();
     }
 });
@@ -1472,7 +1508,6 @@ document.addEventListener('visibilitychange', () => {
 function animate() {
     if (!isPaused) {
         requestAnimationFrame(animate);
-        // ... render
     }
 }`;
     }

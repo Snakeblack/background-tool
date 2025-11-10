@@ -3,19 +3,32 @@
  */
 
 export class FloatingPanel extends HTMLElement {
+    /**
+     * Constructor del componente FloatingPanel
+     */
     constructor() {
         super();
         this.attachShadow({ mode: 'open' });
     }
 
+    /**
+     * Atributos observados del componente
+     * @returns {string[]} Lista de atributos a observar
+     */
     static get observedAttributes() {
         return ['title', 'position'];
     }
 
+    /**
+     * Callback ejecutado cuando el componente se conecta al DOM
+     */
     connectedCallback() {
         this.render();
     }
 
+    /**
+     * Renderiza el panel con su estructura HTML y estilos
+     */
     render() {
         const title = this.getAttribute('title') || 'Panel';
         const position = this.getAttribute('position') || 'left';
@@ -108,7 +121,6 @@ export class FloatingPanel extends HTMLElement {
                     background: rgba(255, 255, 255, 0.3);
                 }
 
-                /* Responsive Design */
                 @media (max-width: 768px) {
                     :host {
                         top: calc(env(safe-area-inset-top, 0.75rem) + 0.25rem);
@@ -237,7 +249,6 @@ export class FloatingPanel extends HTMLElement {
             </div>
         `;
 
-        // Event listeners
         const minimizeBtn = this.shadowRoot.getElementById('minimize-btn');
         const closeBtn = this.shadowRoot.getElementById('close-btn');
 
@@ -245,7 +256,6 @@ export class FloatingPanel extends HTMLElement {
             const isMinimized = this.classList.contains('minimized');
             
             if (isMinimized) {
-                // Opening this panel - close others via accordion
                 this.dispatchEvent(new CustomEvent('panel-request-open', {
                     bubbles: true,
                     composed: true

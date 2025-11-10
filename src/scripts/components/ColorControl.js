@@ -3,20 +3,36 @@
  */
 
 export class ColorControl extends HTMLElement {
+    /**
+     * Constructor del componente ColorControl
+     */
     constructor() {
         super();
         this.attachShadow({ mode: 'open' });
     }
 
+    /**
+     * Atributos observados del componente
+     * @returns {string[]} Lista de atributos a observar
+     */
     static get observedAttributes() {
         return ['color-index', 'label', 'l-value', 'c-value', 'h-value'];
     }
 
+    /**
+     * Callback ejecutado cuando el componente se conecta al DOM
+     */
     connectedCallback() {
         this.render();
         this.updateInitialPreview();
     }
 
+    /**
+     * Callback ejecutado cuando cambia un atributo observado
+     * @param {string} name - Nombre del atributo
+     * @param {string} oldValue - Valor anterior
+     * @param {string} newValue - Nuevo valor
+     */
     attributeChangedCallback(name, oldValue, newValue) {
         if (oldValue !== newValue) {
             this.render();
@@ -26,6 +42,9 @@ export class ColorControl extends HTMLElement {
         }
     }
 
+    /**
+     * Renderiza el componente con su estructura HTML y estilos
+     */
     render() {
         const colorIndex = this.getAttribute('color-index') || '1';
         const label = this.getAttribute('label') || `Color ${colorIndex}`;
@@ -137,7 +156,6 @@ export class ColorControl extends HTMLElement {
                     transform: scale(1.2);
                 }
 
-                /* Responsive Design */
                 @media (max-width: 640px) {
                     .collapsible-header {
                         padding: 0.625rem 0.875rem;
@@ -201,17 +219,17 @@ export class ColorControl extends HTMLElement {
                 </button>
                 <div class="collapsible-content" id="content">
                     <div class="control-item">
-                        <label>Luz (L): <span id="l-val">${lValue}</span></label>
+                        <label for="l-slider">Luz (L): <span id="l-val">${lValue}</span></label>
                         <input type="range" id="l-slider" min="0.1" max="1.0" step="0.01" value="${lValue}" 
                                data-color="${colorIndex}" data-channel="l" class="oklch-slider">
                     </div>
                     <div class="control-item">
-                        <label>Croma (C): <span id="c-val">${cValue}</span></label>
+                        <label for="c-slider">Croma (C): <span id="c-val">${cValue}</span></label>
                         <input type="range" id="c-slider" min="0.0" max="0.4" step="0.005" value="${cValue}"
                                data-color="${colorIndex}" data-channel="c" class="oklch-slider">
                     </div>
                     <div class="control-item">
-                        <label>Tono (H): <span id="h-val">${hValue}</span></label>
+                        <label for="h-slider">Tono (H): <span id="h-val">${hValue}</span></label>
                         <input type="range" id="h-slider" min="0" max="360" step="1" value="${hValue}"
                                data-color="${colorIndex}" data-channel="h" class="oklch-slider">
                     </div>
@@ -219,7 +237,6 @@ export class ColorControl extends HTMLElement {
             </div>
         `;
 
-        // Event listeners
         const header = this.shadowRoot.getElementById('header');
         const content = this.shadowRoot.getElementById('content');
         
@@ -228,18 +245,15 @@ export class ColorControl extends HTMLElement {
             content.classList.toggle('collapsed');
         });
 
-        // Slider events - dispatch custom events to parent
         const sliders = this.shadowRoot.querySelectorAll('.oklch-slider');
         sliders.forEach(slider => {
             slider.addEventListener('input', (e) => {
                 const channel = e.target.dataset.channel;
                 const value = parseFloat(e.target.value);
                 
-                // Update display
                 this.shadowRoot.getElementById(`${channel}-val`).textContent = 
                     channel === 'h' ? value : value.toFixed(channel === 'c' ? 3 : 2);
                 
-                // Dispatch event to parent
                 this.dispatchEvent(new CustomEvent('color-change', {
                     detail: {
                         colorIndex: parseInt(colorIndex),
@@ -253,7 +267,10 @@ export class ColorControl extends HTMLElement {
         });
     }
 
-    // Public method to update preview color
+    /**
+     * Actualiza el preview del color con un valor hexadecimal
+     * @param {string} hexColor - Color en formato hexadecimal
+     */
     updatePreview(hexColor) {
         const preview = this.shadowRoot.getElementById('preview');
         if (preview) {
@@ -261,7 +278,10 @@ export class ColorControl extends HTMLElement {
         }
     }
 
-    // Get current OKLCH values
+    /**
+     * Obtiene los valores actuales OKLCH del componente
+     * @returns {{ l: number, c: number, h: number }}
+     */
     getColorOKLCH() {
         return {
             l: parseFloat(this.getAttribute('l-value') || '0.7'),
@@ -270,15 +290,15 @@ export class ColorControl extends HTMLElement {
         };
     }
 
-    // Update initial preview on mount
+    /**
+     * Actualiza el preview inicial del color al montar el componente
+     */
     updateInitialPreview() {
-        // Import culori dynamically if needed
         if (typeof window.culori !== 'undefined') {
             const oklch = this.getColorOKLCH();
             const hex = window.culori.formatHex({ mode: 'oklch', ...oklch });
             this.updatePreview(hex);
         } else {
-            // If culori not available yet, dispatch event to UIController
             this.dispatchEvent(new CustomEvent('request-preview-update', {
                 detail: {
                     colorIndex: parseInt(this.getAttribute('color-index'))
@@ -290,5 +310,4 @@ export class ColorControl extends HTMLElement {
     }
 }
 
-// Register the custom element
 customElements.define('color-control', ColorControl);
