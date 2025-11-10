@@ -175,6 +175,7 @@ export class UIController {
 
             const label = document.createElement('label');
             label.className = 'text-sm font-medium text-gray-300';
+            label.htmlFor = control.id;
             label.innerHTML = `${control.label}: <span id="${control.id}-value">${control.value}</span>`;
 
             const input = document.createElement('input');
