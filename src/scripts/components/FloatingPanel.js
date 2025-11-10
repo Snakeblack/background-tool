@@ -41,6 +41,7 @@ export class FloatingPanel extends HTMLElement {
                     top: 2rem;
                     ${position}: 2rem;
                     width: 320px;
+                    min-height: 400px;
                     max-height: calc(100vh - 4rem);
                     background: linear-gradient(135deg, rgba(30, 30, 50, 0.95) 0%, rgba(20, 20, 35, 0.98) 100%);
                     border-radius: 16px;
@@ -50,6 +51,8 @@ export class FloatingPanel extends HTMLElement {
                     overflow: hidden;
                     transition: transform 0.3s ease, opacity 0.3s ease;
                     z-index: 100;
+                    contain: layout style paint;
+                    content-visibility: auto;
                 }
                 :host(.hidden) {
                     transform: translateX(${position === 'left' ? '-' : ''}120%);
