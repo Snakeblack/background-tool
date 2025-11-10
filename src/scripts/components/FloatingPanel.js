@@ -55,6 +55,7 @@ export class FloatingPanel extends HTMLElement {
                     align-items: center;
                     justify-content: flex-start;
                     gap: 1rem;
+                    position: relative;
                 }
                 .panel-title {
                     font-size: 1.125rem;
@@ -89,6 +90,8 @@ export class FloatingPanel extends HTMLElement {
                     overflow-y: auto;
                     max-height: calc(100vh - 8rem);
                     transition: max-height 0.3s ease, padding 0.3s ease;
+                    overscroll-behavior: contain;
+                    scrollbar-gutter: stable;
                 }
                 .panel-content::-webkit-scrollbar {
                     width: 8px;
@@ -108,24 +111,66 @@ export class FloatingPanel extends HTMLElement {
                 /* Responsive Design */
                 @media (max-width: 768px) {
                     :host {
-                        top: 0.5rem;
-                        left: 0.5rem;
-                        right: auto;
-                        width: calc(100vw - 1rem);
-                        max-height: 50vh;
+                        top: calc(env(safe-area-inset-top, 0.75rem) + 0.25rem);
+                        left: 0.75rem;
+                        right: 0.75rem;
+                        width: auto;
+                        max-height: calc(100vh - 7rem);
+                        border-radius: 20px;
+                        backdrop-filter: blur(12px);
+                    }
+                    :host([position="right"]) {
+                        top: auto;
+                        bottom: calc(env(safe-area-inset-bottom, 0.75rem) + 5rem);
+                        max-height: 42vh;
+                    }
+                    :host([position="right"].hidden) {
+                        transform: translateY(120%);
+                    }
+                    :host([position="left"].hidden) {
+                        transform: translateY(-120%);
                     }
                     .panel-header {
                         padding: 1rem 1.25rem;
+                        position: sticky;
+                        top: 0;
+                        z-index: 5;
+                        backdrop-filter: blur(18px);
+                    }
+                    .panel-header::after {
+                        content: '';
+                        position: absolute;
+                        left: 1.25rem;
+                        right: 1.25rem;
+                        bottom: -0.5rem;
+                        height: 1px;
+                        background: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.2) 50%, rgba(255,255,255,0) 100%);
                     }
                     .panel-title {
                         font-size: 1rem;
                     }
+                    .panel-btn {
+                        width: 26px;
+                        height: 26px;
+                    }
                     .panel-content {
-                        padding: 1rem;
+                        padding: 1rem 1.25rem 1.25rem;
+                        max-height: none;
+                        mask-image: linear-gradient(180deg, rgba(0,0,0,1) 92%, rgba(0,0,0,0));
                     }
                 }
 
                 @media (max-width: 640px) {
+                    :host {
+                        left: 0.5rem;
+                        right: 0.5rem;
+                        border-radius: 18px;
+                        max-height: calc(100vh - 6.5rem);
+                    }
+                    :host([position="right"]) {
+                        bottom: calc(env(safe-area-inset-bottom, 0.5rem) + 4.25rem);
+                        max-height: 40vh;
+                    }
                     .panel-header {
                         padding: 0.875rem 1rem;
                     }
@@ -144,7 +189,11 @@ export class FloatingPanel extends HTMLElement {
 
                 @media (max-width: 480px) {
                     :host {
-                        max-height: 55vh;
+                        max-height: calc(100vh - 5.5rem);
+                    }
+                    :host([position="right"]) {
+                        max-height: 38vh;
+                        bottom: calc(env(safe-area-inset-bottom, 0.5rem) + 3.75rem);
                     }
                     .panel-header {
                         padding: 0.75rem 0.875rem;
@@ -164,7 +213,14 @@ export class FloatingPanel extends HTMLElement {
 
                 @media (max-height: 600px) and (orientation: landscape) {
                     :host {
-                        max-height: 85vh;
+                        max-height: calc(88vh - 3rem);
+                        top: 0.5rem;
+                        left: 0.5rem;
+                        right: 0.5rem;
+                    }
+                    :host([position="right"]) {
+                        bottom: calc(env(safe-area-inset-bottom, 0.5rem) + 2.75rem);
+                        max-height: calc(65vh - 3rem);
                     }
                 }
             </style>
@@ -186,6 +242,16 @@ export class FloatingPanel extends HTMLElement {
         const closeBtn = this.shadowRoot.getElementById('close-btn');
 
         minimizeBtn.addEventListener('click', () => {
+            const isMinimized = this.classList.contains('minimized');
+            
+            if (isMinimized) {
+                // Opening this panel - close others via accordion
+                this.dispatchEvent(new CustomEvent('panel-request-open', {
+                    bubbles: true,
+                    composed: true
+                }));
+            }
+            
             this.classList.toggle('minimized');
             minimizeBtn.textContent = this.classList.contains('minimized') ? '+' : '−';
         });
