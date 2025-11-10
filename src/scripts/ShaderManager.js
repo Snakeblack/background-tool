@@ -6,6 +6,10 @@ import * as THREE from 'three';
 import { SHADERS } from './shaders/index.js';
 
 export class ShaderManager {
+    /**
+     * Constructor del gestor de shaders
+     * @param {Renderer} renderer - Instancia del renderizador
+     */
     constructor(renderer) {
         this.renderer = renderer;
         this.currentShader = null;
@@ -13,24 +17,22 @@ export class ShaderManager {
         this.uniforms = this.createUniforms();
     }
 
+    /**
+     * Crea el objeto de uniforms con valores por defecto
+     * @returns {Object} Objeto con todos los uniforms del shader
+     */
     createUniforms() {
         return {
             u_time: { value: 0.0 },
             u_resolution: { value: this.renderer.getResolution() },
             u_mouse: { value: new THREE.Vector2(0.5, 0.5) },
-            
-            // Colors
             u_color1: { value: new THREE.Color(1, 0.7, 0.8) },
             u_color2: { value: new THREE.Color(0.5, 0.3, 0.8) },
             u_color3: { value: new THREE.Color(0.2, 0.8, 0.7) },
             u_color4: { value: new THREE.Color(1, 0.9, 0.3) },
-            
-            // Common parameters
             u_speed: { value: 0.5 },
             u_scale: { value: 1.0 },
             u_intensity: { value: 1.0 },
-            
-            // Shader-specific parameters
             u_zoom: { value: 3.0 },
             u_stripe_width: { value: 8.0 },
             u_stripe_speed: { value: 0.8 },
@@ -45,6 +47,11 @@ export class ShaderManager {
         };
     }
 
+    /**
+     * Carga y aplica un shader específico
+     * @param {string} shaderName - Nombre del shader a cargar
+     * @returns {Object|undefined} Configuración del shader cargado
+     */
     loadShader(shaderName) {
         if (!SHADERS[shaderName]) {
             console.error(`Shader "${shaderName}" no encontrado`);
@@ -54,7 +61,6 @@ export class ShaderManager {
         this.currentShader = shaderName;
         const shaderConfig = SHADERS[shaderName];
 
-        // Crear material con el shader
         this.material = new THREE.ShaderMaterial({
             uniforms: this.uniforms,
             vertexShader: shaderConfig.vertex,
@@ -66,28 +72,52 @@ export class ShaderManager {
         return shaderConfig;
     }
 
+    /**
+     * Actualiza el valor de un uniform específico
+     * @param {string} name - Nombre del uniform
+     * @param {*} value - Nuevo valor del uniform
+     */
     updateUniform(name, value) {
         if (this.uniforms[name]) {
             this.uniforms[name].value = value;
         }
     }
 
+    /**
+     * Actualiza el uniform de tiempo con el tiempo transcurrido
+     */
     updateTime() {
         this.uniforms.u_time.value = this.renderer.getElapsedTime();
     }
 
+    /**
+     * Actualiza el uniform de resolución con las dimensiones actuales
+     */
     updateResolution() {
         this.uniforms.u_resolution.value = this.renderer.getResolution();
     }
 
+    /**
+     * Obtiene la lista de shaders disponibles
+     * @returns {string[]} Array con los nombres de los shaders
+     */
     getAvailableShaders() {
         return Object.keys(SHADERS);
     }
 
+    /**
+     * Obtiene la configuración del shader actual
+     * @returns {Object} Configuración del shader actual
+     */
     getCurrentShaderConfig() {
         return SHADERS[this.currentShader];
     }
 
+    /**
+     * Obtiene los parámetros configurables del shader
+     * @param {string} [shaderName] - Nombre del shader (opcional, usa el actual si no se provee)
+     * @returns {Object} Objeto con los parámetros del shader
+     */
     getShaderParameters(shaderName) {
         const shader = SHADERS[shaderName || this.currentShader];
         if (!shader || !shader.controls) {
@@ -114,11 +144,20 @@ export class ShaderManager {
         return parameters;
     }
 
+    /**
+     * Obtiene el código GLSL del fragment shader
+     * @param {string} [shaderName] - Nombre del shader (opcional, usa el actual si no se provee)
+     * @returns {string} Código GLSL del fragment shader
+     */
     getShaderCode(shaderName) {
         const shader = SHADERS[shaderName || this.currentShader];
         return shader ? shader.fragment : '';
     }
 
+    /**
+     * Obtiene el código GLSL del vertex shader actual
+     * @returns {string} Código GLSL del vertex shader
+     */
     getVertexShaderCode() {
         const shader = SHADERS[this.currentShader];
         return shader ? shader.vertex : '';

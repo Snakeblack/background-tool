@@ -3,6 +3,11 @@
  */
 
 export class UIController {
+    /**
+     * Constructor del controlador de UI
+     * @param {ShaderManager} shaderManager - Instancia del gestor de shaders
+     * @param {ColorManager} colorManager - Instancia del gestor de colores
+     */
     constructor(shaderManager, colorManager) {
         this.shaderManager = shaderManager;
         this.colorManager = colorManager;
@@ -16,6 +21,9 @@ export class UIController {
         this.setupExportButton();
     }
 
+    /**
+     * Configura los paneles laterales y el comportamiento de acordeón en móvil
+     */
     setupPanels() {
         const leftPanel = document.getElementById('left-panel');
         const rightPanel = document.getElementById('right-panel');
@@ -26,7 +34,6 @@ export class UIController {
 
         let panelsVisible = true;
 
-        // Desktop: Toggle panels behavior
         const togglePanels = () => {
             panelsVisible = !panelsVisible;
             if (panelsVisible) {
@@ -42,9 +49,7 @@ export class UIController {
 
         let currentActivePanelId = null;
 
-        // Mobile: Accordion behavior
         const switchAccordionTab = (panelId) => {
-            // Return current accordion content to its original panel first
             if (currentActivePanelId && accordionContent) {
                 const currentPanel = document.getElementById(`${currentActivePanelId}-panel`);
                 if (currentPanel) {
@@ -55,17 +60,14 @@ export class UIController {
                 }
             }
 
-            // Update tabs
             accordionTabs.forEach(tab => {
                 tab.classList.toggle('active', tab.dataset.panel === panelId);
             });
 
-            // Clear accordion content
             if (accordionContent) {
                 accordionContent.innerHTML = '';
             }
 
-            // Move new panel content to accordion
             const panel = document.getElementById(`${panelId}-panel`);
             if (panel && accordionContent) {
                 const children = Array.from(panel.children);
@@ -74,23 +76,19 @@ export class UIController {
                 });
             }
 
-            // Update current active panel
             currentActivePanelId = panelId;
         };
 
-        // Setup accordion tabs
         accordionTabs.forEach(tab => {
             tab.addEventListener('click', () => {
                 switchAccordionTab(tab.dataset.panel);
             });
         });
 
-        // Initialize accordion with left panel content
         if (window.innerWidth <= 768) {
             switchAccordionTab('left');
         }
 
-        // Toggle button
         toggleBtn?.addEventListener('click', () => {
             if (window.innerWidth <= 768) {
                 mobileAccordion?.classList.toggle('hidden');
@@ -99,7 +97,6 @@ export class UIController {
             }
         });
 
-        // Listen to panel close events (desktop only)
         leftPanel?.addEventListener('panel-close', () => {
             if (window.innerWidth > 768) {
                 togglePanels();
@@ -112,7 +109,6 @@ export class UIController {
             }
         });
 
-        // Handle window resize
         window.addEventListener('resize', () => {
             if (window.innerWidth <= 768) {
                 switchAccordionTab(accordionTabs[0]?.dataset.panel || 'left');
@@ -120,6 +116,9 @@ export class UIController {
         });
     }
 
+    /**
+     * Configura el comportamiento de los headers colapsables
+     */
     setupCollapsible() {
         const headers = document.querySelectorAll('.collapsible-header');
         headers.forEach(header => {
@@ -133,11 +132,13 @@ export class UIController {
         });
     }
 
+    /**
+     * Configura el selector de shaders y carga el inicial
+     */
     setupShaderSelector() {
         const selector = document.getElementById('shader-type');
         const shaders = this.shaderManager.getAvailableShaders();
         
-        // Poblar selector
         selector.innerHTML = '';
         shaders.forEach(shaderName => {
             const config = this.shaderManager.getCurrentShaderConfig();
@@ -147,19 +148,21 @@ export class UIController {
             selector.appendChild(option);
         });
 
-        // Evento de cambio
         selector.addEventListener('change', (e) => {
             const shaderConfig = this.shaderManager.loadShader(e.target.value);
             this.updateShaderControls(shaderConfig);
         });
 
-        // Cargar shader inicial
         if (shaders.length > 0) {
             const initialConfig = this.shaderManager.loadShader(shaders[0]);
             this.updateShaderControls(initialConfig);
         }
     }
 
+    /**
+     * Actualiza los controles del shader actual en la UI
+     * @param {Object} shaderConfig - Configuración del shader con sus controles
+     */
     updateShaderControls(shaderConfig) {
         const container = document.getElementById('shader-controls-content');
         container.innerHTML = '';
@@ -195,28 +198,26 @@ export class UIController {
         });
     }
 
+    /**
+     * Configura los controles de color y eventos de los componentes
+     */
     setupColorControls() {
-        // Listen to color-change events from Web Components
         document.addEventListener('color-change', (e) => {
             const { colorIndex, channel, value } = e.detail;
             this.handleColorChange(colorIndex, channel, value);
         });
 
-        // Listen to request-preview-update events
         document.addEventListener('request-preview-update', (e) => {
             const { colorIndex } = e.detail;
             this.initializeColorComponent(colorIndex);
         });
 
-        // Velocidad global
         document.getElementById('speed')?.addEventListener('input', (e) => {
             const value = parseFloat(e.target.value);
             this.shaderManager.updateUniform('u_speed', value);
             document.getElementById('speed-value').textContent = value.toFixed(1);
         });
 
-        // Inicializar previews cuando los componentes estén listos
-        // Usar setTimeout para asegurar que los componentes están montados
         setTimeout(() => {
             for (let i = 1; i <= 4; i++) {
                 this.initializeColorComponent(i);
@@ -224,23 +225,27 @@ export class UIController {
         }, 100);
     }
 
+    /**
+     * Maneja el cambio de un canal de color
+     * @param {number} colorIndex - Índice del color (1-4)
+     * @param {string} channel - Canal modificado ('l', 'c', o 'h')
+     * @param {number} value - Nuevo valor del canal
+     */
     handleColorChange(colorIndex, channel, value) {
-        // Get current values
         const color = this.colorManager.getColor(colorIndex);
-        
-        // Update the changed channel
         color[channel] = value;
-        
-        // Update color in manager
         const hex = this.colorManager.updateColor(colorIndex, color.l, color.c, color.h);
         
-        // Update component preview
         const component = document.querySelector(`color-control[color-index="${colorIndex}"]`);
         if (component) {
             component.updatePreview(hex);
         }
     }
 
+    /**
+     * Inicializa el preview de un componente de color
+     * @param {number} colorIndex - Índice del color (1-4)
+     */
     initializeColorComponent(colorIndex) {
         const color = this.colorManager.getColor(colorIndex);
         if (color) {
@@ -252,24 +257,24 @@ export class UIController {
         }
     }
 
+    /**
+     * Configura los botones de presets de colores
+     */
     setupPresets() {
         const presetBtns = document.querySelectorAll('[data-preset]');
         presetBtns.forEach(btn => {
             btn.addEventListener('click', (e) => {
                 const preset = e.target.dataset.preset;
                 if (this.colorManager.setPreset(preset)) {
-                    // Actualizar Web Components con nuevos valores
                     for (let i = 1; i <= 4; i++) {
                         const color = this.colorManager.getColor(i);
                         if (color) {
                             const component = document.querySelector(`color-control[color-index="${i}"]`);
                             if (component) {
-                                // Update component attributes
                                 component.setAttribute('l-value', color.l);
                                 component.setAttribute('c-value', color.c);
                                 component.setAttribute('h-value', color.h);
                                 
-                                // Update preview
                                 const hex = this.colorManager.oklchToHex(color);
                                 component.updatePreview(hex);
                             }
@@ -280,6 +285,9 @@ export class UIController {
         });
     }
 
+    /**
+     * Configura el botón de exportación
+     */
     setupExportButton() {
         const exportBtn = document.getElementById('export-btn');
         const exportModal = document.getElementById('export-modal');
@@ -290,20 +298,20 @@ export class UIController {
         }
 
         exportBtn.addEventListener('click', () => {
-            // Recopilar configuración actual
             const config = this.getCurrentConfiguration();
-            
-            // Abrir modal con la configuración
             exportModal.open(config);
         });
     }
 
+    /**
+     * Obtiene la configuración actual completa para exportación
+     * @returns {Object} Objeto con la configuración completa del gradiente
+     */
     getCurrentConfiguration() {
         const shaderName = this.shaderManager.currentShader;
         const speedUniform = this.shaderManager?.uniforms?.u_speed;
         const speed = typeof speedUniform?.value === 'number' ? speedUniform.value : 0.5;
         
-        // Obtener colores actuales
         const colors = [];
         for (let i = 1; i <= 4; i++) {
             const color = this.colorManager.getColor(i);
@@ -315,10 +323,7 @@ export class UIController {
             }
         }
 
-        // Obtener parámetros del shader actual
         const parameters = this.shaderManager.getShaderParameters(shaderName);
-        
-        // Obtener código del shader
         const shaderCode = this.shaderManager.getShaderCode(shaderName);
         const vertexCode = this.shaderManager.getVertexShaderCode();
 
@@ -332,8 +337,12 @@ export class UIController {
         };
     }
 
+    /**
+     * Muestra una notificación al usuario (actualmente solo en consola)
+     * @param {string} message - Mensaje a mostrar
+     * @param {string} [type='info'] - Tipo de notificación (info, error, warning, success)
+     */
     showNotification(message, type = 'info') {
-        // Implementar notificaciones toast
         console.log(`[${type.toUpperCase()}] ${message}`);
     }
 }

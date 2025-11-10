@@ -6,11 +6,14 @@ import * as THREE from 'three';
 import * as culori from 'culori';
 
 export class ColorManager {
+    /**
+     * Constructor del gestor de colores
+     * @param {ShaderManager} shaderManager - Instancia del gestor de shaders
+     */
     constructor(shaderManager) {
         this.shaderManager = shaderManager;
         this.culori = culori;
         
-        // Estado de colores (OKLCH)
         this.colors = {
             1: { l: 0.7, c: 0.25, h: 330 },
             2: { l: 0.6, c: 0.3, h: 280 },
@@ -19,6 +22,11 @@ export class ColorManager {
         };
     }
 
+    /**
+     * Convierte un color OKLCH a THREE.Color
+     * @param {{ l: number, c: number, h: number }} oklch - Color en formato OKLCH
+     * @returns {THREE.Color} Color en formato Three.js
+     */
     oklchToThreeColor(oklch) {
         const rgb = this.culori.rgb({ 
             mode: 'oklch', 
@@ -29,6 +37,11 @@ export class ColorManager {
         return new THREE.Color(rgb.r, rgb.g, rgb.b);
     }
 
+    /**
+     * Convierte un color OKLCH a formato hexadecimal
+     * @param {{ l: number, c: number, h: number }} oklch - Color en formato OKLCH
+     * @returns {string} Color en formato hexadecimal
+     */
     oklchToHex(oklch) {
         return this.culori.formatHex({ 
             mode: 'oklch', 
@@ -38,6 +51,14 @@ export class ColorManager {
         });
     }
 
+    /**
+     * Actualiza un color y sus uniforms en el shader
+     * @param {number} colorIndex - Índice del color (1-4)
+     * @param {number} l - Valor de luminosidad (0-1)
+     * @param {number} c - Valor de croma (0-0.4)
+     * @param {number} h - Valor de tono (0-360)
+     * @returns {string} Color actualizado en formato hexadecimal
+     */
     updateColor(colorIndex, l, c, h) {
         this.colors[colorIndex] = { l, c, h };
         
@@ -47,12 +68,21 @@ export class ColorManager {
         return this.oklchToHex({ l, c, h });
     }
 
+    /**
+     * Obtiene el color actual por su índice
+     * @param {number} colorIndex - Índice del color (1-4)
+     * @returns {{ l: number, c: number, h: number }} Color en formato OKLCH
+     */
     getColor(colorIndex) {
         return this.colors[colorIndex];
     }
 
+    /**
+     * Aplica un preset de colores predefinido
+     * @param {string} preset - Nombre del preset (sunset, ocean, forest, purple, neon)
+     * @returns {boolean} True si el preset se aplicó correctamente
+     */
     setPreset(preset) {
-        // Presets predefinidos
         const presets = {
             sunset: {
                 1: { l: 0.7, c: 0.25, h: 30 },
@@ -89,7 +119,6 @@ export class ColorManager {
         if (presets[preset]) {
             this.colors = presets[preset];
             
-            // Actualizar todos los colores
             for (let i = 1; i <= 4; i++) {
                 const color = this.colors[i];
                 const threeColor = this.oklchToThreeColor(color);
@@ -101,16 +130,24 @@ export class ColorManager {
         return false;
     }
 
+    /**
+     * Exporta los colores actuales a formato JSON
+     * @returns {string} Colores en formato JSON
+     */
     exportColors() {
         return JSON.stringify(this.colors);
     }
 
+    /**
+     * Importa colores desde un JSON
+     * @param {string} json - String JSON con los colores
+     * @returns {boolean} True si la importación fue exitosa
+     */
     importColors(json) {
         try {
             const imported = JSON.parse(json);
             this.colors = imported;
             
-            // Actualizar shaders
             for (let i = 1; i <= 4; i++) {
                 if (this.colors[i]) {
                     const color = this.colors[i];
