@@ -10,7 +10,7 @@
   "trailingSlash": false,
   "rewrites": [
     {
-      "source": "/(.*)",
+      "source": "/:path*",
       "destination": "/index.html"
     }
   ],
@@ -28,7 +28,7 @@
   ],
   "headers": [
     {
-      "source": "/(.*)",
+      "source": "/:path*",
       "headers": [
         {
           "key": "X-Content-Type-Options",
@@ -53,7 +53,7 @@
       ]
     },
     {
-      "source": "/assets/(.*)",
+      "source": "/assets/:path*",
       "headers": [
         {
           "key": "Cache-Control",
@@ -62,7 +62,7 @@
       ]
     },
     {
-      "source": "/(.*).css",
+      "source": "/:path*.css",
       "headers": [
         {
           "key": "Cache-Control",
@@ -71,7 +71,7 @@
       ]
     },
     {
-      "source": "/(.*).js",
+      "source": "/:path*.js",
       "headers": [
         {
           "key": "Cache-Control",
@@ -80,7 +80,7 @@
       ]
     },
     {
-      "source": "/(.*).glsl",
+      "source": "/:path*.glsl",
       "headers": [
         {
           "key": "Cache-Control",
@@ -93,7 +93,7 @@
       ]
     },
     {
-      "source": "/(.*).woff2",
+      "source": "/:path*.woff2",
       "headers": [
         {
           "key": "Cache-Control",
@@ -102,7 +102,7 @@
       ]
     },
     {
-      "source": "/(.*).html",
+      "source": "/:path*.html",
       "headers": [
         {
           "key": "Cache-Control",
@@ -111,7 +111,7 @@
       ]
     },
     {
-      "source": "/(.*)",
+      "source": "/:path*",
       "headers": [
         {
           "key": "Cache-Control",
@@ -122,7 +122,7 @@
         {
           "type": "header",
           "key": "content-type",
-          "value": "image/(.*)"
+          "value": "image/.*"
         }
       ]
     }
