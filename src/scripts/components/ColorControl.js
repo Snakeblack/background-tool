@@ -14,11 +14,15 @@ export class ColorControl extends HTMLElement {
 
     connectedCallback() {
         this.render();
+        this.updateInitialPreview();
     }
 
     attributeChangedCallback(name, oldValue, newValue) {
         if (oldValue !== newValue) {
             this.render();
+            if (['l-value', 'c-value', 'h-value'].includes(name)) {
+                this.updateInitialPreview();
+            }
         }
     }
 
@@ -254,6 +258,34 @@ export class ColorControl extends HTMLElement {
         const preview = this.shadowRoot.getElementById('preview');
         if (preview) {
             preview.style.backgroundColor = hexColor;
+        }
+    }
+
+    // Get current OKLCH values
+    getColorOKLCH() {
+        return {
+            l: parseFloat(this.getAttribute('l-value') || '0.7'),
+            c: parseFloat(this.getAttribute('c-value') || '0.25'),
+            h: parseFloat(this.getAttribute('h-value') || '330')
+        };
+    }
+
+    // Update initial preview on mount
+    updateInitialPreview() {
+        // Import culori dynamically if needed
+        if (typeof window.culori !== 'undefined') {
+            const oklch = this.getColorOKLCH();
+            const hex = window.culori.formatHex({ mode: 'oklch', ...oklch });
+            this.updatePreview(hex);
+        } else {
+            // If culori not available yet, dispatch event to UIController
+            this.dispatchEvent(new CustomEvent('request-preview-update', {
+                detail: {
+                    colorIndex: parseInt(this.getAttribute('color-index'))
+                },
+                bubbles: true,
+                composed: true
+            }));
         }
     }
 }
