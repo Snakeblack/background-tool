@@ -2,6 +2,8 @@
  * Main App - Orquesta todos los módulos de la aplicación
  */
 
+import '@fontsource/space-grotesk/700.css'; // Bold
+import '@fontsource/space-grotesk/600.css'; // Semi-bold
 import './scripts/components/index.js'; // Registrar Web Components
 import { Renderer } from './scripts/Renderer.js';
 import { ShaderManager } from './scripts/ShaderManager.js';
