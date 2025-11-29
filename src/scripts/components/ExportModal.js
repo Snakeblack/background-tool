@@ -1105,23 +1105,52 @@ new GradientBackground('gradient-canvas');`;
     }
 
     generateReactHook() {
+        const { colors, speed, parameters, shaderCode, vertexCode } = this.config;
+
+        const normalizedColors = this.normalizeColors(colors);
+        const colorStrings = normalizedColors.map(color => this.formatColorForExport(color));
+        
+        const baseUniformLines = [
+            '                u_time: { value: 0 }',
+            '                u_resolution: { value: new THREE.Vector2(window.innerWidth, window.innerHeight) }',
+            `                u_speed: { value: ${this.formatUniformValue(speed ?? 0.5)} }`,
+            `                u_color1: { value: oklchToThree(${colorStrings[0]}) }`,
+            `                u_color2: { value: oklchToThree(${colorStrings[1]}) }`,
+            `                u_color3: { value: oklchToThree(${colorStrings[2]}) }`,
+            `                u_color4: { value: oklchToThree(${colorStrings[3]}) }`,
+        ];
+
+        const parameterUniformLines = Object.entries(parameters || {})
+            .map(([key, value]) => `                u_${key}: { value: ${this.formatUniformValue(value)} }`);
+
+        const uniformsBlock = [...baseUniformLines, ...parameterUniformLines].join(',\n');
+
         return `import { useEffect, useRef } from 'react';
 import * as THREE from 'three';
 import * as culori from 'culori';
 
-export function useGradientBackground(config = {}) {
+const VERTEX_SHADER = \`${vertexCode}\`;
+const FRAGMENT_SHADER = \`${shaderCode}\`;
+
+export function useGradientBackground() {
     const canvasRef = useRef(null);
     const rendererRef = useRef(null);
+    const sceneRef = useRef(null);
+    const materialRef = useRef(null);
     const animationRef = useRef(null);
 
     useEffect(() => {
         if (!canvasRef.current) return;
 
+        // Scene & Camera
         const scene = new THREE.Scene();
+        sceneRef.current = scene;
+        
         const aspect = window.innerWidth / window.innerHeight;
         const camera = new THREE.OrthographicCamera(-aspect, aspect, 1, -1, 0.1, 10);
         camera.position.z = 1;
 
+        // Renderer
         const renderer = new THREE.WebGLRenderer({
             canvas: canvasRef.current,
             antialias: false,
@@ -1131,6 +1160,28 @@ export function useGradientBackground(config = {}) {
         renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
         rendererRef.current = renderer;
 
+        // Helper function
+        const oklchToThree = (oklch) => {
+            const rgb = culori.rgb({ mode: 'oklch', ...oklch });
+            return new THREE.Color(rgb.r, rgb.g, rgb.b);
+        };
+
+        // Material
+        const material = new THREE.ShaderMaterial({
+            uniforms: {
+${uniformsBlock}
+            },
+            vertexShader: VERTEX_SHADER,
+            fragmentShader: FRAGMENT_SHADER
+        });
+        materialRef.current = material;
+
+        // Mesh
+        const geometry = new THREE.PlaneGeometry(2 * aspect, 2);
+        const mesh = new THREE.Mesh(geometry, material);
+        scene.add(mesh);
+
+        // Animation
         const clock = new THREE.Clock();
         const animate = () => {
             animationRef.current = requestAnimationFrame(animate);
@@ -1139,15 +1190,31 @@ export function useGradientBackground(config = {}) {
         };
         animate();
 
+        // Resize Handler
+        const handleResize = () => {
+            const newAspect = window.innerWidth / window.innerHeight;
+            camera.left = -newAspect;
+            camera.right = newAspect;
+            camera.updateProjectionMatrix();
+            
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            material.uniforms.u_resolution.value.set(window.innerWidth, window.innerHeight);
+            
+            mesh.geometry.dispose();
+            mesh.geometry = new THREE.PlaneGeometry(2 * newAspect, 2);
+        };
+        window.addEventListener('resize', handleResize);
+
+        // Cleanup
         return () => {
-            if (animationRef.current) {
-                cancelAnimationFrame(animationRef.current);
-            }
+            if (animationRef.current) cancelAnimationFrame(animationRef.current);
+            window.removeEventListener('resize', handleResize);
+            
             material.dispose();
             geometry.dispose();
             renderer.dispose();
         };
-    }, [config]);
+    }, []);
 
     return canvasRef;
 }`;
@@ -1157,16 +1224,7 @@ export function useGradientBackground(config = {}) {
         return `import { useGradientBackground } from './useGradientBackground';
 
 function App() {
-    const canvasRef = useGradientBackground({
-        shader: 'liquid',
-        speed: 0.5,
-        colors: [
-            { l: 0.7, c: 0.25, h: 330 },
-            { l: 0.6, c: 0.3, h: 280 },
-            { l: 0.8, c: 0.2, h: 150 },
-            { l: 0.65, c: 0.28, h: 60 }
-        ]
-    });
+    const canvasRef = useGradientBackground();
 
     return (
         <div className="App">
@@ -1179,26 +1237,90 @@ function App() {
                 zIndex: -1
             }} />
             
-            {/* Your content here */}
+            <main style={{ position: 'relative', zIndex: 1, color: 'white' }}>
+                <h1>Mi Aplicación React</h1>
+            </main>
         </div>
     );
 }`;
     }
 
     generateVueComposable() {
+        const { colors, speed, parameters, shaderCode, vertexCode } = this.config;
+
+        const normalizedColors = this.normalizeColors(colors);
+        const colorStrings = normalizedColors.map(color => this.formatColorForExport(color));
+        
+        const baseUniformLines = [
+            '                u_time: { value: 0 }',
+            '                u_resolution: { value: new THREE.Vector2(window.innerWidth, window.innerHeight) }',
+            `                u_speed: { value: ${this.formatUniformValue(speed ?? 0.5)} }`,
+            `                u_color1: { value: oklchToThree(${colorStrings[0]}) }`,
+            `                u_color2: { value: oklchToThree(${colorStrings[1]}) }`,
+            `                u_color3: { value: oklchToThree(${colorStrings[2]}) }`,
+            `                u_color4: { value: oklchToThree(${colorStrings[3]}) }`,
+        ];
+
+        const parameterUniformLines = Object.entries(parameters || {})
+            .map(([key, value]) => `                u_${key}: { value: ${this.formatUniformValue(value)} }`);
+
+        const uniformsBlock = [...baseUniformLines, ...parameterUniformLines].join(',\n');
+
         return `import { ref, onMounted, onUnmounted } from 'vue';
 import * as THREE from 'three';
 import * as culori from 'culori';
 
-export function useGradientBackground(config = {}) {
+const VERTEX_SHADER = \`${vertexCode}\`;
+const FRAGMENT_SHADER = \`${shaderCode}\`;
+
+export function useGradientBackground() {
     const canvasRef = ref(null);
-    let renderer, scene, camera, material, mesh, clock;
-    let animationId;
+    let renderer, scene, camera, material, mesh, clock, animationId;
+
+    const oklchToThree = (oklch) => {
+        const rgb = culori.rgb({ mode: 'oklch', ...oklch });
+        return new THREE.Color(rgb.r, rgb.g, rgb.b);
+    };
 
     const init = () => {
+        if (!canvasRef.value) return;
+
+        // Scene
         scene = new THREE.Scene();
         
+        // Camera
+        const aspect = window.innerWidth / window.innerHeight;
+        camera = new THREE.OrthographicCamera(-aspect, aspect, 1, -1, 0.1, 10);
+        camera.position.z = 1;
+
+        // Renderer
+        renderer = new THREE.WebGLRenderer({
+            canvas: canvasRef.value,
+            antialias: false,
+            alpha: false
+        });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+        // Material
+        material = new THREE.ShaderMaterial({
+            uniforms: {
+${uniformsBlock}
+            },
+            vertexShader: VERTEX_SHADER,
+            fragmentShader: FRAGMENT_SHADER
+        });
+
+        // Mesh
+        const geometry = new THREE.PlaneGeometry(2 * aspect, 2);
+        mesh = new THREE.Mesh(geometry, material);
+        scene.add(mesh);
+
+        // Animation
+        clock = new THREE.Clock();
         animate();
+
+        window.addEventListener('resize', onResize);
     };
 
     const animate = () => {
@@ -1207,18 +1329,36 @@ export function useGradientBackground(config = {}) {
         renderer.render(scene, camera);
     };
 
+    const onResize = () => {
+        const aspect = window.innerWidth / window.innerHeight;
+        camera.left = -aspect;
+        camera.right = aspect;
+        camera.updateProjectionMatrix();
+        
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        material.uniforms.u_resolution.value.set(window.innerWidth, window.innerHeight);
+        
+        mesh.geometry.dispose();
+        mesh.geometry = new THREE.PlaneGeometry(2 * aspect, 2);
+        mesh.material = material; // Reassign material
+    };
+
     const cleanup = () => {
         if (animationId) cancelAnimationFrame(animationId);
+        window.removeEventListener('resize', onResize);
+        
         if (material) material.dispose();
         if (mesh) mesh.geometry.dispose();
         if (renderer) renderer.dispose();
     };
 
     onMounted(() => {
-        if (canvasRef.value) init();
+        init();
     });
 
-    onUnmounted(cleanup);
+    onUnmounted(() => {
+        cleanup();
+    });
 
     return { canvasRef };
 }`;
@@ -1228,16 +1368,16 @@ export function useGradientBackground(config = {}) {
         return `<template>
     <div class="app">
         <canvas ref="canvasRef" class="gradient-bg" />
+        <div class="content">
+            <h1>Mi App Vue</h1>
+        </div>
     </div>
 </template>
 
 <script setup>
 import { useGradientBackground } from './useGradientBackground';
 
-const { canvasRef } = useGradientBackground({
-    shader: 'liquid',
-    speed: 0.5
-});
+const { canvasRef } = useGradientBackground();
 </script>
 
 <style scoped>
@@ -1248,6 +1388,11 @@ const { canvasRef } = useGradientBackground({
     width: 100%;
     height: 100%;
     z-index: -1;
+}
+.content {
+    position: relative;
+    z-index: 1;
+    color: white;
 }
 </style>`;
     }
