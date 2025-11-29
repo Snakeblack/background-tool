@@ -27,7 +27,8 @@ export class Renderer {
         this.scene = new Scene();
 
         // Cámara ortográfica fija que cubre el espacio NDC (-1 a 1)
-        this.camera = new OrthographicCamera(-1, 1, 1, -1, 0, 1);
+        // Aumentamos el far plane a 10 para evitar clipping (z-fighting) en móviles
+        this.camera = new OrthographicCamera(-1, 1, 1, -1, 0, 10);
         this.camera.position.z = 1;
 
         this.renderer = new WebGLRenderer({ 
@@ -79,10 +80,14 @@ export class Renderer {
     }
 
     /**
-     * Obtiene la resolución actual de la ventana
-     * @returns {Vector2} Resolución en píxeles
+     * Obtiene la resolución actual de la ventana en píxeles físicos
+     * @returns {Vector2} Resolución en píxeles (ancho * pixelRatio, alto * pixelRatio)
      */
     getResolution() {
-        return new Vector2(window.innerWidth, window.innerHeight);
+        const pixelRatio = this.renderer.getPixelRatio();
+        return new Vector2(
+            window.innerWidth * pixelRatio, 
+            window.innerHeight * pixelRatio
+        );
     }
 }

@@ -1008,7 +1008,7 @@ export class ExportModal extends HTMLElement {
         const colorStrings = normalizedColors.map(color => this.formatColorForExport(color));
         const baseUniformLines = [
             '                u_time: { value: 0 }',
-            '                u_resolution: { value: new THREE.Vector2(window.innerWidth, window.innerHeight) }',
+            '                u_resolution: { value: new THREE.Vector2(window.innerWidth * Math.min(window.devicePixelRatio, 2), window.innerHeight * Math.min(window.devicePixelRatio, 2)) }',
             `                u_speed: { value: ${this.formatUniformValue(speed ?? 0.5)} }`,
             `                u_color1: { value: this.oklchToThree(${colorStrings[0]}) }`,
             `                u_color2: { value: this.oklchToThree(${colorStrings[1]}) }`,
@@ -1035,7 +1035,7 @@ class GradientBackground {
     init() {
         this.scene = new THREE.Scene();
         
-        this.camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
+        this.camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 10);
         this.camera.position.z = 1;
         
         // Renderer
@@ -1075,7 +1075,8 @@ ${uniformsBlock}
 
     onResize() {
         this.renderer.setSize(window.innerWidth, window.innerHeight);
-        this.material.uniforms.u_resolution.value.set(window.innerWidth, window.innerHeight);
+        const pixelRatio = this.renderer.getPixelRatio();
+        this.material.uniforms.u_resolution.value.set(window.innerWidth * pixelRatio, window.innerHeight * pixelRatio);
     }
 
     animate() {
@@ -1103,7 +1104,7 @@ new GradientBackground('gradient-canvas');`;
         
         const baseUniformLines = [
             '                u_time: { value: 0 }',
-            '                u_resolution: { value: new THREE.Vector2(window.innerWidth, window.innerHeight) }',
+            '                u_resolution: { value: new THREE.Vector2(window.innerWidth * Math.min(window.devicePixelRatio, 2), window.innerHeight * Math.min(window.devicePixelRatio, 2)) }',
             `                u_speed: { value: ${this.formatUniformValue(speed ?? 0.5)} }`,
             `                u_color1: { value: oklchToThree(${colorStrings[0]}) }`,
             `                u_color2: { value: oklchToThree(${colorStrings[1]}) }`,
@@ -1137,7 +1138,7 @@ export function useGradientBackground() {
         const scene = new THREE.Scene();
         sceneRef.current = scene;
         
-        const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
+        const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 10);
         camera.position.z = 1;
 
         // Renderer
@@ -1183,7 +1184,8 @@ ${uniformsBlock}
         // Resize Handler
         const handleResize = () => {
             renderer.setSize(window.innerWidth, window.innerHeight);
-            material.uniforms.u_resolution.value.set(window.innerWidth, window.innerHeight);
+            const pixelRatio = renderer.getPixelRatio();
+            material.uniforms.u_resolution.value.set(window.innerWidth * pixelRatio, window.innerHeight * pixelRatio);
         };
         window.addEventListener('resize', handleResize);
 
@@ -1235,7 +1237,7 @@ function App() {
         
         const baseUniformLines = [
             '                u_time: { value: 0 }',
-            '                u_resolution: { value: new THREE.Vector2(window.innerWidth, window.innerHeight) }',
+            '                u_resolution: { value: new THREE.Vector2(window.innerWidth * Math.min(window.devicePixelRatio, 2), window.innerHeight * Math.min(window.devicePixelRatio, 2)) }',
             `                u_speed: { value: ${this.formatUniformValue(speed ?? 0.5)} }`,
             `                u_color1: { value: oklchToThree(${colorStrings[0]}) }`,
             `                u_color2: { value: oklchToThree(${colorStrings[1]}) }`,
@@ -1271,7 +1273,7 @@ export function useGradientBackground() {
         scene = new THREE.Scene();
         
         // Camera
-        camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
+        camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 10);
         camera.position.z = 1;
 
         // Renderer
@@ -1312,7 +1314,8 @@ ${uniformsBlock}
 
     const onResize = () => {
         renderer.setSize(window.innerWidth, window.innerHeight);
-        material.uniforms.u_resolution.value.set(window.innerWidth, window.innerHeight);
+        const pixelRatio = renderer.getPixelRatio();
+        material.uniforms.u_resolution.value.set(window.innerWidth * pixelRatio, window.innerHeight * pixelRatio);
     };
 
     const cleanup = () => {
@@ -1376,7 +1379,7 @@ const { canvasRef } = useGradientBackground();
         const colorStrings = normalizedColors.map(color => this.formatColorForExport(color));
         const baseUniformLines = [
             '                u_time: { value: 0 }',
-            '                u_resolution: { value: new THREE.Vector2(window.innerWidth, window.innerHeight) }',
+            '                u_resolution: { value: new THREE.Vector2(window.innerWidth * Math.min(window.devicePixelRatio, 2), window.innerHeight * Math.min(window.devicePixelRatio, 2)) }',
             `                u_speed: { value: ${this.formatUniformValue(speed ?? 0.5)} }`,
             `                u_color1: { value: this.oklchToThree(${colorStrings[0]}) }`,
             `                u_color2: { value: this.oklchToThree(${colorStrings[1]}) }`,
@@ -1417,7 +1420,7 @@ export class GradientBackgroundService {
         this.scene = new THREE.Scene();
         
         // Camera
-        this.camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
+        this.camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 10);
         this.camera.position.z = 1;
         
         // Renderer
@@ -1474,7 +1477,8 @@ ${uniformsBlock}
         if (!this.camera || !this.renderer || !this.mesh || !this.material) return;
         
         this.renderer.setSize(window.innerWidth, window.innerHeight);
-        this.material.uniforms.u_resolution.value.set(window.innerWidth, window.innerHeight);
+        const pixelRatio = this.renderer.getPixelRatio();
+        this.material.uniforms.u_resolution.value.set(window.innerWidth * pixelRatio, window.innerHeight * pixelRatio);
     }
 
     dispose() {
