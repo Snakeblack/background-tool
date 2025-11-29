@@ -2,9 +2,21 @@
  * Main App - Orquesta todos los módulos de la aplicación
  */
 
+// Space Grotesk (Display)
+import '@fontsource/space-grotesk/300.css';
+import '@fontsource/space-grotesk/400.css';
+import '@fontsource/space-grotesk/500.css';
 import '@fontsource/space-grotesk/600.css';
 import '@fontsource/space-grotesk/700.css';
+
+// Inter (Body)
+import '@fontsource/inter/300.css';
+import '@fontsource/inter/400.css';
+import '@fontsource/inter/500.css';
+import '@fontsource/inter/600.css';
 import './scripts/components/index.js';
+import './scripts/ui/HudDock.js';
+import './scripts/ui/BottomSheet.js';
 import { Renderer } from './scripts/Renderer.js';
 import { ShaderManager } from './scripts/ShaderManager.js';
 import { ColorManager } from './scripts/ColorManager.js';

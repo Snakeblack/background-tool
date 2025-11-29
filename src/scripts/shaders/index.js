@@ -12,20 +12,29 @@ import auroraShader from '../../shaders/aurora.glsl?raw';
 import geometricShader from '../../shaders/geometric.glsl?raw';
 
 export const SHADERS = {
-    liquid: {
-        name: 'Líquido',
-        description: 'Efecto líquido con ruido FBM (Fractional Brownian Motion)',
+    waves: {
+        name: 'Ondas',
+        description: 'Ondas sinusoidales superpuestas con movimiento fluido',
         vertex: vertexShader,
-        fragment: liquidShader,
+        fragment: wavesShader,
         controls: [
             {
-                id: 'zoom',
-                label: 'Complejidad',
-                uniform: 'u_zoom',
+                id: 'wave-amplitude',
+                label: 'Amplitud',
+                uniform: 'u_wave_amplitude',
+                min: 0.05,
+                max: 0.8,
+                step: 0.05,
+                value: 0.25
+            },
+            {
+                id: 'wave-frequency',
+                label: 'Frecuencia',
+                uniform: 'u_wave_frequency',
                 min: 0.5,
                 max: 8.0,
-                step: 0.1,
-                value: 3.0
+                step: 0.5,
+                value: 2.5
             }
         ]
     },
@@ -57,29 +66,21 @@ export const SHADERS = {
         ]
     },
     
-    waves: {
-        name: 'Ondas',
-        description: 'Ondas sinusoidales superpuestas con movimiento fluido',
+    
+    liquid: {
+        name: 'Líquido',
+        description: 'Efecto líquido con ruido FBM (Fractional Brownian Motion)',
         vertex: vertexShader,
-        fragment: wavesShader,
+        fragment: liquidShader,
         controls: [
             {
-                id: 'wave-amplitude',
-                label: 'Amplitud',
-                uniform: 'u_wave_amplitude',
-                min: 0.05,
-                max: 0.8,
-                step: 0.05,
-                value: 0.25
-            },
-            {
-                id: 'wave-frequency',
-                label: 'Frecuencia',
-                uniform: 'u_wave_frequency',
+                id: 'zoom',
+                label: 'Complejidad',
+                uniform: 'u_zoom',
                 min: 0.5,
                 max: 8.0,
-                step: 0.5,
-                value: 2.5
+                step: 0.1,
+                value: 3.0
             }
         ]
     },

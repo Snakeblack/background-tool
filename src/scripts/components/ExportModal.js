@@ -45,8 +45,8 @@ export class ExportModal extends HTMLElement {
                     opacity: 1;
                 }
                 .modal-container {
-                    background: linear-gradient(135deg, rgba(30, 30, 50, 0.98) 0%, rgba(20, 20, 35, 0.98) 100%);
-                    border-radius: 16px;
+                    background: #0a0a0a;
+                    border-radius: 24px;
                     max-width: 800px;
                     width: 90%;
                     max-height: 90vh;
@@ -58,13 +58,14 @@ export class ExportModal extends HTMLElement {
                 }
                 .modal-header {
                     padding: 1.5rem 2rem;
-                    background: linear-gradient(135deg, rgba(50, 50, 80, 0.6) 0%, rgba(30, 30, 50, 0.6) 100%);
-                    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+                    background: rgba(255, 255, 255, 0.02);
+                    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
                     display: flex;
                     align-items: center;
                     justify-content: space-between;
                 }
                 .modal-title {
+                    font-family: 'Space Grotesk', sans-serif;
                     font-size: 1.5rem;
                     font-weight: 600;
                     color: white;
@@ -74,72 +75,54 @@ export class ExportModal extends HTMLElement {
                     width: 32px;
                     height: 32px;
                     border: none;
-                    background: rgba(255, 255, 255, 0.1);
-                    color: white;
-                    border-radius: 8px;
+                    background: rgba(255, 255, 255, 0.05);
+                    color: #a0a0a0;
+                    border-radius: 50%;
                     cursor: pointer;
                     transition: all 0.2s;
-                    font-size: 1.25rem;
+                    font-size: 1rem;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
                 }
                 .close-btn:hover {
-                    background: rgba(255, 255, 255, 0.2);
-                    transform: scale(1.05);
+                    background: rgba(255, 255, 255, 0.1);
+                    color: white;
+                    transform: rotate(90deg);
                 }
                 .modal-body {
                     padding: 2rem;
                     overflow-y: auto;
                     flex: 1;
-                }
-                .modal-body::-webkit-scrollbar {
-                    width: 8px;
-                }
-                .modal-body::-webkit-scrollbar-track {
-                    background: rgba(0, 0, 0, 0.2);
-                }
-                .modal-body::-webkit-scrollbar-thumb {
-                    background: rgba(255, 255, 255, 0.2);
-                    border-radius: 4px;
-                }
-                .section {
-                    margin-bottom: 2rem;
-                }
-                .section-title {
-                    font-size: 1.125rem;
-                    font-weight: 600;
-                    color: #fff;
-                    margin-bottom: 1rem;
-                    display: flex;
-                    align-items: center;
-                    gap: 0.5rem;
-                }
-                .section-description {
-                    color: #9ca3af;
-                    font-size: 0.875rem;
-                    margin-bottom: 1rem;
-                    line-height: 1.6;
+                    font-family: 'Inter', sans-serif;
                 }
                 .tabs {
                     display: flex;
                     gap: 0.5rem;
-                    margin-bottom: 1rem;
+                    margin-bottom: 2rem;
                     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+                    padding-bottom: 1rem;
                 }
                 .tab {
-                    padding: 0.75rem 1.5rem;
+                    padding: 0.5rem 1rem;
                     background: transparent;
-                    border: none;
-                    color: #9ca3af;
+                    border: 1px solid transparent;
+                    border-radius: 9999px;
+                    color: #a0a0a0;
                     cursor: pointer;
                     transition: all 0.2s;
-                    border-bottom: 2px solid transparent;
                     font-weight: 500;
+                    font-size: 0.875rem;
                 }
                 .tab:hover {
                     color: white;
+                    background: rgba(255, 255, 255, 0.05);
                 }
                 .tab.active {
-                    color: white;
-                    border-bottom-color: #3b82f6;
+                    color: #0a0a0a;
+                    background: #ccff00;
+                    border-color: #ccff00;
+                    font-weight: 600;
                 }
                 .tab-content {
                     display: none;
@@ -226,6 +209,22 @@ export class ExportModal extends HTMLElement {
                     margin: 0.5rem 0;
                     color: #e5e7eb;
                     font-size: 0.875rem;
+                }
+
+                /* Custom Scrollbar */
+                ::-webkit-scrollbar {
+                    width: 6px;
+                    height: 6px;
+                }
+                ::-webkit-scrollbar-track {
+                    background: transparent;
+                }
+                ::-webkit-scrollbar-thumb {
+                    background: rgba(255, 255, 255, 0.2);
+                    border-radius: 3px;
+                }
+                ::-webkit-scrollbar-thumb:hover {
+                    background: rgba(255, 255, 255, 0.3);
                 }
                 .step {
                     margin-bottom: 1.5rem;

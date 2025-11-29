@@ -5,5 +5,6 @@
 import { ColorControl } from './ColorControl.js';
 import { FloatingPanel } from './FloatingPanel.js';
 import { ExportModal } from './ExportModal.js';
+import { CustomSelect } from './CustomSelect.js';
 
-export { ColorControl, FloatingPanel, ExportModal };
+export { ColorControl, FloatingPanel, ExportModal, CustomSelect };

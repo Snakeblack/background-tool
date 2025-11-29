@@ -2,6 +2,8 @@
  * Color Control Component - Web Component para controles de color OKLCH
  */
 
+import * as culori from 'culori';
+
 export class ColorControl extends HTMLElement {
     /**
      * Constructor del componente ColorControl
@@ -294,19 +296,9 @@ export class ColorControl extends HTMLElement {
      * Actualiza el preview inicial del color al montar el componente
      */
     updateInitialPreview() {
-        if (typeof window.culori !== 'undefined') {
-            const oklch = this.getColorOKLCH();
-            const hex = window.culori.formatHex({ mode: 'oklch', ...oklch });
-            this.updatePreview(hex);
-        } else {
-            this.dispatchEvent(new CustomEvent('request-preview-update', {
-                detail: {
-                    colorIndex: parseInt(this.getAttribute('color-index'))
-                },
-                bubbles: true,
-                composed: true
-            }));
-        }
+        const oklch = this.getColorOKLCH();
+        const hex = culori.formatHex({ mode: 'oklch', ...oklch });
+        this.updatePreview(hex);
     }
 }
 

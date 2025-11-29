@@ -1,48 +1,72 @@
 /* ============================================
-   Generador de Fondos WebGL - Estilos CSS
+   Avant-Garde UI Design System
    ============================================ */
 
+
+
 :root {
-    --color-gray-200: #e5e7eb;
-    --color-gray-300: #d1d5db;
-    --color-gray-400: #9ca3af;
-    --color-gray-500: #6b7280;
-    --color-gray-600: #4b5563;
-    --color-gray-700: #4a5568;
-    --color-gray-800: #1f2937;
-    --color-gray-900: #111827;
-    --color-white: #ffffff;
-    --color-blue-500: #3b82f6;
-    --color-blue-600: #2563eb;
+    /* --- Core Palette (Dark & Neon) --- */
+    --color-bg: #050505;
+    --color-surface: rgba(20, 20, 20, 0.6);
+    --color-surface-hover: rgba(30, 30, 30, 0.8);
+    --color-border: rgba(255, 255, 255, 0.08);
     
-    --transition-default: 0.3s ease;
-    --transition-fast: 0.15s ease;
-    --backdrop-blur: 10px;
-    --panel-width: 380px;
-    --panel-mobile-width: 100%;
+    --color-text-primary: #ffffff;
+    --color-text-secondary: #a0a0a0;
+    --color-text-muted: #505050;
+
+    /* --- Accents (Dynamic) --- */
+    --color-accent-primary: #ccff00; /* Neon Lime */
+    --color-accent-secondary: #00f0ff; /* Cyan */
+    --color-accent-tertiary: #ff003c; /* Red/Pink */
+    
+    /* --- Glassmorphism --- */
+    --glass-bg: rgba(10, 10, 10, 0.4);
+    --glass-border: 1px solid rgba(255, 255, 255, 0.05);
+    --glass-blur: 20px;
+    --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
+
+    /* --- Typography --- */
+    --font-display: 'Space Grotesk', sans-serif;
+    --font-body: 'Inter', sans-serif;
+
+    /* --- Spacing & Layout --- */
+    --spacing-xs: 0.25rem;
+    --spacing-sm: 0.5rem;
+    --spacing-md: 1rem;
+    --spacing-lg: 1.5rem;
+    --spacing-xl: 2rem;
+    
+    --radius-sm: 8px;
+    --radius-md: 16px;
+    --radius-lg: 24px;
+    --radius-full: 9999px;
+
+    /* --- Animations --- */
+    --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+    --transition-fast: 0.2s var(--ease-out-expo);
+    --transition-smooth: 0.4s var(--ease-out-expo);
 }
+
+/* ============================================
+   Reset & Base
+   ============================================ */
 
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
-}
-
-html,
-body {
-    height: 100%;
+    -webkit-font-smoothing: antialiased;
 }
 
 body {
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background-color: var(--color-bg);
+    color: var(--color-text-primary);
+    font-family: var(--font-body);
     overflow: hidden;
-    background-color: var(--color-gray-900);
-    color: var(--color-gray-200);
+    height: 100vh;
+    width: 100vw;
 }
-
-/* ============================================
-   Canvas y Layout
-   ============================================ */
 
 #bg-canvas {
     position: fixed;
@@ -50,754 +74,260 @@ body {
     left: 0;
     width: 100%;
     height: 100%;
-    z-index: 10;
-    display: block;
+    z-index: 0;
 }
 
 /* ============================================
-   Logo MMRG
+   Typography
    ============================================ */
 
-@property --gradient-angle {
-    syntax: '<angle>';
-    initial-value: 0deg;
-    inherits: false;
+h1, h2, h3, .font-display {
+    font-family: var(--font-display);
+    letter-spacing: -0.02em;
 }
 
-@property --gradient-color-1 {
-    syntax: '<color>';
-    initial-value: rgba(59, 130, 246, 0.8);
-    inherits: false;
-}
+.text-xs { font-size: 0.75rem; }
+.text-sm { font-size: 0.875rem; }
+.text-base { font-size: 1rem; }
+.text-lg { font-size: 1.125rem; }
+.text-xl { font-size: 1.25rem; }
 
-@property --gradient-color-2 {
-    syntax: '<color>';
-    initial-value: rgba(147, 51, 234, 0.8);
-    inherits: false;
-}
+/* ============================================
+   UI Components: Minimal Overlay
+   ============================================ */
 
-.logo-mmrg {
+.minimal-overlay {
     position: fixed;
-    top: 2rem;
-    left: 50%;
-    transform: translateX(-50%);
-    z-index: 200;
-    font-size: 2rem;
+    top: 0;
+    left: 0;
+    width: 100%;
+    padding: var(--spacing-lg);
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    z-index: 100;
+    pointer-events: none; /* Let clicks pass through to canvas */
+}
+
+.logo-container {
+    pointer-events: auto;
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+}
+
+.logo-text {
+    font-family: var(--font-display);
     font-weight: 700;
-    letter-spacing: 0.08em;
-    font-family: 'Space Grotesk', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-    
-    /* OKLCH vibrant colors with fallback */
-    --gradient-color-1: oklch(0.72 0.25 290 / 0.95);
-    --gradient-color-1-fallback: rgba(147, 51, 234, 0.95);
-    --gradient-color-2: oklch(0.65 0.22 250 / 0.95);
-    --gradient-color-2-fallback: rgba(59, 130, 246, 0.95);
-    --gradient-color-3: oklch(0.85 0.15 180 / 0.5);
-    --gradient-color-3-fallback: rgba(200, 230, 255, 0.5);
-    
-    /* Text gradient with vibrant OKLCH colors */
-    background: linear-gradient(
-        var(--gradient-angle),
-        var(--gradient-color-1-fallback),
-        var(--gradient-color-2-fallback),
-        var(--gradient-color-3-fallback),
-        var(--gradient-color-1-fallback)
-    );
-    background: linear-gradient(
-        var(--gradient-angle),
-        var(--gradient-color-1),
-        var(--gradient-color-2),
-        var(--gradient-color-3),
-        var(--gradient-color-1)
-    );
+    font-size: 1.5rem;
+    text-transform: uppercase;
+    background: linear-gradient(135deg, #fff 0%, #aaa 100%);
     background-clip: text;
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
-    background-size: 300% 300%;
-    
-    /* Layered shadows (dark) and glows (bright) */
-    filter: 
-        /* Dark shadows for depth */
-        drop-shadow(0 2px 4px rgba(0, 0, 0, 0.4))
-        drop-shadow(0 4px 12px rgba(0, 0, 0, 0.3))
-        /* Bright glows for vibrancy */
-        drop-shadow(0 0 20px oklch(0.72 0.25 290 / 0.4))
-        drop-shadow(0 0 40px oklch(0.65 0.22 250 / 0.3))
-        drop-shadow(0 0 60px oklch(0.85 0.15 180 / 0.2));
-    
-    /* Fallback for filter with rgb */
-    filter: 
-        drop-shadow(0 2px 4px rgba(0, 0, 0, 0.4))
-        drop-shadow(0 4px 12px rgba(0, 0, 0, 0.3))
-        drop-shadow(0 0 20px rgba(147, 51, 234, 0.4))
-        drop-shadow(0 0 40px rgba(59, 130, 246, 0.3))
-        drop-shadow(0 0 60px rgba(200, 230, 255, 0.2));
-    
-    cursor: default;
-    user-select: none;
-    transition: 
-        transform 0.8s cubic-bezier(0.34, 1.56, 0.64, 1),
-        filter 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-    --gradient-angle: 45deg;
+    filter: drop-shadow(0 0 20px rgba(255,255,255,0.2));
 }
 
-.logo-mmrg:hover {
-    transform: translateX(-50%) translateY(-4px) scale(1.05);
-    
-    /* OKLCH vibrant hover colors with fallback */
-    --gradient-color-1: oklch(0.75 0.28 195 / 1);
-    --gradient-color-1-fallback: rgba(6, 182, 212, 1);
-    --gradient-color-2: oklch(0.68 0.26 340 / 1);
-    --gradient-color-2-fallback: rgba(236, 72, 153, 1);
-    --gradient-color-3: oklch(0.88 0.18 270 / 0.6);
-    --gradient-color-3-fallback: rgba(220, 200, 255, 0.6);
-    
-    /* Enhanced layered shadows and glows on hover */
-    filter: 
-        /* Stronger dark shadows */
-        drop-shadow(0 4px 8px rgba(0, 0, 0, 0.5))
-        drop-shadow(0 8px 20px rgba(0, 0, 0, 0.4))
-        /* Intense bright glows */
-        drop-shadow(0 0 30px oklch(0.75 0.28 195 / 0.6))
-        drop-shadow(0 0 60px oklch(0.68 0.26 340 / 0.5))
-        drop-shadow(0 0 90px oklch(0.88 0.18 270 / 0.4))
-        /* Extra bright outer glow */
-        drop-shadow(0 0 120px oklch(0.75 0.28 195 / 0.3));
-    
-    /* Fallback for filter with rgb */
-    filter: 
-        drop-shadow(0 4px 8px rgba(0, 0, 0, 0.5))
-        drop-shadow(0 8px 20px rgba(0, 0, 0, 0.4))
-        drop-shadow(0 0 30px rgba(6, 182, 212, 0.6))
-        drop-shadow(0 0 60px rgba(236, 72, 153, 0.5))
-        drop-shadow(0 0 90px rgba(220, 200, 255, 0.4))
-        drop-shadow(0 0 120px rgba(6, 182, 212, 0.3));
-    
-    animation: gradient-rotate 6s ease-in-out infinite;
-}
-
-@keyframes gradient-rotate {
-    0% {
-        --gradient-angle: 45deg;
-    }
-    100% {
-        --gradient-angle: 405deg;
-    }
-}
-
-/* Responsive logo */
-@media (max-width: 768px) {
-    .logo-mmrg {
-        font-size: 1.5rem;
-        top: 1rem;
-        letter-spacing: 0.06em;
-    }
-}
-
-@media (max-width: 480px) {
-    .logo-mmrg {
-        font-size: 1.25rem;
-        top: 0.75rem;
-        letter-spacing: 0.05em;
-    }
-}
-
-/* ============================================
-   Paneles Laterales Flotantes
-   ============================================ */
-
-.side-panel {
-    position: fixed;
-    top: 1rem;
-    height: auto;
-    max-height: calc(100vh - 2rem);
-    width: var(--panel-width);
-    background-color: rgba(17, 24, 39, 0.95);
-    backdrop-filter: blur(var(--backdrop-blur));
-    z-index: 30;
-    overflow-y: auto;
-    overflow-x: hidden;
+.top-actions {
+    pointer-events: auto;
     display: flex;
-    flex-direction: column;
-    transition: all var(--transition-default);
-    border: 1px solid rgba(255, 255, 255, 0.05);
-    border-radius: 0.75rem;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    gap: var(--spacing-md);
 }
 
-.side-panel.left-panel {
-    left: 1rem;
-    border-right: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.side-panel.right-panel {
-    right: 1rem;
-    border-left: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-/* Paneles minimizados */
-.side-panel.minimized {
-    max-height: auto;
-    width: auto;
-}
-
-.side-panel.minimized .panel-content {
-    display: none;
-}
-
-.side-panel.minimized .collapsible-content {
-    display: none;
-}
-
-/* Paneles ocultos */
-.left-panel.hidden {
-    transform: translateX(-100%);
-    opacity: 0;
-    pointer-events: none;
-}
-
-.right-panel.hidden {
-    transform: translateX(100%);
-    opacity: 0;
-    pointer-events: none;
-}
-
-/* Header del panel */
-.panel-header {
-    display: flex;
-    justify-content: flex-start;
-    align-items: center;
-    padding: 1.25rem;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-    flex-shrink: 0;
-    background: rgba(0, 0, 0, 0.3);
-    border-radius: 0.75rem 0.75rem 0 0;
-    gap: 1rem;
-}
-
-.panel-title {
-    font-size: 1.125rem;
-    font-weight: 600;
-    color: var(--color-white);
-    margin: 0;
-    flex: 1;
-}
-
-.panel-buttons {
-    display: flex;
-    gap: 0.5rem;
-    align-items: center;
-}
-
-.panel-btn {
-    background: rgba(59, 130, 246, 0.2);
-    border: 1px solid rgba(59, 130, 246, 0.3);
-    color: var(--color-gray-300);
-    font-size: 1rem;
-    cursor: pointer;
-    padding: 0.375rem 0.625rem;
-    border-radius: 0.375rem;
-    transition: all var(--transition-fast);
+.icon-btn {
+    background: var(--glass-bg);
+    backdrop-filter: blur(var(--glass-blur));
+    border: var(--glass-border);
+    border-radius: var(--radius-full);
+    width: 48px;
+    height: 48px;
     display: flex;
     align-items: center;
     justify-content: center;
-    min-width: 32px;
-    height: 32px;
-}
-
-.panel-btn:hover {
-    background: rgba(59, 130, 246, 0.3);
-    border-color: rgba(59, 130, 246, 0.5);
-    color: var(--color-white);
-}
-
-.panel-btn:active {
-    background: rgba(59, 130, 246, 0.4);
-    transform: scale(0.95);
-}
-
-/* Contenido del panel */
-.panel-content {
-    flex: 1;
-    overflow-y: auto;
-    overflow-x: hidden;
-    padding: 1rem;
-    display: flex;
-    flex-direction: column;
-    gap: 0.75rem;
-    -webkit-overflow-scrolling: touch;
-}
-
-/* ============================================
-   Tipografía
-   ============================================ */
-
-h1 {
-    font-size: 1.5rem;
-    font-weight: 700;
-    color: var(--color-white);
-}
-
-h2 {
-    font-size: 1.125rem;
-    font-weight: 600;
-    color: var(--color-white);
-}
-
-p {
-    font-size: 0.875rem;
-    color: var(--color-gray-300);
-}
-
-label {
-    color: var(--color-gray-300);
-    font-size: 0.875rem;
-}
-
-.text-xs {
-    font-size: 0.75rem;
-}
-
-.block {
-    display: block;
-}
-
-.font-medium {
-    font-weight: 500;
-}
-
-/* ============================================
-   Secciones de Control
-   ============================================ */
-
-.control-section {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-    padding: 0.75rem;
-    background: rgba(0, 0, 0, 0.2);
-    border-radius: 0.5rem;
-    border: 1px solid rgba(255, 255, 255, 0.05);
-}
-
-.section-title {
-    font-size: 0.875rem;
-    font-weight: 600;
-    color: var(--color-gray-300);
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    margin-bottom: 0.5rem;
-}
-
-/* Preset Buttons Grid */
-.preset-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 0.5rem;
-}
-
-.preset-btn {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.75rem 1rem;
-    background: linear-gradient(135deg, rgba(50, 50, 80, 0.4) 0%, rgba(30, 30, 50, 0.4) 100%);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 8px;
-    color: white;
-    font-size: 0.875rem;
-    font-weight: 500;
+    color: var(--color-text-primary);
     cursor: pointer;
-    transition: all 0.3s ease;
-    position: relative;
-    overflow: hidden;
+    transition: all var(--transition-fast);
 }
 
-.preset-btn::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
-    opacity: 0;
-    transition: opacity 0.3s ease;
-}
-
-.preset-btn:hover {
-    background: linear-gradient(135deg, rgba(60, 60, 90, 0.5) 0%, rgba(40, 40, 60, 0.5) 100%);
+.icon-btn:hover {
+    background: var(--color-surface-hover);
+    transform: scale(1.05);
     border-color: rgba(255, 255, 255, 0.2);
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
-.preset-btn:hover::before {
-    opacity: 1;
-}
+/* ============================================
+   UI Components: HUD Dock (Desktop)
+   ============================================ */
 
-.preset-btn:active {
-    transform: translateY(0);
-}
-
-.preset-icon {
-    font-size: 1.25rem;
-    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
-}
-
-/* Export Button Floating - Centro Inferior */
-.export-btn-floating {
+hud-dock {
     position: fixed;
-    bottom: calc(1.5rem + env(safe-area-inset-bottom, 0rem));
+    bottom: var(--spacing-xl);
     left: 50%;
     transform: translateX(-50%);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.75rem;
-    padding: 1rem 2rem;
-    min-height: 60px;
-    background: linear-gradient(135deg, rgba(59, 130, 246, 0.95) 0%, rgba(37, 99, 235, 0.95) 100%);
-    border: 2px solid rgba(59, 130, 246, 0.5);
-    border-radius: 50px;
-    color: white;
-    font-size: 1rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.3s ease;
     z-index: 100;
-    box-shadow: 0 8px 32px rgba(59, 130, 246, 0.4);
-    backdrop-filter: blur(10px);
-    touch-action: manipulation;
-    contain: layout style paint;
-    will-change: transform;
-}
-
-.export-btn-floating:hover {
-    background: linear-gradient(135deg, rgba(59, 130, 246, 1) 0%, rgba(37, 99, 235, 1) 100%);
-    border-color: rgba(59, 130, 246, 0.8);
-    transform: translateX(-50%) translateY(-4px);
-    box-shadow: 0 12px 40px rgba(59, 130, 246, 0.6);
-}
-
-.export-btn-floating:active {
-    transform: translateX(-50%) translateY(-2px);
-}
-
-.export-icon {
-    font-size: 1.5rem;
-    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
-}
-
-.export-text {
-    white-space: nowrap;
-}
-
-.control-item {
     display: flex;
-    flex-direction: column;
-    gap: 0.375rem;
+    gap: var(--spacing-md);
+    padding: var(--spacing-sm);
+    background: var(--glass-bg);
+    backdrop-filter: blur(var(--glass-blur));
+    border: var(--glass-border);
+    border-radius: var(--radius-full);
+    box-shadow: var(--glass-shadow);
+    transition: all var(--transition-smooth);
 }
 
-/* ============================================
-   Headers Colapsables
-   ============================================ */
-
-.collapsible-header {
+.dock-item {
+    position: relative;
+    padding: var(--spacing-sm) var(--spacing-md);
+    border-radius: var(--radius-lg);
+    cursor: pointer;
     display: flex;
     align-items: center;
-    gap: 0.75rem;
-    width: 100%;
-    padding: 0.75rem;
-    background: rgba(59, 130, 246, 0.1);
-    border: 1px solid rgba(59, 130, 246, 0.2);
-    border-radius: 0.375rem;
-    color: var(--color-white);
-    font-size: 0.875rem;
+    gap: var(--spacing-sm);
+    color: var(--color-text-secondary);
+    transition: all var(--transition-fast);
+}
+
+.dock-item:hover, .dock-item.active {
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--color-text-primary);
+}
+
+.dock-item.active {
+    color: var(--color-accent-primary);
+}
+
+.dock-label {
+    font-family: var(--font-display);
     font-weight: 500;
-    cursor: pointer;
-    transition: all var(--transition-fast);
-    text-align: left;
-    flex-wrap: wrap;
-}
-
-.collapsible-header:hover {
-    background: rgba(59, 130, 246, 0.15);
-    border-color: rgba(59, 130, 246, 0.3);
-}
-
-.collapsible-header.collapsed {
-    background: rgba(255, 255, 255, 0.05);
-    border-color: rgba(255, 255, 255, 0.1);
-}
-
-.collapse-icon {
-    display: inline-block;
-    font-size: 0.75rem;
-    transition: transform var(--transition-fast);
-    flex-shrink: 0;
-}
-
-.collapsible-header.collapsed .collapse-icon {
-    transform: rotate(-90deg);
-}
-
-.color-preview-inline {
-    width: 1.5rem;
-    height: 1.5rem;
-    border-radius: 0.375rem;
-    border: 2px solid rgba(255, 255, 255, 0.3);
-    flex-shrink: 0;
-    transition: background-color var(--transition-default);
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-    margin-left: auto;
-}
-
-.collapsible-content {
-    display: flex;
-    flex-direction: column;
-    gap: 0.75rem;
-    padding: 0.75rem;
-    background: rgba(0, 0, 0, 0.15);
-    border-radius: 0.375rem;
-    max-height: none;
-    overflow: visible;
-    transition: max-height var(--transition-fast), opacity var(--transition-fast), padding var(--transition-fast);
-    opacity: 1;
-}
-
-.collapsible-content.collapsed {
-    max-height: 0;
-    opacity: 0;
-    padding: 0;
-    overflow: hidden;
-}
-
-/* ============================================
-   Espaciado y Grid
-   ============================================ */
-
-.space-y-6 > * + * {
-    margin-top: 1.5rem;
-}
-
-.space-y-3 > * + * {
-    margin-top: 0.75rem;
-}
-
-.space-y-4 > * + * {
-    margin-top: 1rem;
-}
-
-.grid {
-    display: grid;
-}
-
-.grid-cols-2 {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-}
-
-.gap-x-4 {
-    column-gap: 1rem;
-}
-
-.gap-y-2 {
-    row-gap: 0.5rem;
-}
-
-.col-span-1 {
-    grid-column: span 1;
-}
-
-.col-span-2 {
-    grid-column: span 2;
-}
-
-/* ============================================
-   Componentes del Formulario
-   ============================================ */
-
-select,
-input[type="range"] {
-    width: 100%;
-    background: var(--color-gray-700);
-    border: 1px solid var(--color-gray-600);
-    border-radius: 0.375rem;
-    color: var(--color-white);
     font-size: 0.875rem;
 }
 
-select {
-    padding: 0.5rem 0.75rem;
-    cursor: pointer;
+/* ============================================
+   UI Components: Floating Panels (Contextual)
+   ============================================ */
+
+.floating-panel {
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%) translateY(-10px);
+    width: 320px;
+    background: #0a0a0a;
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: var(--radius-md);
+    padding: var(--spacing-md);
+    opacity: 0;
+    visibility: hidden;
     transition: all var(--transition-fast);
+    box-shadow: 0 20px 50px rgba(0,0,0,0.8);
 }
 
-select:hover {
-    border-color: var(--color-gray-500);
-    background: #525f70;
-}
-
-select:focus {
-    outline: none;
-    box-shadow: 0 0 0 2px var(--color-blue-500);
-    border-color: var(--color-blue-500);
+.dock-item:hover .floating-panel,
+.dock-item.active .floating-panel {
+    opacity: 1;
+    visibility: visible;
+    transform: translateX(-50%) translateY(-20px);
 }
 
 /* ============================================
-   Range Sliders
+   Form Controls
    ============================================ */
 
+.control-group {
+    margin-bottom: var(--spacing-md);
+}
+
+.control-label {
+    display: block;
+    font-size: 0.75rem;
+    color: var(--color-text-secondary);
+    margin-bottom: var(--spacing-xs);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
 input[type="range"] {
-    -webkit-appearance: none;
+    width: 100%;
+    height: 4px;
+    background: rgba(255,255,255,0.1);
+    border-radius: 2px;
     appearance: none;
-    padding: 0;
-    height: 8px;
-    background: var(--color-gray-700);
-    border: none;
-    border-radius: 5px;
-    outline: none;
-    opacity: 0.7;
-    transition: opacity 0.2s, background 0.3s ease;
-    cursor: pointer;
-}
-
-input[type="range"]:hover {
-    opacity: 1;
-}
-
-input[type="range"]:focus {
     outline: none;
 }
 
-/* Webkit (Chrome, Safari) */
 input[type="range"]::-webkit-slider-thumb {
-    -webkit-appearance: none;
     appearance: none;
-    width: 20px;
-    height: 20px;
-    background: var(--thumb-color, var(--color-blue-500));
-    border: 2px solid var(--color-white);
+    width: 16px;
+    height: 16px;
+    background: var(--color-accent-primary);
     border-radius: 50%;
     cursor: pointer;
-    transition: background 0.3s ease, transform 0.1s ease;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 0 10px var(--color-accent-primary);
+    transition: transform 0.2s;
 }
 
 input[type="range"]::-webkit-slider-thumb:hover {
-    transform: scale(1.15);
-    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.5);
-}
-
-input[type="range"]::-webkit-slider-thumb:active {
     transform: scale(1.2);
 }
 
-/* Mozilla Firefox */
-input[type="range"]::-moz-range-thumb {
-    width: 20px;
-    height: 20px;
-    background: var(--thumb-color, var(--color-blue-500));
-    border: 2px solid var(--color-white);
-    border-radius: 50%;
+select {
+    width: 100%;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1);
+    color: white;
+    padding: 8px;
+    border-radius: var(--radius-sm);
+    font-family: var(--font-body);
     cursor: pointer;
-    transition: background 0.3s ease, transform 0.1s ease;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
 }
 
-input[type="range"]::-moz-range-thumb:hover {
-    transform: scale(1.15);
-    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.5);
+select:focus {
+    border-color: var(--color-accent-primary);
+    outline: none;
 }
 
-input[type="range"]::-moz-range-thumb:active {
-    transform: scale(1.2);
-}
-
-input[type="range"]::-moz-range-track {
-    background: transparent;
-    border: none;
+select option {
+    background-color: #111;
+    color: white;
+    padding: 10px;
 }
 
 /* ============================================
-   Contenedores
+   Mobile Bottom Sheet
    ============================================ */
 
-.p-4 {
-    padding: 1rem;
+bottom-sheet {
+    display: none;
 }
 
-.bg-gray-800 {
-    background-color: var(--color-gray-800);
-}
-
-.rounded-lg {
-    border-radius: 0.5rem;
-}
-
-.flex {
-    display: flex;
-}
-
-.items-center {
-    align-items: center;
-}
-
-.justify-between {
-    justify-content: space-between;
+@media (max-width: 768px) {
+    bottom-sheet {
+        display: flex;
+    }
 }
 
 /* ============================================
-   Preview de Color
+   Utilities
    ============================================ */
 
-.color-preview {
-    width: 2.5rem;
-    height: 2.5rem;
-    border-radius: 0.375rem;
-    border: 2px solid rgba(255, 255, 255, 0.3);
-    flex-shrink: 0;
-    transition: background-color var(--transition-default);
+.hidden { display: none !important; }
+.visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
 }
+.flex { display: flex; }
+.flex-col { flex-direction: column; }
+.items-center { align-items: center; }
+.justify-center { justify-content: center; }
 
-/* ============================================
-   Toggle Panels Button
-   ============================================ */
-
-.toggle-panels-btn {
-    position: fixed;
-    bottom: 2rem;
-    left: 50%;
-    transform: translateX(-50%);
-    z-index: 25;
-    background: var(--color-blue-500);
-    color: var(--color-white);
-    border: none;
-    border-radius: 50%;
-    width: 3.5rem;
-    height: 3.5rem;
-    font-size: 1.5rem;
-    cursor: pointer;
-    transition: all var(--transition-default);
-    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    opacity: 0;
-    pointer-events: none;
-    padding-bottom: env(safe-area-inset-bottom, 0);
-}
-
-.toggle-panels-btn:hover {
-    background: var(--color-blue-600);
-    box-shadow: 0 6px 20px rgba(59, 130, 246, 0.6);
-    transform: translateX(-50%) scale(1.1);
-}
-
-.toggle-panels-btn.visible {
-    opacity: 1;
-    pointer-events: auto;
-}
 
 .toggle-icon {
     display: block;
@@ -1355,5 +885,125 @@ input[type="range"]::-moz-range-track {
 
     .collapsible-content {
         padding: 0.5rem;
+    }
+}
+
+/* ============================================
+   Desktop Panel Container (Fixed)
+   ============================================ */
+
+#desktop-panel-container {
+    position: fixed;
+    width: 320px;
+    background: rgba(15, 15, 20, 0.95);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 24px;
+    padding: 1.5rem;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+    z-index: 110;
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    
+    /* Default state handled by UIController positioning */
+}
+
+#desktop-panel-container.hidden {
+    display: none !important;
+}
+
+/* Ensure content inside is visible */
+#desktop-panel-container label {
+    color: var(--color-text-secondary);
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 0.5rem;
+    display: block;
+}
+
+#desktop-panel-container select {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: white;
+    padding: 0.5rem;
+    border-radius: 8px;
+    width: 100%;
+    margin-bottom: 1rem;
+}
+
+/* ============================================
+   Presets Styling
+   ============================================ */
+
+.preset-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.75rem;
+}
+
+.preset-btn {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    color: var(--color-text-secondary);
+    padding: 1rem;
+    border-radius: 16px;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    font-family: var(--font-display);
+    font-weight: 500;
+    font-size: 0.875rem;
+    position: relative;
+    overflow: hidden;
+}
+
+.preset-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(circle at center, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.preset-btn:hover {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.2);
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+}
+
+.preset-btn:hover::before {
+    opacity: 1;
+}
+
+.preset-btn:active {
+    transform: translateY(0);
+}
+
+.preset-icon {
+    font-size: 1.5rem;
+    margin-bottom: 0.25rem;
+    filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.2));
+}
+
+/* Mobile adjustments for presets */
+@media (max-width: 768px) {
+    .preset-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.5rem;
+    }
+    
+    .preset-btn {
+        padding: 0.75rem;
+        border-radius: 12px;
     }
 }
