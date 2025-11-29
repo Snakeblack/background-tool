@@ -44,6 +44,19 @@ export class ShaderManager {
             u_lacunarity: { value: 2.0 },
             u_rotation: { value: 0.0 },
             u_distortion: { value: 0.3 },
+            u_grid_size: { value: 3.0 },
+            u_glow: { value: 1.0 },
+            u_offset_x: { value: 0.0 },
+            u_offset_y: { value: 0.0 },
+            u_sun_size: { value: 0.25 },
+            u_core_size: { value: 1.0 },
+            u_spiral_density: { value: 3.0 },
+            u_star_density: { value: 50.0 },
+            u_cell_density: { value: 8.0 },
+            u_border_width: { value: 0.1 },
+            u_brightness: { value: 0.0 },
+            u_contrast: { value: 1.0 },
+            u_noise: { value: 0.0 },
         };
     }
 
