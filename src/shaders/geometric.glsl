@@ -9,6 +9,9 @@ uniform vec3 u_color4;
 uniform float u_speed;
 uniform float u_scale;
 uniform float u_rotation;
+uniform float u_brightness;
+uniform float u_contrast;
+uniform float u_noise;
 
 #define PI 3.14159265359
 
@@ -95,5 +98,11 @@ void main() {
     vec3 finalColor = mix(bgColor, shapeColor * 0.8, fill);
     finalColor += edge * shapeColor * 1.5;
     
+    // Post-processing
+    finalColor = (finalColor - 0.5) * u_contrast + 0.5;
+    finalColor = finalColor + u_brightness;
+    float noiseVal = (fract(sin(dot(gl_FragCoord.xy + u_time, vec2(12.9898, 78.233))) * 43758.5453) - 0.5) * u_noise;
+    finalColor += noiseVal;
+
     gl_FragColor = vec4(finalColor, 1.0);
 }

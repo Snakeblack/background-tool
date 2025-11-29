@@ -8,6 +8,13 @@ uniform vec3 u_color3;
 uniform float u_speed;
 uniform float u_stripe_width;
 uniform float u_stripe_speed;
+uniform float u_brightness;
+uniform float u_contrast;
+uniform float u_noise;
+
+float random(vec2 p) {
+    return fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.5453);
+}
 
 void main() {
     vec2 uv = gl_FragCoord.xy / u_resolution.xy;
@@ -20,5 +27,11 @@ void main() {
     vec3 mix1 = mix(u_color1, u_color2, n1);
     vec3 finalColor = mix(mix1, u_color3, n2);
     
+    // Post-processing
+    finalColor = (finalColor - 0.5) * u_contrast + 0.5;
+    finalColor = finalColor + u_brightness;
+    float noiseVal = (random(gl_FragCoord.xy + u_time) - 0.5) * u_noise;
+    finalColor += noiseVal;
+
     gl_FragColor = vec4(finalColor, 1.0);
 }

@@ -9,6 +9,9 @@ uniform vec3 u_color4;
 uniform float u_speed;
 uniform float u_intensity;
 uniform float u_scale;
+uniform float u_brightness;
+uniform float u_contrast;
+uniform float u_noise;
 
 // Ruido simplificado
 vec2 random2(vec2 p) {
@@ -62,5 +65,11 @@ void main() {
     vec3 baseColor = mix(u_color1 * 0.2, u_color3 * 0.2, uv.y);
     finalColor = mix(baseColor, finalColor, smoothstep(0.0, 0.5, combined));
     
+    // Post-processing
+    finalColor = (finalColor - 0.5) * u_contrast + 0.5;
+    finalColor = finalColor + u_brightness;
+    float noiseVal = (random2(gl_FragCoord.xy + u_time).x - 0.5) * u_noise;
+    finalColor += noiseVal;
+
     gl_FragColor = vec4(finalColor, 1.0);
 }

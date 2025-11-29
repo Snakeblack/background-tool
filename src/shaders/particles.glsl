@@ -8,6 +8,9 @@ uniform vec3 u_color3;
 uniform vec3 u_color4;
 uniform float u_speed;
 uniform float u_intensity;
+uniform float u_brightness;
+uniform float u_contrast;
+uniform float u_noise;
 
 // Hash para partículas
 float hash(vec2 p) {
@@ -66,5 +69,11 @@ void main() {
     vec3 bg = mix(u_color1 * 0.3, u_color3 * 0.3, uv.y);
     color += bg;
     
+    // Post-processing
+    color = (color - 0.5) * u_contrast + 0.5;
+    color = color + u_brightness;
+    float noiseVal = (hash(gl_FragCoord.xy + u_time) - 0.5) * u_noise;
+    color += noiseVal;
+
     gl_FragColor = vec4(color, 1.0);
 }

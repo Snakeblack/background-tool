@@ -9,6 +9,9 @@ uniform vec3 u_color4;
 uniform float u_speed;
 uniform float u_scale;
 uniform float u_distortion;
+uniform float u_brightness;
+uniform float u_contrast;
+uniform float u_noise;
 
 // Perlin noise simplificado
 vec2 random2(vec2 p) {
@@ -54,5 +57,11 @@ void main() {
     float edge = smoothstep(0.4, 0.5, dist) - smoothstep(0.5, 0.6, dist);
     finalColor += edge * 0.3;
     
+    // Post-processing
+    finalColor = (finalColor - 0.5) * u_contrast + 0.5;
+    finalColor = finalColor + u_brightness;
+    float noiseVal = (random2(gl_FragCoord.xy + u_time).x - 0.5) * u_noise;
+    finalColor += noiseVal;
+
     gl_FragColor = vec4(finalColor, 1.0);
 }
