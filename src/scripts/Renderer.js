@@ -26,10 +26,8 @@ export class Renderer {
     init() {
         this.scene = new Scene();
 
-        const aspect = window.innerWidth / window.innerHeight;
-        this.camera = new OrthographicCamera(
-            -aspect, aspect, 1, -1, 0.1, 10
-        );
+        // Cámara ortográfica fija que cubre el espacio NDC (-1 a 1)
+        this.camera = new OrthographicCamera(-1, 1, 1, -1, 0, 1);
         this.camera.position.z = 1;
 
         this.renderer = new WebGLRenderer({ 
@@ -40,7 +38,8 @@ export class Renderer {
         this.renderer.setSize(window.innerWidth, window.innerHeight);
         this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 
-        const geometry = new PlaneGeometry(2 * aspect, 2);
+        // Geometría fija de 2x2 para cubrir todo el viewport
+        const geometry = new PlaneGeometry(2, 2);
         this.mesh = new Mesh(geometry);
         this.scene.add(this.mesh);
 
@@ -49,19 +48,11 @@ export class Renderer {
 
     /**
      * Maneja el evento de resize de la ventana
-     * Actualiza dimensiones del renderer, cámara y geometría
+     * Actualiza dimensiones del renderer
      */
     onWindowResize() {
         this.renderer.setSize(window.innerWidth, window.innerHeight);
-        const aspect = window.innerWidth / window.innerHeight;
-        this.camera.left = -aspect;
-        this.camera.right = aspect;
-        this.camera.updateProjectionMatrix();
-        
-        if (this.mesh && this.mesh.geometry) {
-            this.mesh.geometry.dispose();
-            this.mesh.geometry = new PlaneGeometry(2 * aspect, 2);
-        }
+        // No es necesario actualizar cámara ni geometría ya que usamos NDC
     }
 
     /**

@@ -1035,8 +1035,7 @@ class GradientBackground {
     init() {
         this.scene = new THREE.Scene();
         
-        const aspect = window.innerWidth / window.innerHeight;
-        this.camera = new THREE.OrthographicCamera(-aspect, aspect, 1, -1, 0.1, 10);
+        this.camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
         this.camera.position.z = 1;
         
         // Renderer
@@ -1050,7 +1049,7 @@ class GradientBackground {
         
         this.createMaterial();
         
-        const geometry = new THREE.PlaneGeometry(2 * aspect, 2);
+        const geometry = new THREE.PlaneGeometry(2, 2);
         this.mesh = new THREE.Mesh(geometry, this.material);
         this.scene.add(this.mesh);
         
@@ -1075,16 +1074,8 @@ ${uniformsBlock}
     }
 
     onResize() {
-        const aspect = window.innerWidth / window.innerHeight;
-        this.camera.left = -aspect;
-        this.camera.right = aspect;
-        this.camera.updateProjectionMatrix();
-        
         this.renderer.setSize(window.innerWidth, window.innerHeight);
         this.material.uniforms.u_resolution.value.set(window.innerWidth, window.innerHeight);
-        
-        this.mesh.geometry.dispose();
-        this.mesh.geometry = new THREE.PlaneGeometry(2 * aspect, 2);
     }
 
     animate() {
@@ -1146,8 +1137,7 @@ export function useGradientBackground() {
         const scene = new THREE.Scene();
         sceneRef.current = scene;
         
-        const aspect = window.innerWidth / window.innerHeight;
-        const camera = new THREE.OrthographicCamera(-aspect, aspect, 1, -1, 0.1, 10);
+        const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
         camera.position.z = 1;
 
         // Renderer
@@ -1177,7 +1167,7 @@ ${uniformsBlock}
         materialRef.current = material;
 
         // Mesh
-        const geometry = new THREE.PlaneGeometry(2 * aspect, 2);
+        const geometry = new THREE.PlaneGeometry(2, 2);
         const mesh = new THREE.Mesh(geometry, material);
         scene.add(mesh);
 
@@ -1192,16 +1182,8 @@ ${uniformsBlock}
 
         // Resize Handler
         const handleResize = () => {
-            const newAspect = window.innerWidth / window.innerHeight;
-            camera.left = -newAspect;
-            camera.right = newAspect;
-            camera.updateProjectionMatrix();
-            
             renderer.setSize(window.innerWidth, window.innerHeight);
             material.uniforms.u_resolution.value.set(window.innerWidth, window.innerHeight);
-            
-            mesh.geometry.dispose();
-            mesh.geometry = new THREE.PlaneGeometry(2 * newAspect, 2);
         };
         window.addEventListener('resize', handleResize);
 
@@ -1289,8 +1271,7 @@ export function useGradientBackground() {
         scene = new THREE.Scene();
         
         // Camera
-        const aspect = window.innerWidth / window.innerHeight;
-        camera = new THREE.OrthographicCamera(-aspect, aspect, 1, -1, 0.1, 10);
+        camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
         camera.position.z = 1;
 
         // Renderer
@@ -1312,7 +1293,7 @@ ${uniformsBlock}
         });
 
         // Mesh
-        const geometry = new THREE.PlaneGeometry(2 * aspect, 2);
+        const geometry = new THREE.PlaneGeometry(2, 2);
         mesh = new THREE.Mesh(geometry, material);
         scene.add(mesh);
 
@@ -1330,17 +1311,8 @@ ${uniformsBlock}
     };
 
     const onResize = () => {
-        const aspect = window.innerWidth / window.innerHeight;
-        camera.left = -aspect;
-        camera.right = aspect;
-        camera.updateProjectionMatrix();
-        
         renderer.setSize(window.innerWidth, window.innerHeight);
         material.uniforms.u_resolution.value.set(window.innerWidth, window.innerHeight);
-        
-        mesh.geometry.dispose();
-        mesh.geometry = new THREE.PlaneGeometry(2 * aspect, 2);
-        mesh.material = material; // Reassign material
     };
 
     const cleanup = () => {
@@ -1445,8 +1417,7 @@ export class GradientBackgroundService {
         this.scene = new THREE.Scene();
         
         // Camera
-        const aspect = window.innerWidth / window.innerHeight;
-        this.camera = new THREE.OrthographicCamera(-aspect, aspect, 1, -1, 0.1, 10);
+        this.camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
         this.camera.position.z = 1;
         
         // Renderer
@@ -1462,7 +1433,7 @@ export class GradientBackgroundService {
         this.createMaterial();
         
         // Geometry
-        const geometry = new THREE.PlaneGeometry(2 * aspect, 2);
+        const geometry = new THREE.PlaneGeometry(2, 2);
         this.mesh = new THREE.Mesh(geometry, this.material);
         this.scene.add(this.mesh);
         
@@ -1502,16 +1473,8 @@ ${uniformsBlock}
     onResize() {
         if (!this.camera || !this.renderer || !this.mesh || !this.material) return;
         
-        const aspect = window.innerWidth / window.innerHeight;
-        this.camera.left = -aspect;
-        this.camera.right = aspect;
-        this.camera.updateProjectionMatrix();
-        
         this.renderer.setSize(window.innerWidth, window.innerHeight);
         this.material.uniforms.u_resolution.value.set(window.innerWidth, window.innerHeight);
-        
-        this.mesh.geometry.dispose();
-        this.mesh.geometry = new THREE.PlaneGeometry(2 * aspect, 2);
     }
 
     dispose() {
