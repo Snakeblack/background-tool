@@ -102,6 +102,17 @@ export class UIController {
     }
 
     openPanel(panelId) {
+        // Prevent reopening same panel
+        if (this.activePanelId === panelId) return;
+
+        // If another panel is open, move its content back to templates first
+        if (this.activePanelId) {
+            const currentContent = this.isMobile ? this.bottomSheet.firstElementChild : this.desktopPanel.firstElementChild;
+            if (currentContent && this.templates) {
+                this.templates.appendChild(currentContent);
+            }
+        }
+
         // 1. Identify content
         const contentId = `content-${panelId === 'settings' ? 'settings' : panelId}`; // mapping 'settings' -> 'content-settings'
         const content = document.getElementById(contentId);
@@ -169,9 +180,9 @@ export class UIController {
     randomize() {
         // Randomize colors
         for (let i = 1; i <= 4; i++) {
-            const l = 0.5 + Math.random() * 0.4;
-            const c = 0.1 + Math.random() * 0.2;
-            const h = Math.random() * 360;
+            const l = parseFloat((0.5 + Math.random() * 0.4).toFixed(2));
+            const c = parseFloat((0.1 + Math.random() * 0.2).toFixed(3));
+            const h = Math.round(Math.random() * 360);
             this.colorManager.updateColor(i, l, c, h);
             
             // Update UI if visible
@@ -191,11 +202,31 @@ export class UIController {
 
         const shaders = this.shaderManager.getAvailableShaders();
         
+        // Custom names map for better presentation
+        const prettyNames = {
+            'neon_grid': 'Synthwave Grid',
+            'aurora': 'Northern Lights',
+            'voronoi': 'Organic Cells',
+            'flow': 'Vanta Flow',
+            'clouds': 'Dream Flight',
+            'liquid': 'Liquid Metal',
+            'geometric': 'Geometric Patterns',
+            'galaxy': 'Cosmic Galaxy',
+            'stripes': 'Retro Stripes',
+            'mesh': 'Wireframe Mesh',
+            'particles': 'Starfield'
+        };
+
         // Clear existing options if any (though custom-select starts empty)
         if (selector.clearOptions) selector.clearOptions();
 
         shaders.forEach(shaderName => {
-            const label = shaderName.charAt(0).toUpperCase() + shaderName.slice(1);
+            let label = prettyNames[shaderName];
+            if (!label) {
+                label = shaderName.split('_')
+                    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+                    .join(' ');
+            }
             selector.addOption(shaderName, label);
         });
 
@@ -272,7 +303,7 @@ export class UIController {
                 const value = parseFloat(e.target.value);
                 this.shaderManager.updateUniform('u_speed', value);
                 const speedVal = document.getElementById('speed-value');
-                if (speedVal) speedVal.textContent = value.toFixed(1);
+                if (speedVal) speedVal.textContent = value.toFixed(2);
             });
         }
 

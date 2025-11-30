@@ -31,19 +31,19 @@ export class ShaderManager {
             u_color3: { value: new Color(0.2, 0.8, 0.7) },
             u_color4: { value: new Color(1, 0.9, 0.3) },
             u_speed: { value: 0.5 },
-            u_scale: { value: 1.0 },
+            u_scale: { value: 6.0 },
             u_intensity: { value: 1.0 },
             u_zoom: { value: 3.0 },
             u_stripe_width: { value: 8.0 },
             u_stripe_speed: { value: 0.8 },
-            u_wave_amplitude: { value: 0.25 },
+            u_wave_amplitude: { value: 0.4 },
             u_wave_frequency: { value: 2.5 },
             u_noise_scale: { value: 2.0 },
             u_octaves: { value: 4.0 },
             u_persistence: { value: 0.5 },
             u_lacunarity: { value: 2.0 },
             u_rotation: { value: 0.0 },
-            u_distortion: { value: 0.3 },
+            u_distortion: { value: 0.6 },
             u_grid_size: { value: 3.0 },
             u_glow: { value: 1.0 },
             u_offset_x: { value: 0.0 },
@@ -73,6 +73,30 @@ export class ShaderManager {
 
         this.currentShader = shaderName;
         const shaderConfig = SHADERS[shaderName];
+
+        // Apply specific default values if defined
+        if (shaderConfig.defaults) {
+            Object.entries(shaderConfig.defaults).forEach(([uniformName, value]) => {
+                if (this.uniforms[uniformName]) {
+                    // Handle Color objects specifically if needed, or assume value is correct type
+                    if (this.uniforms[uniformName].value.isColor && value.isColor) {
+                         this.uniforms[uniformName].value.copy(value);
+                    } else {
+                         this.uniforms[uniformName].value = value;
+                    }
+                }
+            });
+        }
+
+        // Update uniforms with control values
+        if (shaderConfig.controls) {
+            shaderConfig.controls.forEach(control => {
+                const uniformName = control.uniform;
+                if (this.uniforms[uniformName] && control.value !== undefined) {
+                    this.uniforms[uniformName].value = control.value;
+                }
+            });
+        }
 
         this.material = new ShaderMaterial({
             uniforms: this.uniforms,

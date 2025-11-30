@@ -2,6 +2,7 @@
  * Shader Index - Configuración y metadata de todos los shaders disponibles
  */
 
+import { Color } from 'three';
 import vertexShader from '../../shaders/vertex.glsl?raw';
 import liquidShader from '../../shaders/liquid.glsl?raw';
 import stripesShader from '../../shaders/stripes.glsl?raw';
@@ -9,6 +10,8 @@ import wavesShader from '../../shaders/waves.glsl?raw';
 import meshShader from '../../shaders/mesh.glsl?raw';
 import particlesShader from '../../shaders/particles.glsl?raw';
 import auroraShader from '../../shaders/aurora.glsl?raw';
+import cloudsShader from '../../shaders/clouds.glsl?raw';
+import flowShader from '../../shaders/flow.glsl?raw';
 import geometricShader from '../../shaders/geometric.glsl?raw';
 import neonGridShader from '../../shaders/neon_grid.glsl?raw';
 import galaxyShader from '../../shaders/galaxy.glsl?raw';
@@ -57,9 +60,9 @@ export const SHADERS = {
                 label: 'Amplitud',
                 uniform: 'u_wave_amplitude',
                 min: 0.05,
-                max: 0.8,
+                max: 2.5,
                 step: 0.05,
-                value: 0.25
+                value: 0.4
             },
             {
                 id: 'wave-frequency',
@@ -131,19 +134,19 @@ export const SHADERS = {
                 id: 'mesh-scale',
                 label: 'Densidad',
                 uniform: 'u_scale',
-                min: 0.1,
-                max: 10.0,
+                min: 4.0,
+                max: 12.0,
                 step: 0.1,
-                value: 1.5
+                value: 6.0
             },
             {
                 id: 'mesh-distortion',
                 label: 'Distorsión',
                 uniform: 'u_distortion',
-                min: 0.0,
-                max: 0.8,
+                min: 0.5,
+                max: 1.5,
                 step: 0.05,
-                value: 0.3
+                value: 0.6
             }
         ]
     },
@@ -194,6 +197,62 @@ export const SHADERS = {
             }
         ]
     },
+
+    clouds: {
+        name: 'Nubes',
+        description: 'Cielo con nubes esponjosas y realistas',
+        vertex: vertexShader,
+        fragment: cloudsShader,
+        controls: [
+            ...GLOBAL_CONTROLS,
+            {
+                id: 'cloud-scale',
+                label: 'Escala',
+                uniform: 'u_scale',
+                min: 1.0,
+                max: 10.0,
+                step: 0.5,
+                value: 3.0
+            },
+            {
+                id: 'cloud-intensity',
+                label: 'Cobertura',
+                uniform: 'u_intensity',
+                min: 0.0,
+                max: 1.0,
+                step: 0.05,
+                value: 0.5
+            }
+        ]
+    },
+
+    flow: {
+        name: 'Flujo Etéreo',
+        description: 'Efecto fluido y onírico estilo Vanta.js',
+        vertex: vertexShader,
+        fragment: flowShader,
+        controls: [
+            ...GLOBAL_CONTROLS,
+            {
+                id: 'flow-scale',
+                label: 'Escala',
+                uniform: 'u_scale',
+                min: 0.5,
+                max: 5.0,
+                step: 0.1,
+                value: 1.5
+            },
+            {
+                id: 'flow-intensity',
+                label: 'Densidad',
+                uniform: 'u_intensity',
+                min: 0.1,
+                max: 2.0,
+                step: 0.1,
+                value: 1.0
+            }
+        ]
+    },
     
     geometric: {
         name: 'Geométrico',
@@ -228,6 +287,12 @@ export const SHADERS = {
         description: 'Rejilla estilo Synthwave/Cyberpunk con perspectiva 3D',
         vertex: vertexShader,
         fragment: neonGridShader,
+        defaults: {
+            u_color1: new Color(0.12, 0.02, 0.25), // Deep Purple (Sky)
+            u_color2: new Color(0.0, 0.9, 1.0),    // Cyan (Grid)
+            u_color3: new Color(1.0, 0.6, 0.0),    // Orange (Sun)
+            u_color4: new Color(1.0, 0.0, 0.5)     // Pink
+        },
         controls: [
             ...GLOBAL_CONTROLS,
             {
@@ -292,7 +357,7 @@ export const SHADERS = {
                 min: 0.0,
                 max: 20.0,
                 step: 0.5,
-                value: 3.0
+                value: 15.5
             },
             {
                 id: 'star-density',
@@ -301,7 +366,7 @@ export const SHADERS = {
                 min: 0.0,
                 max: 100.0,
                 step: 1.0,
-                value: 50.0
+                value: 24.0
             },
             {
                 id: 'core-size',
@@ -310,7 +375,7 @@ export const SHADERS = {
                 min: 0.1,
                 max: 3.0,
                 step: 0.1,
-                value: 1.0
+                value: 0.4
             }
         ]
     },
