@@ -28,7 +28,7 @@ void main() {
     float wave2 = sin(uv.y * u_wave_frequency * 0.8 - time * 1.3) * u_wave_amplitude * 0.7;
     float wave3 = sin((uv.x + uv.y) * u_wave_frequency * 0.5 + time * 0.7) * u_wave_amplitude * 0.5;
     
-    float combined = (wave1 + wave2 + wave3 + u_wave_amplitude * 2.5) / (u_wave_amplitude * 5.0);
+    float combined = (wave1 + wave2 + wave3 + 2.5) / 5.0;
     
     // Mezcla gradual entre 4 colores
     vec3 color1 = mix(u_color1, u_color2, smoothstep(0.0, 0.33, combined));

@@ -13,63 +13,94 @@ uniform float u_brightness;
 uniform float u_contrast;
 uniform float u_noise;
 
-// Ruido simplificado
-vec2 random2(vec2 p) {
-    return fract(sin(vec2(dot(p, vec2(127.1, 311.7)), dot(p, vec2(269.5, 183.3)))) * 43758.5453);
+// 2D Rotation
+mat2 rot(float a) {
+    float s = sin(a);
+    float c = cos(a);
+    return mat2(c, -s, s, c);
 }
 
-float noise(vec2 st) {
-    vec2 i = floor(st);
-    vec2 f = fract(st);
+// Hash function
+float hash(vec2 p) {
+    return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453123);
+}
+
+// Noise function
+float noise(vec2 p) {
+    vec2 i = floor(p);
+    vec2 f = fract(p);
     vec2 u = f * f * (3.0 - 2.0 * f);
-    float a = dot(random2(i), f);
-    float b = dot(random2(i + vec2(1.0, 0.0)), f - vec2(1.0, 0.0));
-    float c = dot(random2(i + vec2(0.0, 1.0)), f - vec2(0.0, 1.0));
-    float d = dot(random2(i + vec2(1.0, 1.0)), f - vec2(1.0, 1.0));
-    return mix(mix(a, b, u.x), mix(c, d, u.x), u.y);
+    return mix(mix(hash(i + vec2(0.0, 0.0)), hash(i + vec2(1.0, 0.0)), u.x),
+               mix(hash(i + vec2(0.0, 1.0)), hash(i + vec2(1.0, 1.0)), u.x), u.y);
+}
+
+// Fractal Brownian Motion
+float fbm(vec2 p) {
+    float v = 0.0;
+    float a = 0.5;
+    mat2 m = rot(1.0);
+    for (int i = 0; i < 4; i++) {
+        v += a * noise(p);
+        p = m * p * 2.0;
+        a *= 0.5;
+    }
+    return v;
 }
 
 void main() {
     vec2 uv = gl_FragCoord.xy / u_resolution.xy;
-    uv.x *= u_resolution.x / u_resolution.y;
+    vec2 p = uv;
+    p.x *= u_resolution.x / u_resolution.y;
     
-    float time = u_time * u_speed * 0.15;
+    float t = u_time * u_speed * 0.1;
     
-    // Múltiples capas de ruido para simular aurora
-    vec2 uv1 = uv * u_scale + vec2(time * 0.2, time * 0.1);
-    vec2 uv2 = uv * u_scale * 1.3 + vec2(-time * 0.15, time * 0.12);
-    vec2 uv3 = uv * u_scale * 0.8 + vec2(time * 0.1, -time * 0.08);
+    vec3 finalColor = vec3(0.0);
     
-    float n1 = noise(uv1);
-    float n2 = noise(uv2);
-    float n3 = noise(uv3);
+    // Deep background (Night sky)
+    vec3 bg = mix(u_color1 * 0.05, u_color2 * 0.1, p.y * 0.5 + 0.5);
+    finalColor = bg;
     
-    // Ondas verticales que simulan cortinas de aurora
-    float wave = sin(uv.x * 5.0 + time + n1 * 3.0) * 0.5 + 0.5;
-    wave *= sin(uv.y * 2.0 - time * 0.5 + n2 * 2.0) * 0.5 + 0.5;
-    
-    // Combinación de ruidos
-    float combined = n1 * 0.5 + n2 * 0.3 + n3 * 0.2;
-    combined *= wave * u_intensity;
-    
-    // Mezcla de colores con transiciones suaves
-    vec3 color1 = mix(u_color1, u_color2, smoothstep(0.0, 0.3, combined));
-    vec3 color2 = mix(color1, u_color3, smoothstep(0.3, 0.6, combined));
-    vec3 finalColor = mix(color2, u_color4, smoothstep(0.6, 1.0, combined));
-    
-    // Añadir brillo
-    float glow = pow(wave, 3.0) * u_intensity * 0.5;
-    finalColor += glow * u_color2;
-    
-    // Degradado base oscuro
-    vec3 baseColor = mix(u_color1 * 0.2, u_color3 * 0.2, uv.y);
-    finalColor = mix(baseColor, finalColor, smoothstep(0.0, 0.5, combined));
+    // Aurora layers
+    for(float i = 0.0; i < 4.0; i++) {
+        float z = 1.0 + i * 0.2;
+        
+        // Distort coordinates for the curtain effect
+        vec2 q = p * (u_scale * 0.8);
+        q.x += i * 0.5; // Offset layers
+        q.y *= 0.3; // Stretch vertically
+        
+        // Flow movement
+        float flow = fbm(q + vec2(t * 0.2, t * 0.1));
+        
+        // The "curtain" shape definition
+        // We distort the x coordinate based on y and noise
+        float distortion = noise(q * 2.0 + vec2(0.0, t * 0.5));
+        float curve = sin(q.x * 2.0 + distortion * 3.0 + t);
+        
+        // Intensity based on proximity to the curve
+        float d = abs(q.y - curve * 0.2 - 0.5);
+        float intensity = 0.02 / (d + 0.01); // Glow effect
+        
+        // Vertical fade (auroras fade at top and bottom)
+        intensity *= smoothstep(0.0, 0.2, uv.y) * smoothstep(1.0, 0.6, uv.y);
+        
+        // Add noise texture to the light
+        intensity *= (0.5 + 0.5 * fbm(q * 5.0 + vec2(0.0, t * 2.0)));
+        
+        // Color palette for this layer
+        vec3 col = mix(u_color3, u_color4, sin(i + t) * 0.5 + 0.5);
+        if (mod(i, 2.0) == 0.0) col = mix(u_color2, col, 0.5);
+        
+        finalColor += col * intensity * u_intensity * (1.0 / z);
+    }
     
     // Post-processing
     finalColor = (finalColor - 0.5) * u_contrast + 0.5;
-    finalColor = finalColor + u_brightness;
-    float noiseVal = (random2(gl_FragCoord.xy + u_time).x - 0.5) * u_noise;
-    finalColor += noiseVal;
+    finalColor += u_brightness;
+    
+    // Dither
+    float dither = (hash(gl_FragCoord.xy + t) - 0.5) * u_noise;
+    finalColor += dither;
 
     gl_FragColor = vec4(finalColor, 1.0);
 }

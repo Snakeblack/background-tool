@@ -12,7 +12,7 @@ uniform float u_brightness;
 uniform float u_contrast;
 uniform float u_noise;
 
-// Hash para partículas
+// Hash functions
 float hash(vec2 p) {
     return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453123);
 }
@@ -21,59 +21,77 @@ vec2 hash2(vec2 p) {
     return fract(sin(vec2(dot(p, vec2(127.1, 311.7)), dot(p, vec2(269.5, 183.3)))) * 43758.5453);
 }
 
+// Draw a single particle layer
+vec3 particleLayer(vec2 uv, float scale, float speed, float layerIdx) {
+    vec2 id = floor(uv * scale);
+    vec2 gv = fract(uv * scale) - 0.5;
+    
+    vec3 layerColor = vec3(0.0);
+    
+    for(float y = -1.0; y <= 1.0; y++) {
+        for(float x = -1.0; x <= 1.0; x++) {
+            vec2 neighbor = vec2(x, y);
+            vec2 nid = id + neighbor;
+            
+            // Random offset for position
+            vec2 rand = hash2(nid + layerIdx * 100.0);
+            
+            // Movement
+            float t = u_time * u_speed * speed;
+            vec2 offset = vec2(sin(t + rand.x * 6.28), cos(t * 0.8 + rand.y * 6.28)) * 0.4;
+            
+            // Position relative to current cell center
+            vec2 pos = neighbor + offset - gv;
+            float d = length(pos);
+            
+            // Twinkle effect
+            float twinkle = sin(t * 2.0 + rand.x * 10.0) * 0.5 + 0.5;
+            
+            // Particle size and glow
+            float size = (0.05 + rand.y * 0.05) * u_intensity;
+            float glow = 0.01 / (d * d + 0.001) * size * twinkle; // Soft glow
+            float core = smoothstep(size, size * 0.5, d) * twinkle; // Hard core
+            
+            // Color selection
+            vec3 pColor;
+            float colorMix = rand.x;
+            if (colorMix < 0.25) pColor = u_color1;
+            else if (colorMix < 0.5) pColor = u_color2;
+            else if (colorMix < 0.75) pColor = u_color3;
+            else pColor = u_color4;
+            
+            layerColor += pColor * (core + glow * 0.5);
+        }
+    }
+    
+    return layerColor;
+}
+
 void main() {
     vec2 uv = gl_FragCoord.xy / u_resolution.xy;
     uv.x *= u_resolution.x / u_resolution.y;
     
-    float time = u_time * u_speed * 0.3;
+    // Background gradient
+    vec3 bg = mix(u_color1 * 0.1, u_color4 * 0.1, length(uv - 0.5));
+    vec3 color = bg;
     
-    vec3 color = vec3(0.0);
+    // Parallax layers
+    // Layer 1: Small, slow, background particles
+    color += particleLayer(uv, 8.0, 0.2, 1.0) * 0.5;
     
-    // Múltiples capas de partículas
-    for(float i = 0.0; i < 3.0; i++) {
-        vec2 id = floor(uv * (10.0 + i * 5.0));
-        vec2 gv = fract(uv * (10.0 + i * 5.0)) - 0.5;
-        
-        // Posición de la partícula
-        vec2 offset = hash2(id + i) - 0.5;
-        offset *= 0.4;
-        
-        // Movimiento ondulatorio
-        offset.x += sin(time + id.y * 0.5 + i) * 0.2;
-        offset.y += cos(time + id.x * 0.5 + i) * 0.2;
-        
-        vec2 pos = gv - offset;
-        float dist = length(pos);
-        
-        // Radio de la partícula
-        float radius = (0.05 + hash(id + i) * 0.05) * u_intensity;
-        float particle = smoothstep(radius, radius * 0.3, dist);
-        
-        // Color de la partícula basado en su posición
-        float colorMix = hash(id + i * 10.0);
-        vec3 particleColor;
-        if (colorMix < 0.25) {
-            particleColor = u_color1;
-        } else if (colorMix < 0.5) {
-            particleColor = u_color2;
-        } else if (colorMix < 0.75) {
-            particleColor = u_color3;
-        } else {
-            particleColor = u_color4;
-        }
-        
-        color += particle * particleColor * (1.0 - i * 0.2);
-    }
+    // Layer 2: Medium, normal speed
+    color += particleLayer(uv + vec2(0.1), 5.0, 0.5, 2.0);
     
-    // Degradado de fondo
-    vec3 bg = mix(u_color1 * 0.3, u_color3 * 0.3, uv.y);
-    color += bg;
+    // Layer 3: Large, fast, foreground particles
+    color += particleLayer(uv + vec2(0.2), 3.0, 0.8, 3.0) * 1.2;
     
     // Post-processing
     color = (color - 0.5) * u_contrast + 0.5;
-    color = color + u_brightness;
-    float noiseVal = (hash(gl_FragCoord.xy + u_time) - 0.5) * u_noise;
+    color += u_brightness;
+    
+    // Noise
+    float noiseVal = (hash(uv * u_time) - 0.5) * u_noise;
     color += noiseVal;
-
+    
     gl_FragColor = vec4(color, 1.0);
 }

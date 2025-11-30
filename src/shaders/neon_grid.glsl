@@ -2,9 +2,9 @@ precision mediump float;
 
 uniform vec2 u_resolution;
 uniform float u_time;
-uniform vec3 u_color1; // Background/Sky
-uniform vec3 u_color2; // Grid
-uniform vec3 u_color3; // Sun/Glow
+uniform vec3 u_color1; // Sky/Background (Purple)
+uniform vec3 u_color2; // Grid (Cyan/Blue)
+uniform vec3 u_color3; // Sun (Yellow/Orange)
 uniform float u_speed;
 uniform float u_grid_size;
 uniform float u_glow;
@@ -15,116 +15,163 @@ uniform float u_brightness;
 uniform float u_contrast;
 uniform float u_noise;
 
-// Pseudo-random function
-float hash21(vec2 p) {
-    p = fract(p * vec2(234.34, 435.345));
-    p += dot(p, p + 34.23);
+#define PI 3.14159265359
+
+// Hash function
+float hash(vec2 p) {
+    p = fract(p * vec2(123.34, 456.21));
+    p += dot(p, p + 45.32);
     return fract(p.x * p.y);
+}
+
+// 2D Noise
+float noise(vec2 p) {
+    vec2 i = floor(p);
+    vec2 f = fract(p);
+    vec2 u = f * f * (3.0 - 2.0 * f);
+    return mix(mix(hash(i + vec2(0.0, 0.0)), hash(i + vec2(1.0, 0.0)), u.x),
+               mix(hash(i + vec2(0.0, 1.0)), hash(i + vec2(1.0, 1.0)), u.x), u.y);
+}
+
+// FBM for mountains
+float fbm(vec2 p) {
+    float v = 0.0;
+    float a = 0.5;
+    for (int i = 0; i < 4; i++) {
+        v += a * noise(p);
+        p *= 2.0;
+        a *= 0.5;
+    }
+    return v;
 }
 
 void main() {
     vec2 uv = (gl_FragCoord.xy - 0.5 * u_resolution.xy) / u_resolution.y;
-    
-    // Apply offset
     uv.x -= u_offset_x;
     uv.y -= u_offset_y;
 
-    float t = u_time * u_speed;
-    
     vec3 col = vec3(0.0);
+    float t = u_time * u_speed;
+
+    // --- Camera / Perspective ---
+    float horizon = 0.05; 
     
-    // Horizon setup
-    float horizon = 0.05;
-    float bend = uv.y - horizon;
-    
-    // --- SKY (Top half) ---
-    if (uv.y > horizon) {
-        // Background gradient
-        col = mix(u_color1 * 0.5, u_color1 * 0.1, uv.y * 2.0);
+    // Curvature (CRT effect on the world)
+    float curve = uv.y - horizon - pow(abs(uv.x), 2.5) * 0.15;
+
+    // --- SKY ---
+    if (curve > 0.0) {
+        // Gradient Sky: Deep Purple to Pink
+        vec3 skyTop = u_color1 * 0.4; // Darker purple
+        vec3 skyBot = mix(u_color1, vec3(0.8, 0.2, 0.5), 0.5); // Pinkish
+        col = mix(skyBot, skyTop, pow(curve * 1.5, 0.7));
         
         // Stars
-        float stars = hash21(uv * 20.0);
-        if (stars > 0.98) {
-            float twinkle = sin(t * 5.0 + stars * 100.0) * 0.5 + 0.5;
-            col += vec3(twinkle) * (stars - 0.98) * 50.0;
-        }
-        
-        // Sun
-        vec2 sunPos = vec2(0.0, horizon + u_sun_size);
+        float stars = pow(hash(uv * 20.0), 30.0) * 0.8;
+        col += vec3(stars);
+
+        // --- SUN ---
+        vec2 sunPos = vec2(0.0, horizon + 0.25);
         float sunDist = length(uv - sunPos);
-        float sunSize = u_sun_size;
+        float sunRadius = u_sun_size * 0.6; // Base size
         
-        if (sunDist < sunSize) {
-            float sunHeight = (uv.y - sunPos.y) / sunSize; // -1 to 1
-            // Sun stripes
-            float stripes = sin(sunHeight * 20.0 - t * 0.5);
-            float stripeMask = smoothstep(-0.1, 0.1, stripes);
+        if (sunDist < sunRadius) {
+            // Sun Gradient: Yellow top to Red bottom
+            float sunGrad = (uv.y - sunPos.y + sunRadius) / (2.0 * sunRadius);
+            vec3 sunCol = mix(vec3(1.0, 0.0, 0.2), vec3(1.0, 0.9, 0.0), sunGrad); // Red to Yellow
             
-            // Gradient on sun
-            vec3 sunColor = mix(u_color3, u_color2, (uv.y - horizon) * 2.0);
+            // Scanlines on Sun
+            float stripes = sin((uv.y - sunPos.y) * 80.0);
+            float stripeMask = smoothstep(0.0, 0.1, stripes); 
             
-            // Cut stripes near bottom of sun
-            if (uv.y < sunPos.y) {
-                 sunColor *= step(0.0, sin(uv.y * 80.0 + t)); 
-            }
+            // Fade stripes at top
+            float stripeFade = smoothstep(0.6, 0.9, sunGrad); 
+            stripeMask = mix(stripeMask, 1.0, stripeFade); 
             
-            col = mix(col, sunColor, smoothstep(sunSize, sunSize - 0.01, sunDist));
+            col = mix(col, sunCol * u_color3 * 2.5, stripeMask);
             
             // Sun Glow
-            col += sunColor * 0.5 * exp(-sunDist * 4.0) * u_glow;
+            col += sunCol * u_glow * 0.5 * exp(-sunDist * 5.0);
         }
-    } 
-    // --- GROUND (Bottom half) ---
+        
+        // Sun Bloom (outside the disk)
+        col += u_color3 * u_glow * 0.4 * exp(-sunDist * 2.0);
+
+        // --- MOUNTAINS ---
+        float mScale = 4.0;
+        float mScroll = t * 0.1;
+        float mountainHeight = fbm(vec2(uv.x * mScale + mScroll, 1.0)) * 0.25;
+        
+        // Second layer of mountains (further back)
+        float mountainHeight2 = fbm(vec2(uv.x * mScale * 1.5 + mScroll * 0.5 + 10.0, 2.0)) * 0.2;
+        
+        // Render Back Mountains
+        if (curve < mountainHeight2) {
+             col = mix(col, u_color1 * 0.3, 0.9); 
+        }
+        
+        // Render Front Mountains
+        if (curve < mountainHeight) {
+            col = vec3(0.02, 0.0, 0.05); // Dark foreground
+            // Rim light
+            float rim = smoothstep(0.0, 0.01, mountainHeight - curve);
+            col += u_color2 * rim * 0.8; // Cyan rim
+        }
+    }
+    // --- GRID / GROUND ---
     else {
-        // 3D Projection
-        float z = 1.0 / abs(bend);
+        // Perspective projection
+        float z = 1.0 / abs(curve);
         float x = uv.x * z;
         
         // Movement
-        float speedZ = t * 2.0;
+        float speedZ = t * 4.0;
         
-        // Grid logic
+        // Grid UVs
         vec2 gridUV = vec2(x, z + speedZ) * u_grid_size;
-        vec2 grid = fract(gridUV) - 0.5;
-        vec2 id = floor(gridUV);
         
-        // Grid lines
-        float lineThickness = 0.02 * z * z * 0.5; // Thicken in distance to avoid aliasing artifacts
-        lineThickness = clamp(lineThickness, 0.0, 0.5);
+        // Main Grid Lines
+        // Use a glowy line calculation
+        float lineWidth = 0.05 * z * 0.5; // Thicker in distance
+        lineWidth = clamp(lineWidth, 0.0, 0.5);
         
-        float lineMask = smoothstep(lineThickness, 0.0, abs(grid.x)) + 
-                         smoothstep(lineThickness, 0.0, abs(grid.y));
+        float gridLineX = smoothstep(0.5 - lineWidth, 0.5, abs(fract(gridUV.x) - 0.5));
+        float gridLineY = smoothstep(0.5 - lineWidth, 0.5, abs(fract(gridUV.y) - 0.5));
+        float gridMask = max(gridLineX, gridLineY);
         
-        // Fade grid into distance
-        float fog = smoothstep(0.0, 0.8, abs(bend)); // 0 at horizon, 1 close
+        // Fading grid into distance
+        float fog = exp(-z * 0.08);
         
-        // Ground base reflection
-        vec3 groundBase = u_color1 * 0.1;
+        // Grid Color (Cyan/Blue)
+        vec3 gridCol = u_color2 * 2.5; // Bright cyan
         
-        // Add reflection of sun on grid
-        float sunReflect = smoothstep(0.5, 0.0, abs(uv.x)) * smoothstep(0.0, 0.5, abs(bend));
-        groundBase += u_color3 * sunReflect * 0.2;
+        // Floor Color (Dark Purple/Black)
+        vec3 floorCol = vec3(0.05, 0.0, 0.1);
         
-        // Grid color
-        vec3 gridColor = u_color2 * u_glow;
+        // Reflection of Sun on Floor
+        float sunReflect = exp(-pow(uv.x * 3.0, 2.0)) * exp(-abs(curve) * 3.0);
+        floorCol += u_color3 * sunReflect * 0.6 * u_glow;
         
-        // Vertical lines glow more in center
-        gridColor += u_color3 * smoothstep(0.5, 0.0, abs(uv.x)) * 2.0;
+        col = mix(floorCol, gridCol, gridMask * fog);
         
-        col = mix(groundBase, gridColor, clamp(lineMask, 0.0, 1.0) * fog);
-        
-        // Horizon glow
-        col += u_color3 * exp(-abs(bend) * 10.0) * 0.5 * u_glow;
+        // Horizon Glow
+        col += u_color2 * 0.6 * exp(-abs(curve) * 15.0) * fog;
     }
 
+    // --- POST PROCESSING ---
+    
     // Vignette
     col *= 1.0 - smoothstep(0.5, 1.5, length(uv));
-
-    // Post-processing
+    
+    // Scanlines (Screen overlay)
+    col *= 0.9 + 0.1 * sin(uv.y * 1000.0 + t * 10.0);
+    
+    // Contrast/Brightness
     col = (col - 0.5) * u_contrast + 0.5;
-    col = col + u_brightness;
-    float noiseVal = (hash21(gl_FragCoord.xy + u_time) - 0.5) * u_noise;
-    col += noiseVal;
+    col += u_brightness;
+    
+    // Noise
+    col += (hash(uv + t) - 0.5) * u_noise;
 
     gl_FragColor = vec4(col, 1.0);
 }
