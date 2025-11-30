@@ -1,3 +1,5 @@
+import { ChevronDown, createElement } from 'lucide';
+
 /**
  * Custom Select Component - Dropdown personalizado
  */
@@ -130,18 +132,16 @@ export class CustomSelect extends HTMLElement {
                     background: rgba(255, 255, 255, 0.1);
                 }
 
-                .arrow {
-                    width: 10px;
-                    height: 10px;
-                    border-right: 2px solid rgba(255, 255, 255, 0.5);
-                    border-bottom: 2px solid rgba(255, 255, 255, 0.5);
-                    transform: rotate(45deg) translateY(-2px);
-                    transition: transform 0.3s ease;
+                .arrow-icon {
+                    color: rgba(255, 255, 255, 0.5);
+                    transition: transform 0.3s ease, color 0.3s ease;
+                    display: flex;
+                    align-items: center;
                 }
 
-                .select-container.open .arrow {
-                    transform: rotate(-135deg) translateY(-2px);
-                    border-color: #ccff00;
+                .select-container.open .arrow-icon {
+                    transform: rotate(180deg);
+                    color: #ccff00;
                 }
 
                 .options-list {
@@ -203,7 +203,7 @@ export class CustomSelect extends HTMLElement {
             <div class="select-container">
                 <div class="select-header">
                     <span class="selected-value">Select...</span>
-                    <div class="arrow"></div>
+                    <span class="arrow-icon">${createElement(ChevronDown, {width: 16, height: 16}).outerHTML}</span>
                 </div>
                 <div class="options-list"></div>
             </div>

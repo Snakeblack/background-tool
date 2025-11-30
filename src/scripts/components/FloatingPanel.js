@@ -1,3 +1,5 @@
+import { Minus, Plus, X, createElement } from 'lucide';
+
 /**
  * Panel Component - Web Component para paneles flotantes
  */
@@ -243,8 +245,8 @@ export class FloatingPanel extends HTMLElement {
             <div class="panel-header">
                 <h2 class="panel-title">${title}</h2>
                 <div class="panel-buttons">
-                    <button class="panel-btn" id="minimize-btn" title="Minimizar">−</button>
-                    <button class="panel-btn" id="close-btn" title="Cerrar">✕</button>
+                    <button class="panel-btn" id="minimize-btn" title="Minimizar">${createElement(Minus, {width: 16, height: 16}).outerHTML}</button>
+                    <button class="panel-btn" id="close-btn" title="Cerrar">${createElement(X, {width: 16, height: 16}).outerHTML}</button>
                 </div>
             </div>
             <div class="panel-content">
@@ -266,7 +268,7 @@ export class FloatingPanel extends HTMLElement {
             }
             
             this.classList.toggle('minimized');
-            minimizeBtn.textContent = this.classList.contains('minimized') ? '+' : '−';
+            minimizeBtn.innerHTML = this.classList.contains('minimized') ? createElement(Plus, {width: 16, height: 16}).outerHTML : createElement(Minus, {width: 16, height: 16}).outerHTML;
         });
 
         closeBtn.addEventListener('click', () => {

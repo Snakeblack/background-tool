@@ -3,6 +3,7 @@
  */
 
 import * as culori from 'culori';
+import { ChevronDown, createElement } from 'lucide';
 
 export class ColorControl extends HTMLElement {
     /**
@@ -58,57 +59,74 @@ export class ColorControl extends HTMLElement {
             <style>
                 :host {
                     display: block;
+                    font-family: 'Inter', sans-serif;
                 }
                 .control-section {
-                    margin-bottom: 1rem;
+                    margin-bottom: 0.75rem;
                 }
                 .collapsible-header {
                     width: 100%;
                     padding: 0.75rem 1rem;
-                    background: linear-gradient(135deg, #2a2a3e 0%, #1f1f2e 100%);
-                    border: none;
-                    border-radius: 8px;
-                    color: white;
+                    background: rgba(255, 255, 255, 0.03);
+                    border: 1px solid rgba(255, 255, 255, 0.08);
+                    border-radius: 16px;
+                    color: #e0e0e0;
                     cursor: pointer;
                     display: flex;
                     align-items: center;
-                    gap: 0.5rem;
-                    transition: all 0.3s ease;
+                    gap: 0.75rem;
+                    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
                     text-align: left;
+                    font-family: 'Space Grotesk', sans-serif;
+                    font-weight: 500;
+                    font-size: 0.9375rem;
                 }
                 .collapsible-header:hover {
-                    background: linear-gradient(135deg, #343448 0%, #252535 100%);
+                    background: rgba(255, 255, 255, 0.08);
+                    border-color: rgba(255, 255, 255, 0.2);
+                    color: white;
                     transform: translateY(-1px);
                 }
+                .collapsible-header.active {
+                    border-color: rgba(204, 255, 0, 0.3);
+                    background: rgba(204, 255, 0, 0.05);
+                }
                 .collapse-icon {
-                    transition: transform 0.3s ease;
-                    font-size: 0.875rem;
+                    transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+                    font-size: 0.75rem;
+                    color: #a0a0a0;
+                    display: flex;
+                    align-items: center;
                 }
                 .collapsible-header.collapsed .collapse-icon {
                     transform: rotate(-90deg);
                 }
                 .color-preview-inline {
-                    width: 24px;
-                    height: 24px;
+                    width: 20px;
+                    height: 20px;
                     border-radius: 50%;
-                    border: 2px solid rgba(255, 255, 255, 0.3);
+                    border: 1px solid rgba(255, 255, 255, 0.2);
                     margin-left: auto;
-                    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+                    box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
                 }
                 .collapsible-content {
                     max-height: 500px;
                     overflow: hidden;
-                    transition: max-height 0.3s ease, opacity 0.3s ease;
+                    transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
                     opacity: 1;
                     padding: 1rem;
                     background: rgba(0, 0, 0, 0.2);
-                    border-radius: 0 0 8px 8px;
+                    border: 1px solid rgba(255, 255, 255, 0.05);
+                    border-top: none;
+                    border-radius: 0 0 16px 16px;
                     margin-top: -8px;
+                    padding-top: 1.5rem;
                 }
                 .collapsible-content.collapsed {
                     max-height: 0;
                     opacity: 0;
                     padding: 0 1rem;
+                    border-color: transparent;
                 }
                 .control-item {
                     margin-bottom: 1rem;
@@ -117,18 +135,27 @@ export class ColorControl extends HTMLElement {
                     margin-bottom: 0;
                 }
                 label {
-                    display: block;
+                    display: flex;
+                    justify-content: space-between;
                     font-size: 0.75rem;
-                    color: #9ca3af;
+                    color: #a0a0a0;
                     margin-bottom: 0.5rem;
+                    text-transform: uppercase;
+                    letter-spacing: 0.05em;
+                    font-weight: 500;
+                }
+                label span {
+                    color: #ffffff;
+                    font-family: 'Space Mono', monospace;
                 }
                 input[type="range"] {
                     width: 100%;
-                    height: 6px;
-                    border-radius: 3px;
-                    background: linear-gradient(to right, #4a5568, #718096);
+                    height: 4px;
+                    border-radius: 2px;
+                    background: rgba(255, 255, 255, 0.1);
                     outline: none;
                     -webkit-appearance: none;
+                    appearance: none;
                 }
                 input[type="range"]::-webkit-slider-thumb {
                     -webkit-appearance: none;
@@ -136,21 +163,28 @@ export class ColorControl extends HTMLElement {
                     width: 16px;
                     height: 16px;
                     border-radius: 50%;
-                    background: white;
+                    background: #ccff00;
                     cursor: pointer;
-                    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-                    transition: transform 0.2s;
+                    box-shadow: 0 0 10px rgba(204, 255, 0, 0.5);
+                    transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+                    margin-top: -6px; /* Center on track */
+                }
+                input[type="range"]::-webkit-slider-runnable-track {
+                    height: 4px;
+                    border-radius: 2px;
+                    background: rgba(255, 255, 255, 0.1);
                 }
                 input[type="range"]::-webkit-slider-thumb:hover {
                     transform: scale(1.2);
+                    box-shadow: 0 0 15px rgba(204, 255, 0, 0.8);
                 }
                 input[type="range"]::-moz-range-thumb {
                     width: 16px;
                     height: 16px;
                     border-radius: 50%;
-                    background: white;
+                    background: #ccff00;
                     cursor: pointer;
-                    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+                    box-shadow: 0 0 10px rgba(204, 255, 0, 0.5);
                     border: none;
                     transition: transform 0.2s;
                 }
@@ -161,77 +195,47 @@ export class ColorControl extends HTMLElement {
                 @media (max-width: 640px) {
                     .collapsible-header {
                         padding: 0.625rem 0.875rem;
-                        font-size: 0.8125rem;
-                    }
-                    .collapse-icon {
-                        font-size: 0.75rem;
-                    }
-                    .color-preview-inline {
-                        width: 20px;
-                        height: 20px;
-                    }
-                    .collapsible-content {
-                        padding: 0.875rem;
-                    }
-                    .control-item {
-                        margin-bottom: 0.875rem;
-                    }
-                    label {
-                        font-size: 0.6875rem;
-                        margin-bottom: 0.375rem;
-                    }
-                    input[type="range"] {
-                        height: 1.75rem;
-                    }
-                }
-
-                @media (max-width: 480px) {
-                    .collapsible-header {
-                        padding: 0.5rem 0.75rem;
-                        font-size: 0.75rem;
-                    }
-                    .collapse-icon {
-                        font-size: 0.6875rem;
+                        font-size: 0.875rem;
                     }
                     .color-preview-inline {
                         width: 18px;
                         height: 18px;
                     }
                     .collapsible-content {
-                        padding: 0.75rem;
-                    }
-                    .control-item {
-                        margin-bottom: 0.75rem;
+                        padding: 0.875rem;
+                        padding-top: 1.25rem;
                     }
                     label {
-                        font-size: 0.625rem;
-                        margin-bottom: 0.25rem;
+                        font-size: 0.6875rem;
                     }
-                    input[type="range"] {
-                        height: 1.5rem;
-                    }
+                }
+                
+                .icon-sm {
+                    width: 1rem;
+                    height: 1rem;
+                    stroke-width: 2;
                 }
             </style>
             
             <div class="control-section">
                 <button class="collapsible-header" id="header">
-                    <span class="collapse-icon">▼</span>
+                    <span class="collapse-icon">${createElement(ChevronDown, {class: "icon-sm"}).outerHTML}</span>
                     <span>${label}</span>
                     <div class="color-preview-inline" id="preview"></div>
                 </button>
                 <div class="collapsible-content" id="content">
                     <div class="control-item">
-                        <label for="l-slider">Luz (L): <span id="l-val">${lValue}</span></label>
-                        <input type="range" id="l-slider" min="0.1" max="1.0" step="0.01" value="${lValue}" 
+                        <label for="l-slider">Lightness <span>${lValue}</span></label>
+                        <input type="range" id="l-slider" min="0.0" max="1.0" step="0.01" value="${lValue}" 
                                data-color="${colorIndex}" data-channel="l" class="oklch-slider">
                     </div>
                     <div class="control-item">
-                        <label for="c-slider">Croma (C): <span id="c-val">${cValue}</span></label>
+                        <label for="c-slider">Chroma <span>${cValue}</span></label>
                         <input type="range" id="c-slider" min="0.0" max="0.4" step="0.005" value="${cValue}"
                                data-color="${colorIndex}" data-channel="c" class="oklch-slider">
                     </div>
                     <div class="control-item">
-                        <label for="h-slider">Tono (H): <span id="h-val">${hValue}</span></label>
+                        <label for="h-slider">Hue <span>${hValue}</span></label>
                         <input type="range" id="h-slider" min="0" max="360" step="1" value="${hValue}"
                                data-color="${colorIndex}" data-channel="h" class="oklch-slider">
                     </div>
@@ -244,6 +248,7 @@ export class ColorControl extends HTMLElement {
         
         header.addEventListener('click', () => {
             header.classList.toggle('collapsed');
+            header.classList.toggle('active'); // Add active state for border color
             content.classList.toggle('collapsed');
         });
 
@@ -253,8 +258,11 @@ export class ColorControl extends HTMLElement {
                 const channel = e.target.dataset.channel;
                 const value = parseFloat(e.target.value);
                 
-                this.shadowRoot.getElementById(`${channel}-val`).textContent = 
-                    channel === 'h' ? value : value.toFixed(channel === 'c' ? 3 : 2);
+                // Update label span directly
+                const labelSpan = slider.previousElementSibling.querySelector('span');
+                if (labelSpan) {
+                    labelSpan.textContent = channel === 'h' ? Math.round(value) : value.toFixed(channel === 'c' ? 3 : 2);
+                }
                 
                 this.dispatchEvent(new CustomEvent('color-change', {
                     detail: {

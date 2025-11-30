@@ -21,6 +21,7 @@ import { Renderer } from './scripts/Renderer.js';
 import { ShaderManager } from './scripts/ShaderManager.js';
 import { ColorManager } from './scripts/ColorManager.js';
 import { UIController } from './scripts/UIController.js';
+import { createIcons, Sunset, Waves, Trees, Zap, Flame, Snowflake, Moon, Gem } from 'lucide';
 
 class GradientApp {
     /**
@@ -40,6 +41,19 @@ class GradientApp {
      * Inicializa la aplicación cargando colores y comenzando la animación
      */
     init() {
+        createIcons({
+            icons: {
+                Sunset,
+                Waves,
+                Trees,
+                Zap,
+                Flame,
+                Snowflake,
+                Moon,
+                Gem
+            }
+        });
+
         for (let i = 1; i <= 4; i++) {
             const color = this.colorManager.getColor(i);
             if (color) {

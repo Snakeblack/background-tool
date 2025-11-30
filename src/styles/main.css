@@ -990,9 +990,11 @@ bottom-sheet {
 }
 
 .preset-icon {
-    font-size: 1.5rem;
+    width: 1.5rem;
+    height: 1.5rem;
     margin-bottom: 0.25rem;
     filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.2));
+    stroke-width: 1.5;
 }
 
 /* Mobile adjustments for presets */

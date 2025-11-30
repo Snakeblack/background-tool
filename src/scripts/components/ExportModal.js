@@ -1,6 +1,7 @@
 /**
  * Export Modal Component - Genera código para implementar en proyectos
  */
+import { Package, Rocket, Atom, Layers, Hexagon, Zap, Lightbulb, AlertTriangle, Clipboard, Check, AlertCircle, BarChart, X, createElement } from 'lucide';
 
 export class ExportModal extends HTMLElement {
     /**
@@ -32,8 +33,8 @@ export class ExportModal extends HTMLElement {
                     left: 0;
                     right: 0;
                     bottom: 0;
-                    background: rgba(0, 0, 0, 0.85);
-                    backdrop-filter: blur(8px);
+                    background: rgba(0, 0, 0, 0.6);
+                    backdrop-filter: blur(12px);
                     z-index: 1000;
                     align-items: center;
                     justify-content: center;
@@ -45,21 +46,22 @@ export class ExportModal extends HTMLElement {
                     opacity: 1;
                 }
                 .modal-container {
-                    background: #0a0a0a;
+                    background: rgba(15, 15, 20, 0.95);
+                    backdrop-filter: blur(20px);
                     border-radius: 24px;
                     max-width: 800px;
                     width: 90%;
                     max-height: 90vh;
                     overflow: hidden;
-                    box-shadow: 0 25px 80px rgba(0, 0, 0, 0.6);
+                    box-shadow: 0 25px 80px rgba(0, 0, 0, 0.8);
                     border: 1px solid rgba(255, 255, 255, 0.1);
                     display: flex;
                     flex-direction: column;
                 }
                 .modal-header {
                     padding: 1.5rem 2rem;
-                    background: rgba(255, 255, 255, 0.02);
-                    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+                    background: transparent;
+                    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
                     display: flex;
                     align-items: center;
                     justify-content: space-between;
@@ -70,6 +72,8 @@ export class ExportModal extends HTMLElement {
                     font-weight: 600;
                     color: white;
                     margin: 0;
+                    text-transform: uppercase;
+                    letter-spacing: -0.02em;
                 }
                 .close-btn {
                     width: 32px;
@@ -105,8 +109,8 @@ export class ExportModal extends HTMLElement {
                 }
                 .tab {
                     padding: 0.5rem 1rem;
-                    background: transparent;
-                    border: 1px solid transparent;
+                    background: rgba(255, 255, 255, 0.05);
+                    border: 1px solid rgba(255, 255, 255, 0.1);
                     border-radius: 9999px;
                     color: #a0a0a0;
                     cursor: pointer;
@@ -116,11 +120,11 @@ export class ExportModal extends HTMLElement {
                 }
                 .tab:hover {
                     color: white;
-                    background: rgba(255, 255, 255, 0.05);
+                    background: rgba(255, 255, 255, 0.1);
                 }
                 .tab.active {
-                    color: #0a0a0a;
-                    background: #ccff00;
+                    color: #ccff00;
+                    background: rgba(204, 255, 0, 0.1);
                     border-color: #ccff00;
                     font-weight: 600;
                 }
@@ -131,8 +135,8 @@ export class ExportModal extends HTMLElement {
                     display: block;
                 }
                 .code-block {
-                    background: rgba(0, 0, 0, 0.4);
-                    border: 1px solid rgba(255, 255, 255, 0.1);
+                    background: rgba(0, 0, 0, 0.3);
+                    border: 1px solid rgba(255, 255, 255, 0.08);
                     border-radius: 8px;
                     padding: 1rem;
                     margin: 1rem 0;
@@ -153,7 +157,7 @@ export class ExportModal extends HTMLElement {
                 }
                 .copy-btn {
                     padding: 0.5rem 1rem;
-                    background: rgba(59, 130, 246, 0.2);
+                    background: rgba(59, 130, 246, 0.1);
                     border: 1px solid rgba(59, 130, 246, 0.3);
                     color: #60a5fa;
                     border-radius: 6px;
@@ -162,16 +166,16 @@ export class ExportModal extends HTMLElement {
                     font-size: 0.875rem;
                 }
                 .copy-btn:hover {
-                    background: rgba(59, 130, 246, 0.3);
+                    background: rgba(59, 130, 246, 0.2);
                     border-color: rgba(59, 130, 246, 0.5);
                 }
                 .copy-btn.copied {
-                    background: rgba(34, 197, 94, 0.2);
+                    background: rgba(34, 197, 94, 0.1);
                     border-color: rgba(34, 197, 94, 0.3);
                     color: #4ade80;
                 }
                 .copy-btn.copy-error {
-                    background: rgba(239, 68, 68, 0.2);
+                    background: rgba(239, 68, 68, 0.1);
                     border-color: rgba(239, 68, 68, 0.3);
                     color: #f87171;
                 }
@@ -280,11 +284,13 @@ export class ExportModal extends HTMLElement {
                 @media (max-width: 640px) {
                     .modal-container {
                         width: 100%;
-                        max-height: 100vh;
+                        height: 100%;
+                        max-height: 100dvh;
                         border-radius: 0;
                     }
                     .modal-header {
                         padding: 1rem 1.25rem;
+                        padding-top: calc(1rem + env(safe-area-inset-top));
                     }
                     .modal-title {
                         font-size: 1.125rem;
@@ -423,12 +429,30 @@ export class ExportModal extends HTMLElement {
                         margin-bottom: 1.5rem;
                     }
                 }
+                
+                .icon {
+                    width: 1.25rem;
+                    height: 1.25rem;
+                    stroke-width: 2;
+                }
+                
+                .icon-lg {
+                    width: 1.5rem;
+                    height: 1.5rem;
+                    stroke-width: 2;
+                }
+                
+                .section-title {
+                    display: flex;
+                    align-items: center;
+                    gap: 0.75rem;
+                }
             </style>
             
             <div class="modal-container">
                 <div class="modal-header">
-                    <h2 class="modal-title">📦 Exportar a tu Proyecto</h2>
-                    <button class="close-btn" id="close-btn">✕</button>
+                    <h2 class="modal-title">${createElement(Package, {class: "icon-lg"}).outerHTML} Exportar a tu Proyecto</h2>
+                    <button class="close-btn" id="close-btn">${createElement(X, {class: "icon"}).outerHTML}</button>
                 </div>
                 <div class="modal-body">
                     <div class="tabs">
@@ -532,7 +556,7 @@ export class ExportModal extends HTMLElement {
         const container = this.shadowRoot.getElementById('vanilla-content');
         container.innerHTML = `
             <div class="section">
-                <h3 class="section-title">🚀 Implementación Vanilla JS</h3>
+                <h3 class="section-title">${createElement(Rocket, {class: "icon"}).outerHTML} Implementación Vanilla JS</h3>
                 <p class="section-description">
                     Implementación ligera y optimizada sin dependencias de frameworks.
                 </p>
@@ -559,7 +583,7 @@ export class ExportModal extends HTMLElement {
                 ${this.createCodeBlock('javascript', this.generateVanillaJS(), 'gradient.js')}
                 
                 <div class="info-box">
-                    <p><strong>💡 Consejo:</strong> Este código está optimizado para rendimiento con:</p>
+                    <p><strong>${createElement(Lightbulb, {class: "icon"}).outerHTML} Consejo:</strong> Este código está optimizado para rendimiento con:</p>
                     <p>• RequestAnimationFrame para animaciones fluidas</p>
                     <p>• Geometría reutilizable sin recreación</p>
                     <p>• Eventos de resize debounced</p>
@@ -572,7 +596,7 @@ export class ExportModal extends HTMLElement {
         const container = this.shadowRoot.getElementById('react-content');
         container.innerHTML = `
             <div class="section">
-                <h3 class="section-title">⚛️ Implementación React</h3>
+                <h3 class="section-title">${createElement(Atom, {class: "icon"}).outerHTML} Implementación React</h3>
                 <p class="section-description">
                     Hook personalizado para integrar el gradiente en componentes React.
                 </p>
@@ -599,7 +623,7 @@ export class ExportModal extends HTMLElement {
                 ${this.createCodeBlock('jsx', this.generateReactUsage(), 'App.jsx')}
                 
                 <div class="warning-box">
-                    <p><strong>⚠️ Importante:</strong> Asegúrate de limpiar los recursos en el cleanup de useEffect</p>
+                    <p><strong>${createElement(AlertTriangle, {class: "icon"}).outerHTML} Importante:</strong> Asegúrate de limpiar los recursos en el cleanup de useEffect</p>
                 </div>
             </div>
         `;
@@ -609,7 +633,7 @@ export class ExportModal extends HTMLElement {
         const container = this.shadowRoot.getElementById('vue-content');
         container.innerHTML = `
             <div class="section">
-                <h3 class="section-title">💚 Implementación Vue 3</h3>
+                <h3 class="section-title">${createElement(Layers, {class: "icon"}).outerHTML} Implementación Vue 3</h3>
                 <p class="section-description">
                     Composable para Vue 3 con Composition API.
                 </p>
@@ -642,7 +666,7 @@ export class ExportModal extends HTMLElement {
         const container = this.shadowRoot.getElementById('angular-content');
         container.innerHTML = `
             <div class="section">
-                <h3 class="section-title">🅰️ Implementación Angular 19+</h3>
+                <h3 class="section-title">${createElement(Hexagon, {class: "icon"}).outerHTML} Implementación Angular 19+</h3>
                 <p class="section-description">
                     Servicio y directiva para integrar el gradiente en Angular 19+ con Signals.
                 </p>
@@ -676,7 +700,7 @@ export class ExportModal extends HTMLElement {
                 ${this.createCodeBlock('typescript', this.generateAngularUsage(), 'app.component.ts')}
                 
                 <div class="info-box">
-                    <p><strong>💡 Nota:</strong> Este código usa Angular 19+ con Signals y standalone components.</p>
+                    <p><strong>${createElement(Lightbulb, {class: "icon"}).outerHTML} Nota:</strong> Este código usa Angular 19+ con Signals y standalone components.</p>
                 </div>
             </div>
         `;
@@ -686,7 +710,7 @@ export class ExportModal extends HTMLElement {
         const container = this.shadowRoot.getElementById('optimizations-content');
         container.innerHTML = `
             <div class="section">
-                <h3 class="section-title">⚡ Optimizaciones de Rendimiento</h3>
+                <h3 class="section-title">${createElement(Zap, {class: "icon"}).outerHTML} Optimizaciones de Rendimiento</h3>
                 
                 <div class="step">
                     <span class="step-number">1</span>
@@ -710,7 +734,7 @@ export class ExportModal extends HTMLElement {
                 ${this.createCodeBlock('javascript', this.generateVisibilityAPI(), 'visibilityOptimization.js')}
                 
                 <div class="info-box">
-                    <p><strong>📊 Métricas de Rendimiento:</strong></p>
+                    <p><strong>${createElement(BarChart, {class: "icon"}).outerHTML} Métricas de Rendimiento:</strong></p>
                     <p>• FPS Target: 60fps</p>
                     <p>• GPU Usage: ~5-10% (según complejidad del shader)</p>
                     <p>• Memory: ~10-20MB</p>
@@ -739,7 +763,7 @@ export class ExportModal extends HTMLElement {
                 <div class="code-header">
                     <span class="code-title">${title}</span>
                     <button class="copy-btn" data-block-id="${blockId}">
-                        📋 Copiar
+                        ${createElement(Clipboard, {class: "icon"}).outerHTML} Copiar
                     </button>
                 </div>
                 <pre><code>${this.escapeHtml(code)}</code></pre>
@@ -861,7 +885,7 @@ export class ExportModal extends HTMLElement {
      */
     showCopySuccess(button) {
         const originalText = button.innerHTML;
-        button.innerHTML = '✅ Copiado!';
+        button.innerHTML = `${createElement(Check, {class: "icon"}).outerHTML} Copiado!`;
         button.classList.add('copied');
         
         setTimeout(() => {
@@ -876,7 +900,7 @@ export class ExportModal extends HTMLElement {
      */
     showCopyError(button) {
         const originalText = button.innerHTML;
-        button.innerHTML = '⚠️ Error';
+        button.innerHTML = `${createElement(AlertCircle, {class: "icon"}).outerHTML} Error`;
         button.classList.add('copy-error');
 
         setTimeout(() => {

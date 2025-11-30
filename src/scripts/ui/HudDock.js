@@ -1,3 +1,5 @@
+import { Settings, Palette, Sparkles, Shuffle, Package, createElement } from 'lucide';
+
 export class HudDock extends HTMLElement {
     constructor() {
         super();
@@ -55,7 +57,9 @@ export class HudDock extends HTMLElement {
             }
 
             .icon {
-                font-size: 1.25rem;
+                width: 1.25rem;
+                height: 1.25rem;
+                stroke-width: 2;
             }
 
             @media (max-width: 768px) {
@@ -79,7 +83,8 @@ export class HudDock extends HTMLElement {
                 }
                 
                 .icon {
-                    font-size: 1.5rem;
+                    width: 1.5rem;
+                    height: 1.5rem;
                     margin: 0;
                 }
             }
@@ -88,23 +93,23 @@ export class HudDock extends HTMLElement {
         this.shadowRoot.innerHTML = `
             <style>${style}</style>
             <button class="dock-item" data-panel="settings" aria-label="Configuración">
-                <span class="icon" aria-hidden="true">⚙️</span>
+                ${createElement(Settings, { class: "icon" }).outerHTML}
                 <span>Config</span>
             </button>
             <button class="dock-item" data-panel="colors" aria-label="Colores">
-                <span class="icon" aria-hidden="true">🎨</span>
+                ${createElement(Palette, { class: "icon" }).outerHTML}
                 <span>Colors</span>
             </button>
             <button class="dock-item" data-panel="presets" aria-label="Presets">
-                <span class="icon" aria-hidden="true">✨</span>
+                ${createElement(Sparkles, { class: "icon" }).outerHTML}
                 <span>Presets</span>
             </button>
             <button class="dock-item" data-action="random" aria-label="Generar Aleatorio">
-                <span class="icon" aria-hidden="true">🎲</span>
+                ${createElement(Shuffle, { class: "icon" }).outerHTML}
                 <span>Random</span>
             </button>
             <button class="dock-item" data-action="export" aria-label="Exportar Código">
-                <span class="icon" aria-hidden="true">📦</span>
+                ${createElement(Package, { class: "icon" }).outerHTML}
                 <span>Export</span>
             </button>
         `;
