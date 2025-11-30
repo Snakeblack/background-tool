@@ -34,7 +34,9 @@ export class Renderer {
         this.renderer = new WebGLRenderer({ 
             canvas: this.canvas, 
             antialias: true, 
-            alpha: false 
+            alpha: false,
+            precision: 'highp',
+            powerPreference: 'high-performance'
         });
         this.renderer.setSize(window.innerWidth, window.innerHeight);
         this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
@@ -42,6 +44,7 @@ export class Renderer {
         // Geometría fija de 2x2 para cubrir todo el viewport
         const geometry = new PlaneGeometry(2, 2);
         this.mesh = new Mesh(geometry);
+        this.mesh.frustumCulled = false;
         this.scene.add(this.mesh);
 
         window.addEventListener('resize', () => this.onWindowResize());

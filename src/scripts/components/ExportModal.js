@@ -1042,7 +1042,9 @@ class GradientBackground {
         this.renderer = new THREE.WebGLRenderer({
             canvas: this.canvas,
             antialias: false,
-            alpha: false
+            alpha: false,
+            precision: 'highp',
+            powerPreference: 'high-performance'
         });
         this.renderer.setSize(window.innerWidth, window.innerHeight);
         this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
@@ -1051,6 +1053,7 @@ class GradientBackground {
         
         const geometry = new THREE.PlaneGeometry(2, 2);
         this.mesh = new THREE.Mesh(geometry, this.material);
+        this.mesh.frustumCulled = false;
         this.scene.add(this.mesh);
         
         this.clock = new THREE.Clock();
@@ -1145,7 +1148,9 @@ export function useGradientBackground() {
         const renderer = new THREE.WebGLRenderer({
             canvas: canvasRef.current,
             antialias: false,
-            alpha: false
+            alpha: false,
+            precision: 'highp',
+            powerPreference: 'high-performance'
         });
         renderer.setSize(window.innerWidth, window.innerHeight);
         renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
@@ -1170,6 +1175,7 @@ ${uniformsBlock}
         // Mesh
         const geometry = new THREE.PlaneGeometry(2, 2);
         const mesh = new THREE.Mesh(geometry, material);
+        mesh.frustumCulled = false;
         scene.add(mesh);
 
         // Animation
@@ -1280,7 +1286,9 @@ export function useGradientBackground() {
         renderer = new THREE.WebGLRenderer({
             canvas: canvasRef.value,
             antialias: false,
-            alpha: false
+            alpha: false,
+            precision: 'highp',
+            powerPreference: 'high-performance'
         });
         renderer.setSize(window.innerWidth, window.innerHeight);
         renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
@@ -1297,6 +1305,7 @@ ${uniformsBlock}
         // Mesh
         const geometry = new THREE.PlaneGeometry(2, 2);
         mesh = new THREE.Mesh(geometry, material);
+        mesh.frustumCulled = false;
         scene.add(mesh);
 
         // Animation
@@ -1427,7 +1436,9 @@ export class GradientBackgroundService {
         this.renderer = new THREE.WebGLRenderer({
             canvas,
             antialias: false,
-            alpha: false
+            alpha: false,
+            precision: 'highp',
+            powerPreference: 'high-performance'
         });
         this.renderer.setSize(window.innerWidth, window.innerHeight);
         this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
@@ -1438,6 +1449,7 @@ export class GradientBackgroundService {
         // Geometry
         const geometry = new THREE.PlaneGeometry(2, 2);
         this.mesh = new THREE.Mesh(geometry, this.material);
+        this.mesh.frustumCulled = false;
         this.scene.add(this.mesh);
         
         this.isRunning.set(true);
