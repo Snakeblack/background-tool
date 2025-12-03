@@ -245,8 +245,8 @@ export class FloatingPanel extends HTMLElement {
             <div class="panel-header">
                 <h2 class="panel-title">${title}</h2>
                 <div class="panel-buttons">
-                    <button class="panel-btn" id="minimize-btn" title="Minimizar">${createElement(Minus, {width: 16, height: 16}).outerHTML}</button>
-                    <button class="panel-btn" id="close-btn" title="Cerrar">${createElement(X, {width: 16, height: 16}).outerHTML}</button>
+                    <button class="panel-btn" id="minimize-btn" title="Minimizar">${createElement(Minus, { width: 16, height: 16 }).outerHTML}</button>
+                    <button class="panel-btn" id="close-btn" title="Cerrar">${createElement(X, { width: 16, height: 16 }).outerHTML}</button>
                 </div>
             </div>
             <div class="panel-content">
@@ -259,24 +259,30 @@ export class FloatingPanel extends HTMLElement {
 
         minimizeBtn.addEventListener('click', () => {
             const isMinimized = this.classList.contains('minimized');
-            
+
             if (isMinimized) {
-                this.dispatchEvent(new CustomEvent('panel-request-open', {
-                    bubbles: true,
-                    composed: true
-                }));
+                this.dispatchEvent(
+                    new CustomEvent('panel-request-open', {
+                        bubbles: true,
+                        composed: true,
+                    }),
+                );
             }
-            
+
             this.classList.toggle('minimized');
-            minimizeBtn.innerHTML = this.classList.contains('minimized') ? createElement(Plus, {width: 16, height: 16}).outerHTML : createElement(Minus, {width: 16, height: 16}).outerHTML;
+            minimizeBtn.innerHTML = this.classList.contains('minimized')
+                ? createElement(Plus, { width: 16, height: 16 }).outerHTML
+                : createElement(Minus, { width: 16, height: 16 }).outerHTML;
         });
 
         closeBtn.addEventListener('click', () => {
             this.classList.add('hidden');
-            this.dispatchEvent(new CustomEvent('panel-close', {
-                bubbles: true,
-                composed: true
-            }));
+            this.dispatchEvent(
+                new CustomEvent('panel-close', {
+                    bubbles: true,
+                    composed: true,
+                }),
+            );
         });
     }
 }

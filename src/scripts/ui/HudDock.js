@@ -93,30 +93,30 @@ export class HudDock extends HTMLElement {
         this.shadowRoot.innerHTML = `
             <style>${style}</style>
             <button class="dock-item" data-panel="settings" aria-label="Configuración">
-                ${createElement(Settings, { class: "icon" }).outerHTML}
+                ${createElement(Settings, { class: 'icon' }).outerHTML}
                 <span>Config</span>
             </button>
             <button class="dock-item" data-panel="colors" aria-label="Colores">
-                ${createElement(Palette, { class: "icon" }).outerHTML}
+                ${createElement(Palette, { class: 'icon' }).outerHTML}
                 <span>Colors</span>
             </button>
             <button class="dock-item" data-panel="presets" aria-label="Presets">
-                ${createElement(Sparkles, { class: "icon" }).outerHTML}
+                ${createElement(Sparkles, { class: 'icon' }).outerHTML}
                 <span>Presets</span>
             </button>
             <button class="dock-item" data-action="random" aria-label="Generar Aleatorio">
-                ${createElement(Shuffle, { class: "icon" }).outerHTML}
+                ${createElement(Shuffle, { class: 'icon' }).outerHTML}
                 <span>Random</span>
             </button>
             <button class="dock-item" data-action="export" aria-label="Exportar Código">
-                ${createElement(Package, { class: "icon" }).outerHTML}
+                ${createElement(Package, { class: 'icon' }).outerHTML}
                 <span>Export</span>
             </button>
         `;
     }
 
     setupEvents() {
-        this.shadowRoot.querySelectorAll('.dock-item').forEach(item => {
+        this.shadowRoot.querySelectorAll('.dock-item').forEach((item) => {
             item.addEventListener('click', (e) => {
                 const panel = item.dataset.panel;
                 const action = item.dataset.action;
@@ -124,39 +124,45 @@ export class HudDock extends HTMLElement {
                 if (panel) {
                     this.togglePanel(panel, item);
                 } else if (action) {
-                    this.dispatchEvent(new CustomEvent('action', { 
-                        detail: { action },
-                        bubbles: true,
-                        composed: true
-                    }));
+                    this.dispatchEvent(
+                        new CustomEvent('action', {
+                            detail: { action },
+                            bubbles: true,
+                            composed: true,
+                        }),
+                    );
                 }
             });
         });
     }
 
     reset() {
-        this.shadowRoot.querySelectorAll('.dock-item').forEach(i => i.classList.remove('active'));
+        this.shadowRoot.querySelectorAll('.dock-item').forEach((i) => i.classList.remove('active'));
     }
 
     togglePanel(panelId, clickedItem) {
         // Toggle active state locally
         const isActive = clickedItem.classList.contains('active');
-        
+
         // Reset all
-        this.shadowRoot.querySelectorAll('.dock-item').forEach(i => i.classList.remove('active'));
+        this.shadowRoot.querySelectorAll('.dock-item').forEach((i) => i.classList.remove('active'));
 
         if (!isActive) {
             clickedItem.classList.add('active');
-            this.dispatchEvent(new CustomEvent('panel-open', { 
-                detail: { panel: panelId },
-                bubbles: true,
-                composed: true
-            }));
+            this.dispatchEvent(
+                new CustomEvent('panel-open', {
+                    detail: { panel: panelId },
+                    bubbles: true,
+                    composed: true,
+                }),
+            );
         } else {
-            this.dispatchEvent(new CustomEvent('panel-close', { 
-                bubbles: true,
-                composed: true
-            }));
+            this.dispatchEvent(
+                new CustomEvent('panel-close', {
+                    bubbles: true,
+                    composed: true,
+                }),
+            );
         }
     }
 }

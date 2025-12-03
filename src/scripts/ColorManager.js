@@ -13,7 +13,7 @@ export class ColorManager {
     constructor(shaderManager) {
         this.shaderManager = shaderManager;
         this.culori = culori;
-        
+
         this.colors = {
             1: { l: 0.7, c: 0.25, h: 330 },
             2: { l: 0.6, c: 0.3, h: 280 },
@@ -28,11 +28,11 @@ export class ColorManager {
      * @returns {THREE.Color} Color en formato Three.js
      */
     oklchToThreeColor(oklch) {
-        const rgb = this.culori.rgb({ 
-            mode: 'oklch', 
-            l: oklch.l, 
-            c: oklch.c, 
-            h: oklch.h 
+        const rgb = this.culori.rgb({
+            mode: 'oklch',
+            l: oklch.l,
+            c: oklch.c,
+            h: oklch.h,
         });
         return new THREE.Color(rgb.r, rgb.g, rgb.b);
     }
@@ -43,11 +43,11 @@ export class ColorManager {
      * @returns {string} Color en formato hexadecimal
      */
     oklchToHex(oklch) {
-        return this.culori.formatHex({ 
-            mode: 'oklch', 
-            l: oklch.l, 
-            c: oklch.c, 
-            h: oklch.h 
+        return this.culori.formatHex({
+            mode: 'oklch',
+            l: oklch.l,
+            c: oklch.c,
+            h: oklch.h,
         });
     }
 
@@ -61,10 +61,10 @@ export class ColorManager {
      */
     updateColor(colorIndex, l, c, h) {
         this.colors[colorIndex] = { l, c, h };
-        
+
         const threeColor = this.oklchToThreeColor({ l, c, h });
         this.shaderManager.updateUniform(`u_color${colorIndex}`, threeColor);
-        
+
         return this.oklchToHex({ l, c, h });
     }
 
@@ -136,13 +136,13 @@ export class ColorManager {
 
         if (presets[preset]) {
             this.colors = presets[preset];
-            
+
             for (let i = 1; i <= 4; i++) {
                 const color = this.colors[i];
                 const threeColor = this.oklchToThreeColor(color);
                 this.shaderManager.updateUniform(`u_color${i}`, threeColor);
             }
-            
+
             return true;
         }
         return false;
@@ -165,7 +165,7 @@ export class ColorManager {
         try {
             const imported = JSON.parse(json);
             this.colors = imported;
-            
+
             for (let i = 1; i <= 4; i++) {
                 if (this.colors[i]) {
                     const color = this.colors[i];

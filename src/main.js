@@ -33,7 +33,7 @@ class GradientApp {
         this.shaderManager = new ShaderManager(this.renderer);
         this.colorManager = new ColorManager(this.shaderManager);
         this.uiController = new UIController(this.shaderManager, this.colorManager);
-        
+
         this.init();
     }
 
@@ -50,8 +50,8 @@ class GradientApp {
                 Flame,
                 Snowflake,
                 Moon,
-                Gem
-            }
+                Gem,
+            },
         });
 
         for (let i = 1; i <= 4; i++) {
@@ -70,7 +70,7 @@ class GradientApp {
      */
     animate() {
         requestAnimationFrame(() => this.animate());
-        
+
         this.shaderManager.updateTime();
         this.shaderManager.updateResolution();
         this.renderer.render();
@@ -79,27 +79,35 @@ class GradientApp {
 
 window.addEventListener('DOMContentLoaded', () => {
     new GradientApp();
-    
+
     if ('ontouchstart' in window) {
-        document.addEventListener('dblclick', (e) => {
-            e.preventDefault();
-        }, { passive: false });
-        
-        document.addEventListener('touchmove', (e) => {
-            if (e.target === document.body) {
+        document.addEventListener(
+            'dblclick',
+            (e) => {
                 e.preventDefault();
-            }
-        }, { passive: false });
-        
+            },
+            { passive: false },
+        );
+
+        document.addEventListener(
+            'touchmove',
+            (e) => {
+                if (e.target === document.body) {
+                    e.preventDefault();
+                }
+            },
+            { passive: false },
+        );
+
         document.body.classList.add('touch-device');
     }
-    
+
     const handleOrientation = () => {
         const isLandscape = window.matchMedia('(orientation: landscape)').matches;
         document.body.classList.toggle('landscape', isLandscape);
         document.body.classList.toggle('portrait', !isLandscape);
     };
-    
+
     handleOrientation();
     window.addEventListener('orientationchange', handleOrientation);
     window.addEventListener('resize', handleOrientation);

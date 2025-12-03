@@ -1,7 +1,22 @@
 /**
  * Export Modal Component - Genera código para implementar en proyectos
  */
-import { Package, Rocket, Atom, Layers, Hexagon, Zap, Lightbulb, AlertTriangle, Clipboard, Check, AlertCircle, BarChart, X, createElement } from 'lucide';
+import {
+    Package,
+    Rocket,
+    Atom,
+    Layers,
+    Hexagon,
+    Zap,
+    Lightbulb,
+    AlertTriangle,
+    Clipboard,
+    Check,
+    AlertCircle,
+    BarChart,
+    X,
+    createElement,
+} from 'lucide';
 
 export class ExportModal extends HTMLElement {
     /**
@@ -451,8 +466,8 @@ export class ExportModal extends HTMLElement {
             
             <div class="modal-container">
                 <div class="modal-header">
-                    <h2 class="modal-title">${createElement(Package, {class: "icon-lg"}).outerHTML} Exportar a tu Proyecto</h2>
-                    <button class="close-btn" id="close-btn">${createElement(X, {class: "icon"}).outerHTML}</button>
+                    <h2 class="modal-title">${createElement(Package, { class: 'icon-lg' }).outerHTML} Exportar a tu Proyecto</h2>
+                    <button class="close-btn" id="close-btn">${createElement(X, { class: 'icon' }).outerHTML}</button>
                 </div>
                 <div class="modal-body">
                     <div class="tabs">
@@ -483,7 +498,7 @@ export class ExportModal extends HTMLElement {
         closeBtn.addEventListener('click', () => this.close());
 
         const modalContainer = this.shadowRoot.querySelector('.modal-container');
-        
+
         this.addEventListener('click', (e) => {
             if (e.target === this) {
                 this.close();
@@ -496,9 +511,8 @@ export class ExportModal extends HTMLElement {
                 target = target.parentElement;
             }
 
-            const copyBtn = typeof target?.closest === 'function'
-                ? target.closest('.copy-btn')
-                : null;
+            const copyBtn =
+                typeof target?.closest === 'function' ? target.closest('.copy-btn') : null;
             if (copyBtn) {
                 this.copyCode(copyBtn);
                 e.stopPropagation();
@@ -509,13 +523,13 @@ export class ExportModal extends HTMLElement {
         });
 
         const tabs = this.shadowRoot.querySelectorAll('.tab');
-        tabs.forEach(tab => {
+        tabs.forEach((tab) => {
             tab.addEventListener('click', () => {
-                tabs.forEach(t => t.classList.remove('active'));
+                tabs.forEach((t) => t.classList.remove('active'));
                 tab.classList.add('active');
-                
+
                 const tabId = tab.dataset.tab;
-                this.shadowRoot.querySelectorAll('.tab-content').forEach(content => {
+                this.shadowRoot.querySelectorAll('.tab-content').forEach((content) => {
                     content.classList.remove('active');
                 });
                 this.shadowRoot.getElementById(`${tabId}-content`).classList.add('active');
@@ -556,7 +570,7 @@ export class ExportModal extends HTMLElement {
         const container = this.shadowRoot.getElementById('vanilla-content');
         container.innerHTML = `
             <div class="section">
-                <h3 class="section-title">${createElement(Rocket, {class: "icon"}).outerHTML} Implementación Vanilla JS</h3>
+                <h3 class="section-title">${createElement(Rocket, { class: 'icon' }).outerHTML} Implementación Vanilla JS</h3>
                 <p class="section-description">
                     Implementación ligera y optimizada sin dependencias de frameworks.
                 </p>
@@ -583,7 +597,7 @@ export class ExportModal extends HTMLElement {
                 ${this.createCodeBlock('javascript', this.generateVanillaJS(), 'gradient.js')}
                 
                 <div class="info-box">
-                    <p><strong>${createElement(Lightbulb, {class: "icon"}).outerHTML} Consejo:</strong> Este código está optimizado para rendimiento con:</p>
+                    <p><strong>${createElement(Lightbulb, { class: 'icon' }).outerHTML} Consejo:</strong> Este código está optimizado para rendimiento con:</p>
                     <p>• RequestAnimationFrame para animaciones fluidas</p>
                     <p>• Geometría reutilizable sin recreación</p>
                     <p>• Eventos de resize debounced</p>
@@ -596,7 +610,7 @@ export class ExportModal extends HTMLElement {
         const container = this.shadowRoot.getElementById('react-content');
         container.innerHTML = `
             <div class="section">
-                <h3 class="section-title">${createElement(Atom, {class: "icon"}).outerHTML} Implementación React</h3>
+                <h3 class="section-title">${createElement(Atom, { class: 'icon' }).outerHTML} Implementación React</h3>
                 <p class="section-description">
                     Hook personalizado para integrar el gradiente en componentes React.
                 </p>
@@ -623,7 +637,7 @@ export class ExportModal extends HTMLElement {
                 ${this.createCodeBlock('jsx', this.generateReactUsage(), 'App.jsx')}
                 
                 <div class="warning-box">
-                    <p><strong>${createElement(AlertTriangle, {class: "icon"}).outerHTML} Importante:</strong> Asegúrate de limpiar los recursos en el cleanup de useEffect</p>
+                    <p><strong>${createElement(AlertTriangle, { class: 'icon' }).outerHTML} Importante:</strong> Asegúrate de limpiar los recursos en el cleanup de useEffect</p>
                 </div>
             </div>
         `;
@@ -633,7 +647,7 @@ export class ExportModal extends HTMLElement {
         const container = this.shadowRoot.getElementById('vue-content');
         container.innerHTML = `
             <div class="section">
-                <h3 class="section-title">${createElement(Layers, {class: "icon"}).outerHTML} Implementación Vue 3</h3>
+                <h3 class="section-title">${createElement(Layers, { class: 'icon' }).outerHTML} Implementación Vue 3</h3>
                 <p class="section-description">
                     Composable para Vue 3 con Composition API.
                 </p>
@@ -666,7 +680,7 @@ export class ExportModal extends HTMLElement {
         const container = this.shadowRoot.getElementById('angular-content');
         container.innerHTML = `
             <div class="section">
-                <h3 class="section-title">${createElement(Hexagon, {class: "icon"}).outerHTML} Implementación Angular 19+</h3>
+                <h3 class="section-title">${createElement(Hexagon, { class: 'icon' }).outerHTML} Implementación Angular 19+</h3>
                 <p class="section-description">
                     Servicio y directiva para integrar el gradiente en Angular 19+ con Signals.
                 </p>
@@ -700,7 +714,7 @@ export class ExportModal extends HTMLElement {
                 ${this.createCodeBlock('typescript', this.generateAngularUsage(), 'app.component.ts')}
                 
                 <div class="info-box">
-                    <p><strong>${createElement(Lightbulb, {class: "icon"}).outerHTML} Nota:</strong> Este código usa Angular 19+ con Signals y standalone components.</p>
+                    <p><strong>${createElement(Lightbulb, { class: 'icon' }).outerHTML} Nota:</strong> Este código usa Angular 19+ con Signals y standalone components.</p>
                 </div>
             </div>
         `;
@@ -710,7 +724,7 @@ export class ExportModal extends HTMLElement {
         const container = this.shadowRoot.getElementById('optimizations-content');
         container.innerHTML = `
             <div class="section">
-                <h3 class="section-title">${createElement(Zap, {class: "icon"}).outerHTML} Optimizaciones de Rendimiento</h3>
+                <h3 class="section-title">${createElement(Zap, { class: 'icon' }).outerHTML} Optimizaciones de Rendimiento</h3>
                 
                 <div class="step">
                     <span class="step-number">1</span>
@@ -734,7 +748,7 @@ export class ExportModal extends HTMLElement {
                 ${this.createCodeBlock('javascript', this.generateVisibilityAPI(), 'visibilityOptimization.js')}
                 
                 <div class="info-box">
-                    <p><strong>${createElement(BarChart, {class: "icon"}).outerHTML} Métricas de Rendimiento:</strong></p>
+                    <p><strong>${createElement(BarChart, { class: 'icon' }).outerHTML} Métricas de Rendimiento:</strong></p>
                     <p>• FPS Target: 60fps</p>
                     <p>• GPU Usage: ~5-10% (según complejidad del shader)</p>
                     <p>• Memory: ~10-20MB</p>
@@ -752,18 +766,18 @@ export class ExportModal extends HTMLElement {
      */
     createCodeBlock(language, code, title) {
         const blockId = `code-${Math.random().toString(36).substr(2, 9)}`;
-        
+
         if (!this.codeBlocks) {
             this.codeBlocks = new Map();
         }
         this.codeBlocks.set(blockId, code);
-        
+
         return `
             <div class="code-block">
                 <div class="code-header">
                     <span class="code-title">${title}</span>
                     <button class="copy-btn" data-block-id="${blockId}">
-                        ${createElement(Clipboard, {class: "icon"}).outerHTML} Copiar
+                        ${createElement(Clipboard, { class: 'icon' }).outerHTML} Copiar
                     </button>
                 </div>
                 <pre><code>${this.escapeHtml(code)}</code></pre>
@@ -778,7 +792,7 @@ export class ExportModal extends HTMLElement {
     async copyCode(button) {
         const blockId = button.getAttribute('data-block-id');
         const code = this.codeBlocks.get(blockId);
-        
+
         if (!code) {
             console.error('No se encontró el código para copiar');
             this.showCopyError(button);
@@ -810,7 +824,7 @@ export class ExportModal extends HTMLElement {
             this.showCopyError(button);
         }
     }
-    
+
     copyUsingCopyEvent(text) {
         if (typeof document === 'undefined') {
             return false;
@@ -878,16 +892,16 @@ export class ExportModal extends HTMLElement {
             return false;
         }
     }
-    
+
     /**
      * Muestra feedback visual de copiado exitoso
      * @param {HTMLButtonElement} button - Botón a actualizar
      */
     showCopySuccess(button) {
         const originalText = button.innerHTML;
-        button.innerHTML = `${createElement(Check, {class: "icon"}).outerHTML} Copiado!`;
+        button.innerHTML = `${createElement(Check, { class: 'icon' }).outerHTML} Copiado!`;
         button.classList.add('copied');
-        
+
         setTimeout(() => {
             button.innerHTML = originalText;
             button.classList.remove('copied');
@@ -900,7 +914,7 @@ export class ExportModal extends HTMLElement {
      */
     showCopyError(button) {
         const originalText = button.innerHTML;
-        button.innerHTML = `${createElement(AlertCircle, {class: "icon"}).outerHTML} Error`;
+        button.innerHTML = `${createElement(AlertCircle, { class: 'icon' }).outerHTML} Error`;
         button.classList.add('copy-error');
 
         setTimeout(() => {
@@ -982,7 +996,7 @@ export class ExportModal extends HTMLElement {
         }
 
         if (Array.isArray(value)) {
-            return `[${value.map(item => this.formatUniformValue(item)).join(', ')}]`;
+            return `[${value.map((item) => this.formatUniformValue(item)).join(', ')}]`;
         }
 
         return JSON.stringify(value);
@@ -1029,7 +1043,7 @@ export class ExportModal extends HTMLElement {
         const { colors, speed, parameters, shaderCode, vertexCode } = this.config;
 
         const normalizedColors = this.normalizeColors(colors);
-        const colorStrings = normalizedColors.map(color => this.formatColorForExport(color));
+        const colorStrings = normalizedColors.map((color) => this.formatColorForExport(color));
         const baseUniformLines = [
             '                u_time: { value: 0 }',
             '                u_resolution: { value: new THREE.Vector2(window.innerWidth * Math.min(window.devicePixelRatio, 2), window.innerHeight * Math.min(window.devicePixelRatio, 2)) }',
@@ -1040,8 +1054,10 @@ export class ExportModal extends HTMLElement {
             `                u_color4: { value: this.oklchToThree(${colorStrings[3]}) }`,
         ];
 
-        const parameterUniformLines = Object.entries(parameters || {})
-            .map(([key, value]) => `                u_${key}: { value: ${this.formatUniformValue(value)} }`);
+        const parameterUniformLines = Object.entries(parameters || {}).map(
+            ([key, value]) =>
+                `                u_${key}: { value: ${this.formatUniformValue(value)} }`,
+        );
 
         const uniformLines = [...baseUniformLines, ...parameterUniformLines];
         const uniformsBlock = uniformLines.join(',\n');
@@ -1127,8 +1143,8 @@ new GradientBackground('gradient-canvas');`;
         const { colors, speed, parameters, shaderCode, vertexCode } = this.config;
 
         const normalizedColors = this.normalizeColors(colors);
-        const colorStrings = normalizedColors.map(color => this.formatColorForExport(color));
-        
+        const colorStrings = normalizedColors.map((color) => this.formatColorForExport(color));
+
         const baseUniformLines = [
             '                u_time: { value: 0 }',
             '                u_resolution: { value: new THREE.Vector2(window.innerWidth * Math.min(window.devicePixelRatio, 2), window.innerHeight * Math.min(window.devicePixelRatio, 2)) }',
@@ -1139,8 +1155,10 @@ new GradientBackground('gradient-canvas');`;
             `                u_color4: { value: oklchToThree(${colorStrings[3]}) }`,
         ];
 
-        const parameterUniformLines = Object.entries(parameters || {})
-            .map(([key, value]) => `                u_${key}: { value: ${this.formatUniformValue(value)} }`);
+        const parameterUniformLines = Object.entries(parameters || {}).map(
+            ([key, value]) =>
+                `                u_${key}: { value: ${this.formatUniformValue(value)} }`,
+        );
 
         const uniformsBlock = [...baseUniformLines, ...parameterUniformLines].join(',\n');
 
@@ -1263,8 +1281,8 @@ function App() {
         const { colors, speed, parameters, shaderCode, vertexCode } = this.config;
 
         const normalizedColors = this.normalizeColors(colors);
-        const colorStrings = normalizedColors.map(color => this.formatColorForExport(color));
-        
+        const colorStrings = normalizedColors.map((color) => this.formatColorForExport(color));
+
         const baseUniformLines = [
             '                u_time: { value: 0 }',
             '                u_resolution: { value: new THREE.Vector2(window.innerWidth * Math.min(window.devicePixelRatio, 2), window.innerHeight * Math.min(window.devicePixelRatio, 2)) }',
@@ -1275,8 +1293,10 @@ function App() {
             `                u_color4: { value: oklchToThree(${colorStrings[3]}) }`,
         ];
 
-        const parameterUniformLines = Object.entries(parameters || {})
-            .map(([key, value]) => `                u_${key}: { value: ${this.formatUniformValue(value)} }`);
+        const parameterUniformLines = Object.entries(parameters || {}).map(
+            ([key, value]) =>
+                `                u_${key}: { value: ${this.formatUniformValue(value)} }`,
+        );
 
         const uniformsBlock = [...baseUniformLines, ...parameterUniformLines].join(',\n');
 
@@ -1409,7 +1429,7 @@ const { canvasRef } = useGradientBackground();
         const { colors, speed, parameters, shaderCode, vertexCode } = this.config;
 
         const normalizedColors = this.normalizeColors(colors);
-        const colorStrings = normalizedColors.map(color => this.formatColorForExport(color));
+        const colorStrings = normalizedColors.map((color) => this.formatColorForExport(color));
         const baseUniformLines = [
             '                u_time: { value: 0 }',
             '                u_resolution: { value: new THREE.Vector2(window.innerWidth * Math.min(window.devicePixelRatio, 2), window.innerHeight * Math.min(window.devicePixelRatio, 2)) }',
@@ -1419,8 +1439,10 @@ const { canvasRef } = useGradientBackground();
             `                u_color3: { value: this.oklchToThree(${colorStrings[2]}) }`,
             `                u_color4: { value: this.oklchToThree(${colorStrings[3]}) }`,
         ];
-        const parameterUniformLines = Object.entries(parameters || {})
-            .map(([key, value]) => `                u_${key}: { value: ${this.formatUniformValue(value)} }`);
+        const parameterUniformLines = Object.entries(parameters || {}).map(
+            ([key, value]) =>
+                `                u_${key}: { value: ${this.formatUniformValue(value)} }`,
+        );
         const uniformsBlock = [...baseUniformLines, ...parameterUniformLines].join(',\n');
 
         return `import { Injectable, signal, effect } from '@angular/core';
@@ -1658,7 +1680,6 @@ function animate() {
     }
 }`;
     }
-
 }
 
 customElements.define('export-modal', ExportModal);
