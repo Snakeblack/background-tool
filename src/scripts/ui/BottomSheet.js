@@ -90,7 +90,7 @@ export class BottomSheet extends HTMLElement {
         this.addEventListener('touchmove', (e) => {
             this.currentY = e.touches[0].clientY;
             const delta = this.currentY - this.startY;
-            
+
             // Simple logic: if dragging up and closed, or dragging down and open
             if (!this.isOpen && delta < 0) {
                 // Dragging up
@@ -101,12 +101,12 @@ export class BottomSheet extends HTMLElement {
         this.addEventListener('touchend', (e) => {
             this.style.transition = 'transform 0.4s cubic-bezier(0.16, 1, 0.3, 1)';
             const delta = this.currentY - this.startY;
-            
+
             if (Math.abs(delta) > 50) {
                 if (delta < 0 && !this.isOpen) this.open();
                 if (delta > 0 && this.isOpen) this.close();
             }
-            
+
             this.startY = 0;
             this.currentY = 0;
         });

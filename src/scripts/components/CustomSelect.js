@@ -53,15 +53,17 @@ export class CustomSelect extends HTMLElement {
         this.value = value;
         this.updateDisplay();
         this.close();
-        this.dispatchEvent(new CustomEvent('change', { 
-            detail: { value },
-            bubbles: true 
-        }));
+        this.dispatchEvent(
+            new CustomEvent('change', {
+                detail: { value },
+                bubbles: true,
+            }),
+        );
     }
 
     updateDisplay() {
         const display = this.shadowRoot.querySelector('.selected-value');
-        const option = this.options.find(o => o.value === this.value);
+        const option = this.options.find((o) => o.value === this.value);
         if (display && option) {
             display.textContent = option.label;
         }
@@ -72,7 +74,7 @@ export class CustomSelect extends HTMLElement {
         if (!list) return;
 
         list.innerHTML = '';
-        this.options.forEach(opt => {
+        this.options.forEach((opt) => {
             const item = document.createElement('div');
             item.className = `option-item ${opt.value === this.value ? 'selected' : ''}`;
             item.textContent = opt.label;
@@ -203,7 +205,7 @@ export class CustomSelect extends HTMLElement {
             <div class="select-container">
                 <div class="select-header">
                     <span class="selected-value">Select...</span>
-                    <span class="arrow-icon">${createElement(ChevronDown, {width: 16, height: 16}).outerHTML}</span>
+                    <span class="arrow-icon">${createElement(ChevronDown, { width: 16, height: 16 }).outerHTML}</span>
                 </div>
                 <div class="options-list"></div>
             </div>

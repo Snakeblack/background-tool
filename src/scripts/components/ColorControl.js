@@ -219,7 +219,7 @@ export class ColorControl extends HTMLElement {
             
             <div class="control-section">
                 <button class="collapsible-header" id="header">
-                    <span class="collapse-icon">${createElement(ChevronDown, {class: "icon-sm"}).outerHTML}</span>
+                    <span class="collapse-icon">${createElement(ChevronDown, { class: 'icon-sm' }).outerHTML}</span>
                     <span>${label}</span>
                     <div class="color-preview-inline" id="preview"></div>
                 </button>
@@ -245,7 +245,7 @@ export class ColorControl extends HTMLElement {
 
         const header = this.shadowRoot.getElementById('header');
         const content = this.shadowRoot.getElementById('content');
-        
+
         header.addEventListener('click', () => {
             header.classList.toggle('collapsed');
             header.classList.toggle('active'); // Add active state for border color
@@ -253,26 +253,31 @@ export class ColorControl extends HTMLElement {
         });
 
         const sliders = this.shadowRoot.querySelectorAll('.oklch-slider');
-        sliders.forEach(slider => {
+        sliders.forEach((slider) => {
             slider.addEventListener('input', (e) => {
                 const channel = e.target.dataset.channel;
                 const value = parseFloat(e.target.value);
-                
+
                 // Update label span directly
                 const labelSpan = slider.previousElementSibling.querySelector('span');
                 if (labelSpan) {
-                    labelSpan.textContent = channel === 'h' ? Math.round(value) : value.toFixed(channel === 'c' ? 3 : 2);
+                    labelSpan.textContent =
+                        channel === 'h'
+                            ? Math.round(value)
+                            : value.toFixed(channel === 'c' ? 3 : 2);
                 }
-                
-                this.dispatchEvent(new CustomEvent('color-change', {
-                    detail: {
-                        colorIndex: parseInt(colorIndex),
-                        channel,
-                        value
-                    },
-                    bubbles: true,
-                    composed: true
-                }));
+
+                this.dispatchEvent(
+                    new CustomEvent('color-change', {
+                        detail: {
+                            colorIndex: parseInt(colorIndex),
+                            channel,
+                            value,
+                        },
+                        bubbles: true,
+                        composed: true,
+                    }),
+                );
             });
         });
     }
@@ -296,7 +301,7 @@ export class ColorControl extends HTMLElement {
         return {
             l: parseFloat(this.getAttribute('l-value') || '0.7'),
             c: parseFloat(this.getAttribute('c-value') || '0.25'),
-            h: parseFloat(this.getAttribute('h-value') || '330')
+            h: parseFloat(this.getAttribute('h-value') || '330'),
         };
     }
 
