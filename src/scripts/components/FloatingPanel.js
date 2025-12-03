@@ -44,6 +44,7 @@ export class FloatingPanel extends HTMLElement {
                     top: 2rem;
                     ${position}: 2rem;
                     width: 320px;
+                    /* Ensure panel stays within viewport: 2rem top + 8rem bottom margin (for dock + spacing) */
                     max-height: calc(100vh - 10rem);
                     background: linear-gradient(135deg, rgba(30, 30, 50, 0.95) 0%, rgba(20, 20, 35, 0.98) 100%);
                     border-radius: 16px;
@@ -107,6 +108,7 @@ export class FloatingPanel extends HTMLElement {
                     padding: 1.5rem;
                     overflow-y: auto;
                     flex: 1;
+                    /* Allow flex item to shrink below content size for proper scrolling in flexbox */
                     min-height: 0;
                     transition: max-height 0.3s ease, padding 0.3s ease;
                     overscroll-behavior: contain;
