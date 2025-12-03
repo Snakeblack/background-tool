@@ -38,13 +38,13 @@ export class FloatingPanel extends HTMLElement {
         this.shadowRoot.innerHTML = `
             <style>
                 :host {
-                    display: block;
+                    display: flex;
+                    flex-direction: column;
                     position: fixed;
                     top: 2rem;
                     ${position}: 2rem;
                     width: 320px;
-                    min-height: 400px;
-                    max-height: calc(100vh - 4rem);
+                    max-height: calc(100vh - 10rem);
                     background: linear-gradient(135deg, rgba(30, 30, 50, 0.95) 0%, rgba(20, 20, 35, 0.98) 100%);
                     border-radius: 16px;
                     box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
@@ -106,7 +106,8 @@ export class FloatingPanel extends HTMLElement {
                 .panel-content {
                     padding: 1.5rem;
                     overflow-y: auto;
-                    max-height: calc(100vh - 8rem);
+                    flex: 1;
+                    min-height: 0;
                     transition: max-height 0.3s ease, padding 0.3s ease;
                     overscroll-behavior: contain;
                     scrollbar-gutter: stable;

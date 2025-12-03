@@ -20,7 +20,9 @@ export class BottomSheet extends HTMLElement {
                 left: 0;
                 width: 100%;
                 height: 80vh;
-                background: #111;
+                background: rgba(17, 17, 17, 0.85);
+                backdrop-filter: blur(20px);
+                -webkit-backdrop-filter: blur(20px);
                 border-top: 1px solid rgba(255, 255, 255, 0.1);
                 border-radius: 24px 24px 0 0;
                 transform: translateY(100%);
