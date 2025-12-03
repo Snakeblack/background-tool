@@ -2,7 +2,15 @@
  * Core Renderer - Gestiona Three.js y la escena WebGL
  */
 
-import { Scene, OrthographicCamera, WebGLRenderer, PlaneGeometry, Mesh, Clock, Vector2 } from 'three';
+import {
+    Scene,
+    OrthographicCamera,
+    WebGLRenderer,
+    PlaneGeometry,
+    Mesh,
+    Clock,
+    Vector2,
+} from 'three';
 
 export class Renderer {
     /**
@@ -16,7 +24,7 @@ export class Renderer {
         this.renderer = null;
         this.mesh = null;
         this.clock = new Clock();
-        
+
         this.init();
     }
 
@@ -31,12 +39,12 @@ export class Renderer {
         this.camera = new OrthographicCamera(-1, 1, 1, -1, 0, 10);
         this.camera.position.z = 1;
 
-        this.renderer = new WebGLRenderer({ 
-            canvas: this.canvas, 
-            antialias: true, 
+        this.renderer = new WebGLRenderer({
+            canvas: this.canvas,
+            antialias: true,
             alpha: false,
             precision: 'highp',
-            powerPreference: 'high-performance'
+            powerPreference: 'high-performance',
         });
         this.renderer.setSize(window.innerWidth, window.innerHeight);
         this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
@@ -88,9 +96,6 @@ export class Renderer {
      */
     getResolution() {
         const pixelRatio = this.renderer.getPixelRatio();
-        return new Vector2(
-            window.innerWidth * pixelRatio, 
-            window.innerHeight * pixelRatio
-        );
+        return new Vector2(window.innerWidth * pixelRatio, window.innerHeight * pixelRatio);
     }
 }

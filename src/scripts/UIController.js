@@ -2,17 +2,19 @@
  * UI Controller - Gestiona toda la interacción con la interfaz (HUD & Mobile)
  */
 
+import { Info, createElement } from 'lucide';
+
 export class UIController {
     constructor(shaderManager, colorManager) {
         this.shaderManager = shaderManager;
         this.colorManager = colorManager;
-        
+
         // Cache DOM elements
         this.dock = document.querySelector('hud-dock');
         this.bottomSheet = document.querySelector('bottom-sheet');
         this.desktopPanel = document.getElementById('desktop-panel-container');
         this.templates = document.getElementById('templates');
-        
+
         // State
         this.activePanelId = null;
         this.isMobile = window.innerWidth <= 768;
@@ -27,7 +29,7 @@ export class UIController {
         this.setupColorControls();
         this.setupPresets();
         this.setupExportButton();
-        
+
         // Initial setup
         this.updateLayoutMode();
     }
@@ -41,7 +43,7 @@ export class UIController {
                 // If a panel is open, re-open it in the new mode
                 if (this.activePanelId) {
                     this.closePanel(); // Close current
-                    // Re-opening would require logic to trigger the dock, 
+                    // Re-opening would require logic to trigger the dock,
                     // for now let's just close it to avoid glitches.
                 }
             }
@@ -93,9 +95,12 @@ export class UIController {
             if (!this.isMobile && this.activePanelId) {
                 const isClickInsidePanel = this.desktopPanel.contains(e.target);
                 const isClickInsideDock = this.dock.contains(e.target);
-                
+
                 if (!isClickInsidePanel && !isClickInsideDock) {
-                    this.dock.togglePanel(this.activePanelId, this.dock.shadowRoot.querySelector('.dock-item.active'));
+                    this.dock.togglePanel(
+                        this.activePanelId,
+                        this.dock.shadowRoot.querySelector('.dock-item.active'),
+                    );
                 }
             }
         });
@@ -107,7 +112,9 @@ export class UIController {
 
         // If another panel is open, move its content back to templates first
         if (this.activePanelId) {
-            const currentContent = this.isMobile ? this.bottomSheet.firstElementChild : this.desktopPanel.firstElementChild;
+            const currentContent = this.isMobile
+                ? this.bottomSheet.firstElementChild
+                : this.desktopPanel.firstElementChild;
             if (currentContent && this.templates) {
                 this.templates.appendChild(currentContent);
             }
@@ -116,7 +123,7 @@ export class UIController {
         // 1. Identify content
         const contentId = `content-${panelId === 'settings' ? 'settings' : panelId}`; // mapping 'settings' -> 'content-settings'
         const content = document.getElementById(contentId);
-        
+
         if (!content) {
             console.warn(`Content not found for panel: ${panelId}`);
             return;
@@ -131,14 +138,14 @@ export class UIController {
             this.desktopPanel.innerHTML = '';
             this.desktopPanel.appendChild(content);
             this.desktopPanel.classList.remove('hidden');
-            
+
             // Position above the active dock item
             // Note: We'd need to get the rect of the active item from the shadow DOM or just center it.
             // For simplicity in this version, we'll center the panel above the dock.
             this.desktopPanel.style.bottom = '100px'; // Approx above dock
             this.desktopPanel.style.left = '50%';
             this.desktopPanel.style.transform = 'translateX(-50%)';
-            
+
             // Add animation class
             this.desktopPanel.classList.add('fade-in-up');
         }
@@ -150,7 +157,9 @@ export class UIController {
         if (!this.activePanelId) return;
 
         // Move content back to templates to preserve state
-        const content = this.isMobile ? this.bottomSheet.firstElementChild : this.desktopPanel.firstElementChild;
+        const content = this.isMobile
+            ? this.bottomSheet.firstElementChild
+            : this.desktopPanel.firstElementChild;
         if (content && this.templates) {
             this.templates.appendChild(content);
         }
@@ -184,14 +193,14 @@ export class UIController {
             const c = parseFloat((0.1 + Math.random() * 0.2).toFixed(3));
             const h = Math.round(Math.random() * 360);
             this.colorManager.updateColor(i, l, c, h);
-            
+
             // Update UI if visible
             const component = document.querySelector(`color-control[color-index="${i}"]`);
             if (component) {
                 component.setAttribute('l-value', l);
                 component.setAttribute('c-value', c);
                 component.setAttribute('h-value', h);
-                component.updatePreview(this.colorManager.oklchToHex({l, c, h}));
+                component.updatePreview(this.colorManager.oklchToHex({ l, c, h }));
             }
         }
     }
@@ -201,30 +210,31 @@ export class UIController {
         if (!selector) return;
 
         const shaders = this.shaderManager.getAvailableShaders();
-        
+
         // Custom names map for better presentation
         const prettyNames = {
-            'neon_grid': 'Synthwave Grid',
-            'aurora': 'Northern Lights',
-            'voronoi': 'Organic Cells',
-            'flow': 'Vanta Flow',
-            'clouds': 'Dream Flight',
-            'liquid': 'Liquid Metal',
-            'geometric': 'Geometric Patterns',
-            'galaxy': 'Cosmic Galaxy',
-            'stripes': 'Retro Stripes',
-            'mesh': 'Wireframe Mesh',
-            'particles': 'Starfield'
+            neon_grid: 'Synthwave Grid',
+            aurora: 'Northern Lights',
+            voronoi: 'Organic Cells',
+            flow: 'Vanta Flow',
+            clouds: 'Dream Flight',
+            liquid: 'Liquid Metal',
+            geometric: 'Geometric Patterns',
+            galaxy: 'Cosmic Galaxy',
+            stripes: 'Retro Stripes',
+            mesh: 'Wireframe Mesh',
+            particles: 'Starfield',
         };
 
         // Clear existing options if any (though custom-select starts empty)
         if (selector.clearOptions) selector.clearOptions();
 
-        shaders.forEach(shaderName => {
+        shaders.forEach((shaderName) => {
             let label = prettyNames[shaderName];
             if (!label) {
-                label = shaderName.split('_')
-                    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+                label = shaderName
+                    .split('_')
+                    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
                     .join(' ');
             }
             selector.addOption(shaderName, label);
@@ -236,13 +246,13 @@ export class UIController {
         });
 
         if (shaders.length > 0) {
-            // Select first option without triggering event initially if needed, 
+            // Select first option without triggering event initially if needed,
             // or just load shader. CustomSelect.select triggers event.
             // Let's just load the shader manually and set the value visually.
             const initialShader = shaders[0];
             selector.value = initialShader;
             selector.updateDisplay();
-            
+
             const initialConfig = this.shaderManager.loadShader(initialShader);
             this.updateShaderControls(initialConfig);
         }
@@ -251,19 +261,41 @@ export class UIController {
     updateShaderControls(shaderConfig) {
         const container = document.getElementById('shader-controls-content');
         if (!container) return;
-        
+
         container.innerHTML = '';
 
         if (!shaderConfig?.controls) return;
 
-        shaderConfig.controls.forEach(control => {
+        shaderConfig.controls.forEach((control) => {
             const controlDiv = document.createElement('div');
             controlDiv.className = 'control-group';
+
+            const labelWrapper = document.createElement('div');
+            labelWrapper.className = 'control-label-wrapper';
 
             const label = document.createElement('label');
             label.className = 'control-label';
             label.htmlFor = control.id;
             label.innerHTML = `${control.label}: <span id="${control.id}-value">${control.value}</span>`;
+
+            labelWrapper.appendChild(label);
+
+            // Add info icon with tooltip if tooltip is available
+            if (control.tooltip) {
+                const infoButton = document.createElement('button');
+                infoButton.className = 'info-icon-btn';
+                infoButton.type = 'button';
+                infoButton.setAttribute('aria-label', 'Más información');
+                infoButton.setAttribute('data-tooltip', control.tooltip);
+
+                const infoIcon = createElement(Info, {
+                    size: 14,
+                    strokeWidth: 2,
+                });
+
+                infoButton.appendChild(infoIcon);
+                labelWrapper.appendChild(infoButton);
+            }
 
             const input = document.createElement('input');
             input.type = 'range';
@@ -280,7 +312,7 @@ export class UIController {
                 this.shaderManager.updateUniform(control.uniform, value);
             });
 
-            controlDiv.appendChild(label);
+            controlDiv.appendChild(labelWrapper);
             controlDiv.appendChild(input);
             container.appendChild(controlDiv);
         });
@@ -318,7 +350,7 @@ export class UIController {
         const color = this.colorManager.getColor(colorIndex);
         color[channel] = value;
         const hex = this.colorManager.updateColor(colorIndex, color.l, color.c, color.h);
-        
+
         const component = document.querySelector(`color-control[color-index="${colorIndex}"]`);
         if (component) {
             component.updatePreview(hex);
@@ -347,12 +379,14 @@ export class UIController {
                 for (let i = 1; i <= 4; i++) {
                     const color = this.colorManager.getColor(i);
                     if (color) {
-                        const component = document.querySelector(`color-control[color-index="${i}"]`);
+                        const component = document.querySelector(
+                            `color-control[color-index="${i}"]`,
+                        );
                         if (component) {
                             component.setAttribute('l-value', color.l);
                             component.setAttribute('c-value', color.c);
                             component.setAttribute('h-value', color.h);
-                            
+
                             const hex = this.colorManager.oklchToHex(color);
                             component.updatePreview(hex);
                         }
@@ -378,14 +412,14 @@ export class UIController {
         const shaderName = this.shaderManager.currentShader;
         const speedUniform = this.shaderManager?.uniforms?.u_speed;
         const speed = typeof speedUniform?.value === 'number' ? speedUniform.value : 0.5;
-        
+
         const colors = [];
         for (let i = 1; i <= 4; i++) {
             const color = this.colorManager.getColor(i);
             if (color) {
                 colors.push({
                     id: i,
-                    oklch: { ...color }
+                    oklch: { ...color },
                 });
             }
         }
@@ -400,7 +434,7 @@ export class UIController {
             colors: colors,
             parameters: parameters,
             shaderCode: shaderCode,
-            vertexCode: vertexCode
+            vertexCode: vertexCode,
         };
     }
 }

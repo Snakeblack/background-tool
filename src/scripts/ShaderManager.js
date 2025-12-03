@@ -80,9 +80,9 @@ export class ShaderManager {
                 if (this.uniforms[uniformName]) {
                     // Handle Color objects specifically if needed, or assume value is correct type
                     if (this.uniforms[uniformName].value.isColor && value.isColor) {
-                         this.uniforms[uniformName].value.copy(value);
+                        this.uniforms[uniformName].value.copy(value);
                     } else {
-                         this.uniforms[uniformName].value = value;
+                        this.uniforms[uniformName].value = value;
                     }
                 }
             });
@@ -90,7 +90,7 @@ export class ShaderManager {
 
         // Update uniforms with control values
         if (shaderConfig.controls) {
-            shaderConfig.controls.forEach(control => {
+            shaderConfig.controls.forEach((control) => {
                 const uniformName = control.uniform;
                 if (this.uniforms[uniformName] && control.value !== undefined) {
                     this.uniforms[uniformName].value = control.value;
@@ -105,7 +105,7 @@ export class ShaderManager {
         });
 
         this.renderer.setMaterial(this.material);
-        
+
         return shaderConfig;
     }
 
@@ -162,7 +162,7 @@ export class ShaderManager {
         }
 
         const parameters = {};
-        shader.controls.forEach(control => {
+        shader.controls.forEach((control) => {
             const configuredUniform = control.uniform;
             const uniformKey = configuredUniform.startsWith('u_')
                 ? configuredUniform
