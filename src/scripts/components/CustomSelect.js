@@ -9,8 +9,18 @@ export class CustomSelect extends HTMLElement {
         super();
         this.attachShadow({ mode: 'open' });
         this.options = [];
-        this.value = null;
+        this._value = null;
         this.isOpen = false;
+    }
+
+    get value() {
+        return this._value;
+    }
+
+    set value(val) {
+        this._value = val;
+        this.updateDisplay();
+        this.renderOptions();
     }
 
     connectedCallback() {
@@ -22,11 +32,11 @@ export class CustomSelect extends HTMLElement {
 
     addOption(value, label) {
         this.options.push({ value, label });
-        if (!this.value) {
+        if (!this._value) {
             this.value = value;
-            this.updateDisplay();
+        } else {
+            this.renderOptions();
         }
-        this.renderOptions();
     }
 
     clearOptions() {
@@ -51,7 +61,6 @@ export class CustomSelect extends HTMLElement {
 
     select(value) {
         this.value = value;
-        this.updateDisplay();
         this.close();
         this.dispatchEvent(new CustomEvent('change', { 
             detail: { value },

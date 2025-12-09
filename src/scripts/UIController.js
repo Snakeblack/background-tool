@@ -16,11 +16,13 @@ export class UIController {
         // State
         this.activePanelId = null;
         this.isMobile = window.innerWidth <= 768;
+        this.tooltipElement = null;
 
         this.init();
     }
 
     init() {
+        this.createGlobalTooltip();
         this.setupResizeListener();
         this.setupHudListeners();
         this.setupShaderSelector();
@@ -30,6 +32,12 @@ export class UIController {
         
         // Initial setup
         this.updateLayoutMode();
+    }
+
+    createGlobalTooltip() {
+        this.tooltipElement = document.createElement('div');
+        this.tooltipElement.className = 'global-tooltip';
+        document.body.appendChild(this.tooltipElement);
     }
 
     setupResizeListener() {
@@ -232,6 +240,19 @@ export class UIController {
 
         selector.addEventListener('change', (e) => {
             const shaderConfig = this.shaderManager.loadShader(e.detail.value);
+            
+            // Sync ColorManager with new defaults if they exist
+            if (shaderConfig?.defaults) {
+                const { u_color1, u_color2, u_color3, u_color4 } = shaderConfig.defaults;
+                if (u_color1 && u_color2 && u_color3 && u_color4) {
+                    this.colorManager.setColorsFromThreeColors(u_color1, u_color2, u_color3, u_color4);
+                    // Update UI components
+                    for (let i = 1; i <= 4; i++) {
+                        this.initializeColorComponent(i);
+                    }
+                }
+            }
+
             this.updateShaderControls(shaderConfig);
         });
 
@@ -244,11 +265,30 @@ export class UIController {
             selector.updateDisplay();
             
             const initialConfig = this.shaderManager.loadShader(initialShader);
+            
+            // Sync ColorManager with initial defaults
+            if (initialConfig?.defaults) {
+                const { u_color1, u_color2, u_color3, u_color4 } = initialConfig.defaults;
+                if (u_color1 && u_color2 && u_color3 && u_color4) {
+                    this.colorManager.setColorsFromThreeColors(u_color1, u_color2, u_color3, u_color4);
+                    // Update UI components
+                    for (let i = 1; i <= 4; i++) {
+                        this.initializeColorComponent(i);
+                    }
+                }
+            }
+
             this.updateShaderControls(initialConfig);
         }
     }
 
+    getVisualValue(value, min, max) {
+        return Math.round(((value - min) / (max - min)) * 100);
+    }
+
     updateShaderControls(shaderConfig) {
+        this.updateColorLabels(shaderConfig);
+
         const container = document.getElementById('shader-controls-content');
         if (!container) return;
         
@@ -260,29 +300,108 @@ export class UIController {
             const controlDiv = document.createElement('div');
             controlDiv.className = 'control-group';
 
+            const visualValue = this.getVisualValue(control.value, control.min, control.max);
+            
+            // Header container for label and info icon
+            const headerDiv = document.createElement('div');
+            headerDiv.className = 'control-header';
+            headerDiv.style.display = 'flex';
+            headerDiv.style.alignItems = 'center';
+            headerDiv.style.justifyContent = 'space-between';
+            headerDiv.style.marginBottom = '8px';
+
+            const labelContainer = document.createElement('div');
+            labelContainer.style.display = 'flex';
+            labelContainer.style.alignItems = 'center';
+            labelContainer.style.gap = '6px';
+
             const label = document.createElement('label');
             label.className = 'control-label';
             label.htmlFor = control.id;
-            label.innerHTML = `${control.label}: <span id="${control.id}-value">${control.value}</span>`;
+            label.style.marginBottom = '0'; // Override default
+            label.textContent = control.label;
+
+            labelContainer.appendChild(label);
+
+            if (control.tooltip) {
+                const infoIcon = document.createElement('div');
+                infoIcon.className = 'info-icon';
+                infoIcon.innerHTML = `
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="12" y1="16" x2="12" y2="12"></line>
+                        <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                    </svg>
+                `;
+                
+                // Event listeners for global tooltip
+                infoIcon.addEventListener('mouseenter', (e) => {
+                    if (!this.tooltipElement) return;
+                    
+                    const rect = infoIcon.getBoundingClientRect();
+                    this.tooltipElement.textContent = control.tooltip;
+                    this.tooltipElement.classList.add('visible');
+                    
+                    // Calculate position (centered above the icon)
+                    const tooltipRect = this.tooltipElement.getBoundingClientRect();
+                    const left = rect.left + (rect.width / 2) - (tooltipRect.width / 2);
+                    const top = rect.top - tooltipRect.height - 8; // 8px gap
+                    
+                    this.tooltipElement.style.left = `${left}px`;
+                    this.tooltipElement.style.top = `${top}px`;
+                });
+
+                infoIcon.addEventListener('mouseleave', () => {
+                    if (this.tooltipElement) {
+                        this.tooltipElement.classList.remove('visible');
+                    }
+                });
+
+                labelContainer.appendChild(infoIcon);
+            }
+
+            const valueDisplay = document.createElement('span');
+            valueDisplay.id = `${control.id}-value`;
+            valueDisplay.textContent = visualValue;
+            valueDisplay.style.fontSize = '0.85rem';
+            valueDisplay.style.opacity = '0.7';
+
+            headerDiv.appendChild(labelContainer);
+            headerDiv.appendChild(valueDisplay);
 
             const input = document.createElement('input');
             input.type = 'range';
             input.id = control.id;
             input.min = control.min;
             input.max = control.max;
-            input.step = control.step;
+            // Force high precision step for fluidity
+            input.step = '0.001';
             input.value = control.value;
 
             input.addEventListener('input', (e) => {
                 const value = parseFloat(e.target.value);
                 const valueSpan = document.getElementById(`${control.id}-value`);
-                if (valueSpan) valueSpan.textContent = value.toFixed(2);
+                if (valueSpan) {
+                    valueSpan.textContent = this.getVisualValue(value, control.min, control.max);
+                }
                 this.shaderManager.updateUniform(control.uniform, value);
             });
 
-            controlDiv.appendChild(label);
+            controlDiv.appendChild(headerDiv);
             controlDiv.appendChild(input);
             container.appendChild(controlDiv);
+        });
+    }
+
+    updateColorLabels(shaderConfig) {
+        if (!shaderConfig?.colorLabels) return;
+        
+        shaderConfig.colorLabels.forEach((label, index) => {
+            const colorIndex = index + 1;
+            const component = document.querySelector(`color-control[color-index="${colorIndex}"]`);
+            if (component) {
+                component.setAttribute('label', label);
+            }
         });
     }
 
@@ -303,7 +422,10 @@ export class UIController {
                 const value = parseFloat(e.target.value);
                 this.shaderManager.updateUniform('u_speed', value);
                 const speedVal = document.getElementById('speed-value');
-                if (speedVal) speedVal.textContent = value.toFixed(2);
+                if (speedVal) {
+                    // Speed is 0.0 to 1.0
+                    speedVal.textContent = Math.round(value * 100);
+                }
             });
         }
 

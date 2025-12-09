@@ -233,9 +233,13 @@ hud-dock {
 /* ============================================
    Form Controls
    ============================================ */
+#content-colors {
+    padding-inline: .5rem;
+}
 
 .control-group {
     margin-bottom: var(--spacing-md);
+    padding-inline: .5rem;
 }
 
 .control-label {
@@ -784,7 +788,7 @@ bottom-sheet {
         display: flex;
         justify-content: space-between;
         font-size: 0.75rem;
-        color: #a0a0a0;
+        color: var(--color-text-secondary);
         margin-bottom: 0;
         text-transform: uppercase;
         letter-spacing: 0.05em;
@@ -793,7 +797,7 @@ bottom-sheet {
     }
 
     #content-settings .control-label span {
-        color: #ffffff;
+        color: var(--color-text-secondary);
         font-family: 'Space Mono', monospace;
     }
 
@@ -952,10 +956,10 @@ bottom-sheet {
 #desktop-panel-container {
     position: fixed;
     /* width: 320px; handled by component */
-    background: transparent;
-    backdrop-filter: none;
+    background: #1212122f;
+    backdrop-filter: blur(20px);
     border: none;
-    border-radius: 0;
+    border-radius: 24px;
     padding: 0;
     box-shadow: none;
     z-index: 110;
@@ -986,7 +990,7 @@ bottom-sheet {
 
 /* Ensure content inside is visible */
 #desktop-panel-container label {
-    color: var(--color-text-secondary);
+    color: var(--color-text-primary);
     font-size: 0.75rem;
     text-transform: uppercase;
     letter-spacing: 0.05em;
@@ -1012,6 +1016,8 @@ bottom-sheet {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
     gap: 0.75rem;
+    padding: .75rem;
+    padding-bottom: 1.5rem;
 }
 
 .preset-btn {
@@ -1043,6 +1049,7 @@ bottom-sheet {
     height: 100%;
     background: radial-gradient(circle at center, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
     opacity: 0;
+    border-radius: 16px;
     transition: opacity 0.3s ease;
 }
 
@@ -1052,10 +1059,12 @@ bottom-sheet {
     color: white;
     transform: translateY(-2px);
     box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+    border-radius: 16px;
 }
 
 .preset-btn:hover::before {
     opacity: 1;
+    border-radius: 16px;
 }
 
 .preset-btn:active {
@@ -1082,3 +1091,50 @@ bottom-sheet {
         border-radius: 12px;
     }
 }
+
+/* --- Tooltips --- */
+.info-icon {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--color-text-secondary);
+    cursor: help;
+    transition: color 0.2s ease;
+}
+
+.info-icon:hover {
+    color: var(--color-accent-primary);
+}
+
+.global-tooltip {
+    position: fixed; /* Fixed positioning relative to viewport */
+    top: 0;
+    left: 0;
+    width: max-content;
+    max-width: 220px;
+    padding: 8px 12px;
+    background: rgba(10, 10, 10, 0.95);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    color: var(--color-text-primary);
+    font-size: 0.75rem;
+    line-height: 1.4;
+    text-align: center;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition: opacity 0.2s var(--ease-out-expo), transform 0.2s var(--ease-out-expo);
+    z-index: 9999; /* Very high z-index */
+    backdrop-filter: blur(10px);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.6);
+    transform: translateY(4px);
+}
+
+.global-tooltip.visible {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+/* Arrow for tooltip (optional, might be tricky with fixed positioning, skipping for now for simplicity/robustness) */

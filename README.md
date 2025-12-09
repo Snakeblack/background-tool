@@ -1,4 +1,4 @@
-# 🎨 MMRG Background Generator | Generador de Fondos WebGL
+# 🎨 MMRG Background Generator | Generador de Fondos Animados WebGL
 
 [![Live Demo](https://img.shields.io/badge/demo-online-brightgreen.svg)](https://background.mretamozo.com)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)

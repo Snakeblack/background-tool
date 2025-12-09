@@ -1,7 +1,7 @@
 {
   "name": "MMRG Background Generator",
   "short_name": "BG Generator",
-  "description": "Generador de fondos WebGL con shaders personalizables",
+  "description": "Generador de fondos animados WebGL con shaders personalizables",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#1e1e32",

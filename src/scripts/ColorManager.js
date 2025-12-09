@@ -78,6 +78,31 @@ export class ColorManager {
     }
 
     /**
+     * Actualiza el estado interno desde colores Three.js (RGB)
+     * @param {THREE.Color} c1 
+     * @param {THREE.Color} c2 
+     * @param {THREE.Color} c3 
+     * @param {THREE.Color} c4 
+     */
+    setColorsFromThreeColors(c1, c2, c3, c4) {
+        const colors = [c1, c2, c3, c4];
+        const toOklch = this.culori.converter('oklch');
+
+        colors.forEach((color, index) => {
+            if (color) {
+                const rgb = { mode: 'rgb', r: color.r, g: color.g, b: color.b };
+                const oklch = toOklch(rgb);
+                
+                this.colors[index + 1] = { 
+                    l: oklch.l !== undefined ? oklch.l : 0, 
+                    c: oklch.c !== undefined ? oklch.c : 0, 
+                    h: oklch.h !== undefined ? oklch.h : 0 
+                };
+            }
+        });
+    }
+
+    /**
      * Aplica un preset de colores predefinido
      * @param {string} preset - Nombre del preset (sunset, ocean, forest, purple, neon)
      * @returns {boolean} True si el preset se aplicó correctamente

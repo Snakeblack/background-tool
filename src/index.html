@@ -5,9 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
     
     <!-- Primary Meta Tags -->
-    <title>Generador de Fondos WebGL Gratis | Shaders Animados para Web - MMRG</title>
+    <title>Generador de Fondos Animados WebGL Gratis | Shaders Animados para Web - MMRG</title>
     <meta name="description" content="Generador gratuito de fondos animados WebGL. Crea backgrounds modernos con shaders personalizables, espacio de color OKLCH y exporta código para React, Vue, Angular.">
-    <meta name="keywords" content="generador de fondos webgl, shaders personalizables, three.js backgrounds, oklch color space, animated backgrounds, gradient generator, react background, vue background, angular background, herramienta desarrollo web, fondos animados, webgl generator, shader editor online, css gradients, animated gradients, web design tools, free background generator">
+    <meta name="keywords" content="generador de fondos animados, generador de fondos  animados webgl, shaders personalizables, three.js backgrounds, oklch color space, animated backgrounds, gradient generator, react background, vue background, angular background, herramienta desarrollo web, fondos animados, webgl generator, shader editor online, css gradients, animated gradients, web design tools, free background generator">
     <meta name="author" content="Manuel Retamozo - MMRG">
     <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
     <meta name="googlebot" content="index, follow">
@@ -26,19 +26,19 @@
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://background.mretamozo.com/">
     <meta property="og:site_name" content="MMRG Background Generator">
-    <meta property="og:title" content="Generador de Fondos WebGL Gratis | Shaders Animados">
+    <meta property="og:title" content="Generador de Fondos Animados WebGL Gratis | Shaders Animados">
     <meta property="og:description" content="Crea fondos animados únicos con WebGL y shaders personalizables. Editor OKLCH, múltiples efectos únicos y exportación de código para React, Vue, Angular. Gratis y open source.">
     <meta property="og:image" content="https://background.mretamozo.com/logo-img.jpg">
     <meta property="og:image:width" content="1200">
     <meta property="og:image:height" content="1200">
-    <meta property="og:image:alt" content="MMRG Background Generator - Generador de fondos WebGL con shaders personalizables">
+    <meta property="og:image:alt" content="MMRG Background Generator - Generador de fondos animados WebGL con shaders personalizables">
     <meta property="og:locale" content="es_ES">
     <meta property="og:locale:alternate" content="en_US">
     
     <!-- Twitter -->
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:url" content="https://background.mretamozo.com/">
-    <meta name="twitter:title" content="Generador de Fondos WebGL Gratis | Shaders Animados">
+    <meta name="twitter:title" content="Generador de Fondos Animados WebGL Gratis | Shaders Animados">
     <meta name="twitter:description" content="Crea fondos animados únicos con WebGL y shaders personalizables. Editor OKLCH, múltiples efectos y exportación de código. Gratis y open source.">
     <meta name="twitter:image" content="https://background.mretamozo.com/logo-img.jpg">
     <meta name="twitter:image:alt" content="MMRG Background Generator interface">
@@ -65,7 +65,7 @@
       "@context": "https://schema.org",
       "@type": "WebApplication",
       "name": "MMRG Background Generator",
-      "alternateName": "Generador de Fondos WebGL",
+      "alternateName": "Generador de Fondos Animados WebGL",
       "url": "https://background.mretamozo.com",
       "description": "Generador de fondos animados WebGL con shaders personalizables, espacio de color OKLCH y exportación de código para React, Vue, Angular y Vanilla JS. Crea fondos únicos y modernos para tus proyectos web.",
       "applicationCategory": "DesignApplication",
@@ -91,7 +91,7 @@
         "url": "https://mretamozo.com"
       },
       "softwareVersion": "1.0.0",
-      "keywords": "WebGL, shaders, generador de fondos, OKLCH, Three.js, gradientes animados, fondos web, diseño web, herramienta de desarrollo",
+      "keywords": "WebGL, shaders, generador de fondos, OKLCH, Three.js, gradientes animados, fondos animados, fondos web, diseño web, herramienta de desarrollo",
       "featureList": [
         "Colección de shaders WebGL únicos (Aurora, Waves, Liquid, Mesh, Stripes, Geometric, Particles)",
         "Editor de colores con espacio OKLCH para colores vibrantes",
@@ -114,7 +114,7 @@
 </head>
 <body>
     <!-- SEO Content (Visually Hidden) -->
-    <h1 class="visually-hidden">Generador de Fondos WebGL y Shaders Animados Gratis</h1>
+    <h1 class="visually-hidden">Generador de Fondos Animados WebGL y Shaders Animados Gratis</h1>
     <section class="visually-hidden">
         <h2>Sobre esta herramienta</h2>
         <p>MMRG Background Generator es una herramienta gratuita y de código abierto diseñada para desarrolladores y diseñadores web. Permite crear fondos animados de alta calidad utilizando tecnología WebGL y Three.js.</p>
@@ -170,8 +170,8 @@
                 <custom-select id="shader-type"></custom-select>
             </div>
             <div class="control-group">
-                <label class="control-label">Global Speed: <span id="speed-value">0.50</span></label>
-                <input type="range" id="speed" min="0.0" max="1.0" step="0.01" value="0.5">
+                <label class="control-label">Global Speed: <span id="speed-value">50</span></label>
+                <input type="range" id="speed" min="0.0" max="1.0" step="0.001" value="0.5">
             </div>
             <div id="shader-controls-content" class="space-y-4">
                 <!-- Dynamic controls -->
@@ -181,10 +181,10 @@
         <!-- Colors Panel Content -->
         <div id="content-colors">
             <div class="space-y-4">
-                <color-control color-index="1" label="Primary" l-value="0.7" c-value="0.25" h-value="330"></color-control>
-                <color-control color-index="2" label="Secondary" l-value="0.6" c-value="0.3" h-value="280"></color-control>
-                <color-control color-index="3" label="Accent 1" l-value="0.8" c-value="0.2" h-value="150"></color-control>
-                <color-control color-index="4" label="Accent 2" l-value="0.65" c-value="0.28" h-value="60"></color-control>
+                <color-control color-index="1" label="Color 1" l-value="0.7" c-value="0.25" h-value="330"></color-control>
+                <color-control color-index="2" label="Color 2" l-value="0.6" c-value="0.3" h-value="280"></color-control>
+                <color-control color-index="3" label="Color 3" l-value="0.8" c-value="0.2" h-value="150"></color-control>
+                <color-control color-index="4" label="Color 4" l-value="0.65" c-value="0.28" h-value="60"></color-control>
             </div>
         </div>
 

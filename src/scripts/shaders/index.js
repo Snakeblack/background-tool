@@ -20,7 +20,8 @@ import voronoiShader from '../../shaders/voronoi.glsl?raw';
 const GLOBAL_CONTROLS = [
     {
         id: 'brightness',
-        label: 'Brillo',
+        label: 'Brightness',
+        tooltip: 'Adjusts the overall lightness of the scene.',
         uniform: 'u_brightness',
         min: -0.5,
         max: 0.5,
@@ -29,7 +30,8 @@ const GLOBAL_CONTROLS = [
     },
     {
         id: 'contrast',
-        label: 'Contraste',
+        label: 'Contrast',
+        tooltip: 'Controls the difference between light and dark areas.',
         uniform: 'u_contrast',
         min: 0.5,
         max: 2.0,
@@ -38,7 +40,8 @@ const GLOBAL_CONTROLS = [
     },
     {
         id: 'noise',
-        label: 'Ruido',
+        label: 'Noise',
+        tooltip: 'Adds grain texture for a more organic look.',
         uniform: 'u_noise',
         min: 0.0,
         max: 0.5,
@@ -53,11 +56,19 @@ export const SHADERS = {
         description: 'Ondas sinusoidales superpuestas con movimiento fluido',
         vertex: vertexShader,
         fragment: wavesShader,
+        colorLabels: ['Wave 1', 'Wave 2', 'Wave 3', 'Background'],
+        defaults: {
+            u_color1: new Color(0.0, 0.4, 0.9),    // Electric Azure
+            u_color2: new Color(0.6, 0.0, 1.0),    // Vivid Violet
+            u_color3: new Color(1.0, 0.0, 0.5),    // Neon Rose
+            u_color4: new Color(0.02, 0.0, 0.1)    // Deep Indigo
+        },
         controls: [
             ...GLOBAL_CONTROLS,
             {
                 id: 'wave-amplitude',
-                label: 'Amplitud',
+                label: 'Amplitude',
+                tooltip: 'Controls the height of the waves.',
                 uniform: 'u_wave_amplitude',
                 min: 0.05,
                 max: 2.5,
@@ -66,7 +77,8 @@ export const SHADERS = {
             },
             {
                 id: 'wave-frequency',
-                label: 'Frecuencia',
+                label: 'Frequency',
+                tooltip: 'Adjusts the number of waves visible.',
                 uniform: 'u_wave_frequency',
                 min: 0.1,
                 max: 20.0,
@@ -81,11 +93,13 @@ export const SHADERS = {
         description: 'Patrones de rayas usando funciones seno y coseno',
         vertex: vertexShader,
         fragment: stripesShader,
+        colorLabels: ['Color 1', 'Color 2', 'Color 3', 'Color 4'],
         controls: [
             ...GLOBAL_CONTROLS,
             {
                 id: 'stripe-width',
-                label: 'Frecuencia',
+                label: 'Density',
+                tooltip: 'Controls the number of stripes.',
                 uniform: 'u_stripe_width',
                 min: 1.0,
                 max: 100.0,
@@ -94,7 +108,8 @@ export const SHADERS = {
             },
             {
                 id: 'stripe-speed',
-                label: 'Velocidad Relativa',
+                label: 'Relative Speed',
+                tooltip: 'Adjusts how fast stripes move relative to each other.',
                 uniform: 'u_stripe_speed',
                 min: 0.0,
                 max: 2.0,
@@ -109,11 +124,13 @@ export const SHADERS = {
         description: 'Efecto líquido con ruido FBM (Fractional Brownian Motion)',
         vertex: vertexShader,
         fragment: liquidShader,
+        colorLabels: ['Color A', 'Color B', 'Color C', 'Background'],
         controls: [
             ...GLOBAL_CONTROLS,
             {
                 id: 'zoom',
-                label: 'Complejidad',
+                label: 'Complexity',
+                tooltip: 'Controls the detail level of the fluid distortion.',
                 uniform: 'u_zoom',
                 min: 0.1,
                 max: 20.0,
@@ -128,11 +145,13 @@ export const SHADERS = {
         description: 'Gradiente tipo malla con distorsión procedural',
         vertex: vertexShader,
         fragment: meshShader,
+        colorLabels: ['Color 1', 'Color 2', 'Color 3', 'Color 4'],
         controls: [
             ...GLOBAL_CONTROLS,
             {
                 id: 'mesh-scale',
-                label: 'Densidad',
+                label: 'Density',
+                tooltip: 'Adjusts the grid tightness of the mesh.',
                 uniform: 'u_scale',
                 min: 4.0,
                 max: 12.0,
@@ -141,7 +160,8 @@ export const SHADERS = {
             },
             {
                 id: 'mesh-distortion',
-                label: 'Distorsión',
+                label: 'Distortion',
+                tooltip: 'Controls the amount of warping applied to the mesh.',
                 uniform: 'u_distortion',
                 min: 0.5,
                 max: 1.5,
@@ -156,11 +176,13 @@ export const SHADERS = {
         description: 'Sistema de partículas animadas con movimiento ondulatorio',
         vertex: vertexShader,
         fragment: particlesShader,
+        colorLabels: ['Particles', 'Glow', 'Background 1', 'Background 2'],
         controls: [
             ...GLOBAL_CONTROLS,
             {
                 id: 'particle-intensity',
-                label: 'Brillo',
+                label: 'Intensity',
+                tooltip: 'Controls the brightness and visibility of particles.',
                 uniform: 'u_intensity',
                 min: 0.1,
                 max: 5.0,
@@ -175,11 +197,13 @@ export const SHADERS = {
         description: 'Efecto de aurora boreal con capas de ruido',
         vertex: vertexShader,
         fragment: auroraShader,
+        colorLabels: ['Sky', 'Horizon', 'Aurora 1', 'Aurora 2'],
         controls: [
             ...GLOBAL_CONTROLS,
             {
                 id: 'aurora-scale',
-                label: 'Escala',
+                label: 'Scale',
+                tooltip: 'Adjusts the size of the aurora curtains.',
                 uniform: 'u_scale',
                 min: 0.1,
                 max: 5.0,
@@ -188,7 +212,8 @@ export const SHADERS = {
             },
             {
                 id: 'aurora-intensity',
-                label: 'Intensidad',
+                label: 'Intensity',
+                tooltip: 'Controls the brightness of the aurora effect.',
                 uniform: 'u_intensity',
                 min: 0.3,
                 max: 2.5,
@@ -203,11 +228,13 @@ export const SHADERS = {
         description: 'Cielo con nubes esponjosas y realistas',
         vertex: vertexShader,
         fragment: cloudsShader,
+        colorLabels: ['Sky', 'Clouds 1', 'Clouds 2', 'Sun'],
         controls: [
             ...GLOBAL_CONTROLS,
             {
                 id: 'cloud-scale',
-                label: 'Escala',
+                label: 'Scale',
+                tooltip: 'Adjusts the size and fluffiness of clouds.',
                 uniform: 'u_scale',
                 min: 1.0,
                 max: 10.0,
@@ -216,7 +243,8 @@ export const SHADERS = {
             },
             {
                 id: 'cloud-intensity',
-                label: 'Cobertura',
+                label: 'Coverage',
+                tooltip: 'Controls the amount of sky covered by clouds.',
                 uniform: 'u_intensity',
                 min: 0.0,
                 max: 1.0,
@@ -231,11 +259,13 @@ export const SHADERS = {
         description: 'Efecto fluido y onírico estilo Vanta.js',
         vertex: vertexShader,
         fragment: flowShader,
+        colorLabels: ['Color 1', 'Color 2', 'Color 3', 'Background'],
         controls: [
             ...GLOBAL_CONTROLS,
             {
                 id: 'flow-scale',
-                label: 'Escala',
+                label: 'Scale',
+                tooltip: 'Adjusts the size of the flow patterns.',
                 uniform: 'u_scale',
                 min: 0.5,
                 max: 5.0,
@@ -244,7 +274,8 @@ export const SHADERS = {
             },
             {
                 id: 'flow-intensity',
-                label: 'Densidad',
+                label: 'Density',
+                tooltip: 'Controls the compactness of the flow lines.',
                 uniform: 'u_intensity',
                 min: 0.1,
                 max: 2.0,
@@ -259,11 +290,13 @@ export const SHADERS = {
         description: 'Patrones geométricos (hexágonos, cuadrados, triángulos)',
         vertex: vertexShader,
         fragment: geometricShader,
+        colorLabels: ['Shapes 1', 'Shapes 2', 'Background 1', 'Background 2'],
         controls: [
             ...GLOBAL_CONTROLS,
             {
                 id: 'geo-scale',
-                label: 'Tamaño',
+                label: 'Scale',
+                tooltip: 'Adjusts the size of the geometric shapes.',
                 uniform: 'u_scale',
                 min: 1.0,
                 max: 20.0,
@@ -272,7 +305,8 @@ export const SHADERS = {
             },
             {
                 id: 'geo-rotation',
-                label: 'Rotación Base',
+                label: 'Base Rotation',
+                tooltip: 'Controls the initial rotation angle of shapes.',
                 uniform: 'u_rotation',
                 min: 0.0,
                 max: 6.28,
@@ -287,6 +321,7 @@ export const SHADERS = {
         description: 'Rejilla estilo Synthwave/Cyberpunk con perspectiva 3D',
         vertex: vertexShader,
         fragment: neonGridShader,
+        colorLabels: ['Sky', 'Grid', 'Sun', 'Glow'],
         defaults: {
             u_color1: new Color(0.12, 0.02, 0.25), // Deep Purple (Sky)
             u_color2: new Color(0.0, 0.9, 1.0),    // Cyan (Grid)
@@ -297,7 +332,8 @@ export const SHADERS = {
             ...GLOBAL_CONTROLS,
             {
                 id: 'grid-size',
-                label: 'Escala Rejilla',
+                label: 'Grid Scale',
+                tooltip: 'Adjusts the size of the grid squares.',
                 uniform: 'u_grid_size',
                 min: 0.5,
                 max: 20.0,
@@ -306,7 +342,8 @@ export const SHADERS = {
             },
             {
                 id: 'grid-glow',
-                label: 'Intensidad Brillo',
+                label: 'Glow Intensity',
+                tooltip: 'Controls the brightness of the neon glow.',
                 uniform: 'u_glow',
                 min: 0.1,
                 max: 2.0,
@@ -315,7 +352,8 @@ export const SHADERS = {
             },
             {
                 id: 'grid-offset-x',
-                label: 'Posición X',
+                label: 'Offset X',
+                tooltip: 'Shifts the grid horizontally.',
                 uniform: 'u_offset_x',
                 min: -1.0,
                 max: 1.0,
@@ -324,7 +362,8 @@ export const SHADERS = {
             },
             {
                 id: 'grid-offset-y',
-                label: 'Posición Y',
+                label: 'Offset Y',
+                tooltip: 'Shifts the grid vertically.',
                 uniform: 'u_offset_y',
                 min: -0.5,
                 max: 0.5,
@@ -333,7 +372,8 @@ export const SHADERS = {
             },
             {
                 id: 'sun-size',
-                label: 'Tamaño Sol',
+                label: 'Sun Size',
+                tooltip: 'Controls the size of the sun on the horizon.',
                 uniform: 'u_sun_size',
                 min: 0.0,
                 max: 1.0,
@@ -348,11 +388,13 @@ export const SHADERS = {
         description: 'Espiral galáctica con estrellas y nebulosas',
         vertex: vertexShader,
         fragment: galaxyShader,
+        colorLabels: ['Core', 'Arms', 'Nebula', 'Stars'],
         controls: [
             ...GLOBAL_CONTROLS,
             {
                 id: 'spiral-density',
-                label: 'Densidad Espiral',
+                label: 'Spiral Density',
+                tooltip: 'Controls the tightness of the spiral arms.',
                 uniform: 'u_spiral_density',
                 min: 0.0,
                 max: 20.0,
@@ -361,7 +403,8 @@ export const SHADERS = {
             },
             {
                 id: 'star-density',
-                label: 'Densidad Estrellas',
+                label: 'Star Density',
+                tooltip: 'Adjusts the number of stars in the background.',
                 uniform: 'u_star_density',
                 min: 0.0,
                 max: 100.0,
@@ -370,7 +413,8 @@ export const SHADERS = {
             },
             {
                 id: 'core-size',
-                label: 'Tamaño Núcleo',
+                label: 'Core Size',
+                tooltip: 'Controls the size of the galactic core.',
                 uniform: 'u_core_size',
                 min: 0.1,
                 max: 3.0,
@@ -385,11 +429,13 @@ export const SHADERS = {
         description: 'Patrón celular Voronoi orgánico/tecnológico',
         vertex: vertexShader,
         fragment: voronoiShader,
+        colorLabels: ['Cells 1', 'Cells 2', 'Borders', 'Background'],
         controls: [
             ...GLOBAL_CONTROLS,
             {
                 id: 'cell-density',
-                label: 'Densidad Células',
+                label: 'Cell Density',
+                tooltip: 'Controls the number of cells in the pattern.',
                 uniform: 'u_cell_density',
                 min: 1.0,
                 max: 50.0,
@@ -398,7 +444,8 @@ export const SHADERS = {
             },
             {
                 id: 'border-width',
-                label: 'Ancho Borde',
+                label: 'Border Width',
+                tooltip: 'Adjusts the thickness of cell borders.',
                 uniform: 'u_border_width',
                 min: 0.01,
                 max: 0.5,

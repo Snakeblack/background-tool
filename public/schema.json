@@ -2,7 +2,7 @@
   "@context": "https://schema.org",
   "@type": "WebApplication",
   "name": "MMRG Background Generator",
-  "alternateName": "Generador de Fondos WebGL",
+  "alternateName": "Generador de Fondos Animados WebGL",
   "url": "https://background.mretamozo.com",
   "description": "Generador de fondos animados WebGL con shaders personalizables, espacio de color OKLCH y exportación de código para React, Vue, Angular y Vanilla JS. Crea fondos únicos y modernos para tus proyectos web.",
   "applicationCategory": "DesignApplication",
@@ -28,7 +28,7 @@
     "url": "https://mretamozo.com"
   },
   "softwareVersion": "1.0.0",
-  "keywords": "WebGL, shaders, generador de fondos, OKLCH, Three.js, gradientes animados, fondos web, diseño web, herramienta de desarrollo",
+  "keywords": "WebGL, shaders, generador de fondos, OKLCH, Three.js, gradientes animados, fondos animados, fondos web, diseño web, herramienta de desarrollo",
   "featureList": [
     "8 shaders WebGL únicos (Aurora, Waves, Liquid, Mesh, Stripes, Geometric, Particles)",
     "Editor de colores con espacio OKLCH para colores vibrantes",

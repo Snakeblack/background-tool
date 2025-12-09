@@ -1,7 +1,7 @@
 {
   "name": "gradient-generator-webgl",
   "version": "1.0.0",
-  "description": "Generador de fondos WebGL con espacio de color OKLCH y shaders avanzados",
+  "description": "Generador de fondos animados WebGL con espacio de color OKLCH y shaders avanzados",
   "author": "Manuel Retamozo <hello@mretamozo.com>",
   "license": "MIT",
   "homepage": "https://background.mretamozo.com",

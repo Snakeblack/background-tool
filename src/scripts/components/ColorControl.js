@@ -225,18 +225,18 @@ export class ColorControl extends HTMLElement {
                 </button>
                 <div class="collapsible-content" id="content">
                     <div class="control-item">
-                        <label for="l-slider">Lightness <span>${lValue}</span></label>
-                        <input type="range" id="l-slider" min="0.0" max="1.0" step="0.01" value="${lValue}" 
+                        <label for="l-slider">Lightness <span>${Math.round(lValue * 100)}</span></label>
+                        <input type="range" id="l-slider" min="0.0" max="1.0" step="0.001" value="${lValue}" 
                                data-color="${colorIndex}" data-channel="l" class="oklch-slider">
                     </div>
                     <div class="control-item">
-                        <label for="c-slider">Chroma <span>${cValue}</span></label>
-                        <input type="range" id="c-slider" min="0.0" max="0.4" step="0.005" value="${cValue}"
+                        <label for="c-slider">Chroma <span>${Math.round((cValue / 0.4) * 100)}</span></label>
+                        <input type="range" id="c-slider" min="0.0" max="0.4" step="0.001" value="${cValue}"
                                data-color="${colorIndex}" data-channel="c" class="oklch-slider">
                     </div>
                     <div class="control-item">
-                        <label for="h-slider">Hue <span>${hValue}</span></label>
-                        <input type="range" id="h-slider" min="0" max="360" step="1" value="${hValue}"
+                        <label for="h-slider">Hue <span>${Math.round(hValue)}</span></label>
+                        <input type="range" id="h-slider" min="0" max="360" step="0.1" value="${hValue}"
                                data-color="${colorIndex}" data-channel="h" class="oklch-slider">
                     </div>
                 </div>
@@ -261,7 +261,13 @@ export class ColorControl extends HTMLElement {
                 // Update label span directly
                 const labelSpan = slider.previousElementSibling.querySelector('span');
                 if (labelSpan) {
-                    labelSpan.textContent = channel === 'h' ? Math.round(value) : value.toFixed(channel === 'c' ? 3 : 2);
+                    if (channel === 'l') {
+                        labelSpan.textContent = Math.round(value * 100);
+                    } else if (channel === 'c') {
+                        labelSpan.textContent = Math.round((value / 0.4) * 100);
+                    } else if (channel === 'h') {
+                        labelSpan.textContent = Math.round(value);
+                    }
                 }
                 
                 this.dispatchEvent(new CustomEvent('color-change', {

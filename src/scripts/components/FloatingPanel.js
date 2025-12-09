@@ -37,14 +37,15 @@ export class FloatingPanel extends HTMLElement {
 
     render() {
         const style = `
+            * {
+                box-sizing: border-box;
+            }
+
             :host {
-                display: flex;
-                flex-direction: column;
+                display: block;
                 position: fixed;
                 z-index: 110;
                 width: 320px;
-                /* Ensure it fits in viewport above dock */
-                max-height: calc(100vh - 160px);
                 /* Default bottom position if not set by controller */
                 bottom: 110px;
                 left: 50%;
@@ -54,10 +55,7 @@ export class FloatingPanel extends HTMLElement {
             .panel-wrapper {
                 transform: translateZ(0);
                 transition: transform 0.3s ease;
-                display: flex;
-                flex-direction: column;
-                min-height: 0;
-                max-height: 100%;
+                width: 100%;
             }
 
             .glass-container {
@@ -65,33 +63,30 @@ export class FloatingPanel extends HTMLElement {
                 overflow: hidden;
                 border-radius: 24px;
                 box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
-                --bg-color: rgba(0, 0, 0, 0.6);
+                --bg-color: rgba(0, 0, 0, 0.25);
                 --highlight: rgba(255, 255, 255, 0.15);
                 padding: 1.5rem;
-                padding-right: calc(1.5rem - 12px);
+                padding-right: calc(1.5rem - 1rem);
                 display: flex;
                 flex-direction: column;
-                min-height: 0;
-                max-height: 100%;
+                max-height: calc(100vh - 160px);
             }
 
-            .glass-effect {
+            .glass-distortion-wrapper {
                 position: absolute;
                 inset: 0;
                 z-index: 10;
-                backdrop-filter: blur(12px);
                 filter: url(#glass-distortion-panel) saturate(120%) brightness(1.15);
                 border-radius: inherit;
                 pointer-events: none;
             }
 
-            .glass-dark-layer {
+            .glass-blur {
                 position: absolute;
                 inset: 0;
-                z-index: 15;
-                background: rgba(0, 0, 0, 0.3);
+                backdrop-filter: blur(12px);
+                -webkit-backdrop-filter: blur(12px);
                 border-radius: inherit;
-                pointer-events: none;
             }
 
             .glass-tint {
@@ -120,6 +115,7 @@ export class FloatingPanel extends HTMLElement {
                 color: #fff;
                 text-shadow: 0 1px 2px rgba(0,0,0,0.5);
                 overflow-y: auto;
+                flex: 1;
                 min-height: 0;
                 padding-right: 4px;
                 
@@ -160,8 +156,9 @@ export class FloatingPanel extends HTMLElement {
                         </filter>
                     </svg>
 
-                    <div class="glass-effect"></div>
-                    <div class="glass-dark-layer"></div>
+                    <div class="glass-distortion-wrapper">
+                        <div class="glass-blur"></div>
+                    </div>
                     <div class="glass-tint"></div>
                     <div class="glass-highlight"></div>
                     
