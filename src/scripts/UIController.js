@@ -135,7 +135,7 @@ export class UIController {
             // Position above the active dock item
             // Note: We'd need to get the rect of the active item from the shadow DOM or just center it.
             // For simplicity in this version, we'll center the panel above the dock.
-            this.desktopPanel.style.bottom = '100px'; // Approx above dock
+            this.desktopPanel.style.bottom = '110px'; // Increased to clear the dock
             this.desktopPanel.style.left = '50%';
             this.desktopPanel.style.transform = 'translateX(-50%)';
             

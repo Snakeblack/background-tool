@@ -1,283 +1,176 @@
-import { Minus, Plus, X, createElement } from 'lucide';
-
-/**
- * Panel Component - Web Component para paneles flotantes
- */
+import { createElement } from 'lucide';
 
 export class FloatingPanel extends HTMLElement {
-    /**
-     * Constructor del componente FloatingPanel
-     */
     constructor() {
         super();
         this.attachShadow({ mode: 'open' });
+        this.frames = 0;
+        this.animationId = null;
     }
 
-    /**
-     * Atributos observados del componente
-     * @returns {string[]} Lista de atributos a observar
-     */
-    static get observedAttributes() {
-        return ['title', 'position'];
-    }
-
-    /**
-     * Callback ejecutado cuando el componente se conecta al DOM
-     */
     connectedCallback() {
         this.render();
+        this.startAnimation();
     }
 
-    /**
-     * Renderiza el panel con su estructura HTML y estilos
-     */
-    render() {
-        const title = this.getAttribute('title') || 'Panel';
-        const position = this.getAttribute('position') || 'left';
+    disconnectedCallback() {
+        if (this.animationId) {
+            cancelAnimationFrame(this.animationId);
+        }
+    }
 
-        this.shadowRoot.innerHTML = `
-            <style>
-                :host {
-                    display: block;
-                    position: fixed;
-                    top: 2rem;
-                    ${position}: 2rem;
-                    width: 320px;
-                    min-height: 400px;
-                    max-height: calc(100vh - 4rem);
-                    background: linear-gradient(135deg, rgba(30, 30, 50, 0.95) 0%, rgba(20, 20, 35, 0.98) 100%);
-                    border-radius: 16px;
-                    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
-                    backdrop-filter: blur(10px);
-                    border: 1px solid rgba(255, 255, 255, 0.1);
-                    overflow: hidden;
-                    transition: transform 0.3s ease, opacity 0.3s ease;
-                    z-index: 100;
-                    contain: layout style paint;
-                    content-visibility: auto;
-                }
-                :host(.hidden) {
-                    transform: translateX(${position === 'left' ? '-' : ''}120%);
-                    opacity: 0;
-                    pointer-events: none;
-                }
-                :host(.minimized) .panel-content {
-                    max-height: 0;
-                    padding: 0;
-                }
-                .panel-header {
-                    padding: 1.25rem 1.5rem;
-                    background: linear-gradient(135deg, rgba(50, 50, 80, 0.6) 0%, rgba(30, 30, 50, 0.6) 100%);
-                    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-                    display: flex;
-                    align-items: center;
-                    justify-content: flex-start;
-                    gap: 1rem;
-                    position: relative;
-                }
-                .panel-title {
-                    font-size: 1.125rem;
-                    font-weight: 600;
-                    color: white;
-                    flex: 1;
-                }
-                .panel-buttons {
-                    display: flex;
-                    gap: 0.5rem;
-                }
-                .panel-btn {
-                    width: 28px;
-                    height: 28px;
-                    border: none;
-                    background: rgba(255, 255, 255, 0.1);
-                    color: white;
-                    border-radius: 6px;
-                    cursor: pointer;
-                    transition: all 0.2s;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    font-size: 1rem;
-                }
-                .panel-btn:hover {
-                    background: rgba(255, 255, 255, 0.2);
-                    transform: scale(1.05);
-                }
-                .panel-content {
-                    padding: 1.5rem;
-                    overflow-y: auto;
-                    max-height: calc(100vh - 8rem);
-                    transition: max-height 0.3s ease, padding 0.3s ease;
-                    overscroll-behavior: contain;
-                    scrollbar-gutter: stable;
-                }
-                .panel-content::-webkit-scrollbar {
-                    width: 8px;
-                }
-                .panel-content::-webkit-scrollbar-track {
-                    background: rgba(0, 0, 0, 0.2);
-                    border-radius: 4px;
-                }
-                .panel-content::-webkit-scrollbar-thumb {
-                    background: rgba(255, 255, 255, 0.2);
-                    border-radius: 4px;
-                }
-                .panel-content::-webkit-scrollbar-thumb:hover {
-                    background: rgba(255, 255, 255, 0.3);
-                }
-
-                @media (max-width: 768px) {
-                    :host {
-                        top: calc(env(safe-area-inset-top, 0.75rem) + 0.25rem);
-                        left: 0.75rem;
-                        right: 0.75rem;
-                        width: auto;
-                        max-height: calc(100vh - 7rem);
-                        border-radius: 20px;
-                        backdrop-filter: blur(12px);
-                    }
-                    :host([position="right"]) {
-                        top: auto;
-                        bottom: calc(env(safe-area-inset-bottom, 0.75rem) + 5rem);
-                        max-height: 42vh;
-                    }
-                    :host([position="right"].hidden) {
-                        transform: translateY(120%);
-                    }
-                    :host([position="left"].hidden) {
-                        transform: translateY(-120%);
-                    }
-                    .panel-header {
-                        padding: 1rem 1.25rem;
-                        position: sticky;
-                        top: 0;
-                        z-index: 5;
-                        backdrop-filter: blur(18px);
-                    }
-                    .panel-header::after {
-                        content: '';
-                        position: absolute;
-                        left: 1.25rem;
-                        right: 1.25rem;
-                        bottom: -0.5rem;
-                        height: 1px;
-                        background: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.2) 50%, rgba(255,255,255,0) 100%);
-                    }
-                    .panel-title {
-                        font-size: 1rem;
-                    }
-                    .panel-btn {
-                        width: 26px;
-                        height: 26px;
-                    }
-                    .panel-content {
-                        padding: 1rem 1.25rem 1.25rem;
-                        max-height: none;
-                        mask-image: linear-gradient(180deg, rgba(0,0,0,1) 92%, rgba(0,0,0,0));
-                    }
-                }
-
-                @media (max-width: 640px) {
-                    :host {
-                        left: 0.5rem;
-                        right: 0.5rem;
-                        border-radius: 18px;
-                        max-height: calc(100vh - 6.5rem);
-                    }
-                    :host([position="right"]) {
-                        bottom: calc(env(safe-area-inset-bottom, 0.5rem) + 4.25rem);
-                        max-height: 40vh;
-                    }
-                    .panel-header {
-                        padding: 0.875rem 1rem;
-                    }
-                    .panel-title {
-                        font-size: 0.9375rem;
-                    }
-                    .panel-btn {
-                        width: 24px;
-                        height: 24px;
-                        font-size: 0.875rem;
-                    }
-                    .panel-content {
-                        padding: 0.875rem;
-                    }
-                }
-
-                @media (max-width: 480px) {
-                    :host {
-                        max-height: calc(100vh - 5.5rem);
-                    }
-                    :host([position="right"]) {
-                        max-height: 38vh;
-                        bottom: calc(env(safe-area-inset-bottom, 0.5rem) + 3.75rem);
-                    }
-                    .panel-header {
-                        padding: 0.75rem 0.875rem;
-                    }
-                    .panel-title {
-                        font-size: 0.875rem;
-                    }
-                    .panel-btn {
-                        width: 22px;
-                        height: 22px;
-                        font-size: 0.75rem;
-                    }
-                    .panel-content {
-                        padding: 0.75rem;
-                    }
-                }
-
-                @media (max-height: 600px) and (orientation: landscape) {
-                    :host {
-                        max-height: calc(88vh - 3rem);
-                        top: 0.5rem;
-                        left: 0.5rem;
-                        right: 0.5rem;
-                    }
-                    :host([position="right"]) {
-                        bottom: calc(env(safe-area-inset-bottom, 0.5rem) + 2.75rem);
-                        max-height: calc(65vh - 3rem);
-                    }
-                }
-            </style>
+    startAnimation() {
+        const animate = () => {
+            this.frames += 0.05;
+            // Oscilación sutil de la frecuencia
+            const freq = 0.008 + Math.sin(this.frames * 0.05) * 0.002;
             
-            <div class="panel-header">
-                <h2 class="panel-title">${title}</h2>
-                <div class="panel-buttons">
-                    <button class="panel-btn" id="minimize-btn" title="Minimizar">${createElement(Minus, {width: 16, height: 16}).outerHTML}</button>
-                    <button class="panel-btn" id="close-btn" title="Cerrar">${createElement(X, {width: 16, height: 16}).outerHTML}</button>
-                </div>
-            </div>
-            <div class="panel-content">
-                <slot></slot>
-            </div>
-        `;
-
-        const minimizeBtn = this.shadowRoot.getElementById('minimize-btn');
-        const closeBtn = this.shadowRoot.getElementById('close-btn');
-
-        minimizeBtn.addEventListener('click', () => {
-            const isMinimized = this.classList.contains('minimized');
-            
-            if (isMinimized) {
-                this.dispatchEvent(new CustomEvent('panel-request-open', {
-                    bubbles: true,
-                    composed: true
-                }));
+            const turb = this.shadowRoot.getElementById('turb-control-panel');
+            if (turb) {
+                turb.setAttribute('baseFrequency', `${freq} ${freq}`);
             }
             
-            this.classList.toggle('minimized');
-            minimizeBtn.innerHTML = this.classList.contains('minimized') ? createElement(Plus, {width: 16, height: 16}).outerHTML : createElement(Minus, {width: 16, height: 16}).outerHTML;
-        });
+            this.animationId = requestAnimationFrame(animate);
+        };
+        animate();
+    }
 
-        closeBtn.addEventListener('click', () => {
-            this.classList.add('hidden');
-            this.dispatchEvent(new CustomEvent('panel-close', {
-                bubbles: true,
-                composed: true
-            }));
-        });
+    render() {
+        const style = `
+            :host {
+                display: flex;
+                flex-direction: column;
+                position: fixed;
+                z-index: 110;
+                width: 320px;
+                /* Ensure it fits in viewport above dock */
+                max-height: calc(100vh - 160px);
+                /* Default bottom position if not set by controller */
+                bottom: 110px;
+                left: 50%;
+                transform: translateX(-50%);
+            }
+
+            .panel-wrapper {
+                transform: translateZ(0);
+                transition: transform 0.3s ease;
+                display: flex;
+                flex-direction: column;
+                min-height: 0;
+                max-height: 100%;
+            }
+
+            .glass-container {
+                position: relative;
+                overflow: hidden;
+                border-radius: 24px;
+                box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+                --bg-color: rgba(0, 0, 0, 0.6);
+                --highlight: rgba(255, 255, 255, 0.15);
+                padding: 1.5rem;
+                padding-right: calc(1.5rem - 12px);
+                display: flex;
+                flex-direction: column;
+                min-height: 0;
+                max-height: 100%;
+            }
+
+            .glass-effect {
+                position: absolute;
+                inset: 0;
+                z-index: 10;
+                backdrop-filter: blur(12px);
+                filter: url(#glass-distortion-panel) saturate(120%) brightness(1.15);
+                border-radius: inherit;
+                pointer-events: none;
+            }
+
+            .glass-dark-layer {
+                position: absolute;
+                inset: 0;
+                z-index: 15;
+                background: rgba(0, 0, 0, 0.3);
+                border-radius: inherit;
+                pointer-events: none;
+            }
+
+            .glass-tint {
+                position: absolute;
+                inset: 0;
+                z-index: 20;
+                background: var(--bg-color);
+                border-radius: inherit;
+                pointer-events: none;
+            }
+
+            .glass-highlight {
+                position: absolute;
+                inset: 0;
+                z-index: 30;
+                box-shadow: inset 1px 1px 1px var(--highlight);
+                border-radius: inherit;
+                background: none;
+                pointer-events: none;
+                border: 1px solid rgba(255, 255, 255, 0.05);
+            }
+
+            .panel-content {
+                position: relative;
+                z-index: 40;
+                color: #fff;
+                text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+                overflow-y: auto;
+                min-height: 0;
+                padding-right: 4px;
+                
+                scrollbar-width: thin;
+                scrollbar-color: rgba(255, 255, 255, 0.3) transparent;
+                scrollbar-gutter: stable;
+            }
+
+            .panel-content::-webkit-scrollbar {
+                width: 4px;
+            }
+
+            .panel-content::-webkit-scrollbar-track {
+                background: transparent;
+            }
+
+            .panel-content::-webkit-scrollbar-thumb {
+                background-color: rgba(255, 255, 255, 0.3);
+                border-radius: 4px;
+            }
+            
+            .panel-content::-webkit-scrollbar-thumb:hover {
+                background-color: rgba(255, 255, 255, 0.5);
+            }
+        `;
+
+        this.shadowRoot.innerHTML = `
+            <style>${style}</style>
+            
+            <div class="panel-wrapper">
+                <div class="glass-container">
+                    <!-- SVG Filter Definition -->
+                    <svg aria-hidden="true" style="position: absolute; width: 0; height: 0; overflow: hidden;">
+                        <filter id="glass-distortion-panel">
+                            <feTurbulence id="turb-control-panel" type="turbulence" baseFrequency="0.008" numOctaves="2" result="noise"></feTurbulence>
+                            <feGaussianBlur in="noise" stdDeviation="1.5" result="smoothNoise"/>
+                            <feDisplacementMap in="SourceGraphic" in2="smoothNoise" scale="77"></feDisplacementMap>
+                        </filter>
+                    </svg>
+
+                    <div class="glass-effect"></div>
+                    <div class="glass-dark-layer"></div>
+                    <div class="glass-tint"></div>
+                    <div class="glass-highlight"></div>
+                    
+                    <div class="panel-content">
+                        <slot></slot>
+                    </div>
+                </div>
+            </div>
+        `;
     }
 }
 
