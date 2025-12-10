@@ -17,6 +17,20 @@ import neonGridShader from '../../shaders/neon_grid.glsl?raw';
 import galaxyShader from '../../shaders/galaxy.glsl?raw';
 import voronoiShader from '../../shaders/voronoi.glsl?raw';
 
+// TSL Source Imports
+import liquidNode from './liquidNode.js?raw';
+import stripesNode from './stripesNode.js?raw';
+import wavesNode from './wavesNode.js?raw';
+import meshNode from './meshNode.js?raw';
+import particlesNode from './particlesNode.js?raw';
+import auroraNode from './auroraNode.js?raw';
+import cloudsNode from './cloudsNode.js?raw';
+import flowNode from './flowNode.js?raw';
+import geometricNode from './geometricNode.js?raw';
+import neonGridNode from './neonGridNode.js?raw';
+import galaxyNode from './galaxyNode.js?raw';
+import voronoiNode from './voronoiNode.js?raw';
+
 const GLOBAL_CONTROLS = [
     {
         id: 'brightness',
@@ -56,12 +70,13 @@ export const SHADERS = {
         description: 'Ondas sinusoidales superpuestas con movimiento fluido',
         vertex: vertexShader,
         fragment: wavesShader,
+        tslSource: wavesNode,
         colorLabels: ['Wave 1', 'Wave 2', 'Wave 3', 'Background'],
         defaults: {
-            u_color1: new Color(0.0, 0.4, 0.9),    // Electric Azure
-            u_color2: new Color(0.6, 0.0, 1.0),    // Vivid Violet
-            u_color3: new Color(1.0, 0.0, 0.5),    // Neon Rose
-            u_color4: new Color(0.02, 0.0, 0.1)    // Deep Indigo
+            u_color1: new Color(0.8, 0.0, 0.4),    // Deep Magenta
+            u_color2: new Color(0.0, 0.6, 0.8),    // Deep Cyan
+            u_color3: new Color(0.5, 0.0, 0.8),    // Deep Violet
+            u_color4: new Color(0.05, 0.0, 0.1)    // Very Dark Purple
         },
         controls: [
             ...GLOBAL_CONTROLS,
@@ -73,7 +88,7 @@ export const SHADERS = {
                 min: 0.05,
                 max: 2.5,
                 step: 0.05,
-                value: 0.4
+                value: 1.2
             },
             {
                 id: 'wave-frequency',
@@ -93,6 +108,7 @@ export const SHADERS = {
         description: 'Patrones de rayas usando funciones seno y coseno',
         vertex: vertexShader,
         fragment: stripesShader,
+        tslSource: stripesNode,
         colorLabels: ['Color 1', 'Color 2', 'Color 3', 'Color 4'],
         controls: [
             ...GLOBAL_CONTROLS,
@@ -124,6 +140,7 @@ export const SHADERS = {
         description: 'Efecto líquido con ruido FBM (Fractional Brownian Motion)',
         vertex: vertexShader,
         fragment: liquidShader,
+        tslSource: liquidNode,
         colorLabels: ['Color A', 'Color B', 'Color C', 'Background'],
         controls: [
             ...GLOBAL_CONTROLS,
@@ -145,6 +162,7 @@ export const SHADERS = {
         description: 'Gradiente tipo malla con distorsión procedural',
         vertex: vertexShader,
         fragment: meshShader,
+        tslSource: meshNode,
         colorLabels: ['Color 1', 'Color 2', 'Color 3', 'Color 4'],
         controls: [
             ...GLOBAL_CONTROLS,
@@ -176,7 +194,8 @@ export const SHADERS = {
         description: 'Sistema de partículas animadas con movimiento ondulatorio',
         vertex: vertexShader,
         fragment: particlesShader,
-        colorLabels: ['Particles', 'Glow', 'Background 1', 'Background 2'],
+        tslSource: particlesNode,
+        colorLabels: ['Background', 'Particles 1', 'Particles 2', 'Glow'],
         controls: [
             ...GLOBAL_CONTROLS,
             {
@@ -197,6 +216,7 @@ export const SHADERS = {
         description: 'Efecto de aurora boreal con capas de ruido',
         vertex: vertexShader,
         fragment: auroraShader,
+        tslSource: auroraNode,
         colorLabels: ['Sky', 'Horizon', 'Aurora 1', 'Aurora 2'],
         controls: [
             ...GLOBAL_CONTROLS,
@@ -228,6 +248,7 @@ export const SHADERS = {
         description: 'Cielo con nubes esponjosas y realistas',
         vertex: vertexShader,
         fragment: cloudsShader,
+        tslSource: cloudsNode,
         colorLabels: ['Sky', 'Clouds 1', 'Clouds 2', 'Sun'],
         controls: [
             ...GLOBAL_CONTROLS,
@@ -259,6 +280,7 @@ export const SHADERS = {
         description: 'Efecto fluido y onírico estilo Vanta.js',
         vertex: vertexShader,
         fragment: flowShader,
+        tslSource: flowNode,
         colorLabels: ['Color 1', 'Color 2', 'Color 3', 'Background'],
         controls: [
             ...GLOBAL_CONTROLS,
@@ -290,6 +312,7 @@ export const SHADERS = {
         description: 'Patrones geométricos (hexágonos, cuadrados, triángulos)',
         vertex: vertexShader,
         fragment: geometricShader,
+        tslSource: geometricNode,
         colorLabels: ['Shapes 1', 'Shapes 2', 'Background 1', 'Background 2'],
         controls: [
             ...GLOBAL_CONTROLS,
@@ -321,6 +344,7 @@ export const SHADERS = {
         description: 'Rejilla estilo Synthwave/Cyberpunk con perspectiva 3D',
         vertex: vertexShader,
         fragment: neonGridShader,
+        tslSource: neonGridNode,
         colorLabels: ['Sky', 'Grid', 'Sun', 'Glow'],
         defaults: {
             u_color1: new Color(0.12, 0.02, 0.25), // Deep Purple (Sky)
@@ -388,6 +412,7 @@ export const SHADERS = {
         description: 'Espiral galáctica con estrellas y nebulosas',
         vertex: vertexShader,
         fragment: galaxyShader,
+        tslSource: galaxyNode,
         colorLabels: ['Core', 'Arms', 'Nebula', 'Stars'],
         controls: [
             ...GLOBAL_CONTROLS,
@@ -429,6 +454,7 @@ export const SHADERS = {
         description: 'Patrón celular Voronoi orgánico/tecnológico',
         vertex: vertexShader,
         fragment: voronoiShader,
+        tslSource: voronoiNode,
         colorLabels: ['Cells 1', 'Cells 2', 'Borders', 'Background'],
         controls: [
             ...GLOBAL_CONTROLS,

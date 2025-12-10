@@ -1,6 +1,29 @@
 import { defineConfig } from 'vite';
 import { VitePWA } from 'vite-plugin-pwa';
 import compress from 'vite-plugin-compression';
+import fs from 'fs';
+import path from 'path';
+
+const copyWasmPlugin = () => {
+  return {
+    name: 'copy-wasm-files',
+    buildStart() {
+      const src = path.resolve(process.cwd(), 'node_modules/@litertjs/core/wasm');
+      const dest = path.resolve(process.cwd(), 'public/wasm');
+      
+      if (!fs.existsSync(dest)) {
+        fs.mkdirSync(dest, { recursive: true });
+      }
+      
+      if (fs.existsSync(src)) {
+        fs.cpSync(src, dest, { recursive: true });
+        console.log('Copied LiteRT WASM files to public/wasm');
+      } else {
+        console.warn('LiteRT WASM source not found at ' + src);
+      }
+    }
+  }
+}
 
 export default defineConfig({
   root: 'src',
@@ -33,7 +56,9 @@ export default defineConfig({
       output: {
         manualChunks: (id) => {
           if (id.includes('node_modules')) {
-            if (id.includes('three')) return 'three';
+            if (id.includes('three/build/three.webgpu.js')) return 'three-webgpu';
+            if (id.includes('three/build/three.tsl.js')) return 'three-tsl';
+            if (id.includes('three')) return 'three-core';
             if (id.includes('culori')) return 'culori';
             return 'vendor';
           }
@@ -53,7 +78,7 @@ export default defineConfig({
         },
       },
     },
-    chunkSizeWarningLimit: 600,
+    chunkSizeWarningLimit: 1000,
     reportCompressedSize: false,
     cssCodeSplit: false,
     assetsInlineLimit: 4096,
@@ -66,6 +91,10 @@ export default defineConfig({
     port: 3000,
     open: true,
     host: true,
+    headers: {
+      'Cross-Origin-Opener-Policy': 'same-origin',
+      'Cross-Origin-Embedder-Policy': 'require-corp',
+    },
     warmup: {
       clientFiles: [
         './main.js',
@@ -79,6 +108,10 @@ export default defineConfig({
   preview: {
     port: 4173,
     host: true,
+    headers: {
+      'Cross-Origin-Opener-Policy': 'same-origin',
+      'Cross-Origin-Embedder-Policy': 'require-corp',
+    },
   },
   
   assetsInclude: ['**/*.glsl'],
@@ -119,5 +152,6 @@ export default defineConfig({
         globPatterns: ['**/*.{js,css,html,glsl,jpg,svg,woff2}'],
       },
     }),
+    copyWasmPlugin(),
   ],
 });

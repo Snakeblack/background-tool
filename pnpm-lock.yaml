@@ -14,6 +14,9 @@ importers:
       '@fontsource/space-grotesk':
         specifier: ^5.2.10
         version: 5.2.10
+      '@litertjs/core':
+        specifier: ^0.2.1
+        version: 0.2.1
       culori:
         specifier: ^3.2.1
         version: 3.3.0
@@ -21,8 +24,8 @@ importers:
         specifier: ^0.555.0
         version: 0.555.0
       three:
-        specifier: ^0.158.0
-        version: 0.158.0
+        specifier: ^0.171.0
+        version: 0.171.0
     devDependencies:
       '@typescript-eslint/eslint-plugin':
         specifier: ^8.0.0
@@ -804,6 +807,12 @@ packages:
 
   '@jridgewell/trace-mapping@0.3.31':
     resolution: {integrity: sha512-zzNR+SdQSDJzc8joaeP8QQoCQr8NuYx2dIIytl1QeBEZHJ9uW6hebsrYgbz8hJwUQao3TWCMtmfV8Nu1twOLAw==}
+
+  '@litertjs/core@0.2.1':
+    resolution: {integrity: sha512-DhoP7VY6ibcGzcQTWqH3/rbtBjq/bi8iMaR4IeGRndq7FI+v6RLwhcdtPtbV2lNv0RmjWIQbaA75K/m57gqQqw==}
+
+  '@litertjs/wasm-utils@0.2.1':
+    resolution: {integrity: sha512-38/EbAu2u7DxXz3SCQbnIKYbj68x8x9HVmWVCX+UseRydYu0EDBaMPzUWYvhQCM1r79Q3Q7mn86SiFlWvlQrZw==}
 
   '@rollup/plugin-babel@5.3.1':
     resolution: {integrity: sha512-WFfdLWU/xVWKeRQnKmIAQULUI7Il0gZnBIH/ZFO069wYIfPu+8zrfp/KMW0atmELoRDq8FbiP3VCss9MhCut7Q==}
@@ -2126,8 +2135,8 @@ packages:
     engines: {node: '>=10'}
     hasBin: true
 
-  three@0.158.0:
-    resolution: {integrity: sha512-TALj4EOpdDPF1henk2Q+s17K61uEAAWQ7TJB68nr7FKxqwyDr3msOt5IWdbGm4TaWKjrtWS8DJJWe9JnvsWOhQ==}
+  three@0.171.0:
+    resolution: {integrity: sha512-Y/lAXPaKZPcEdkKjh0JOAHVv8OOnv/NDJqm0wjfCzyQmfKxV7zvkwsnBgPBKTzJHToSOhRGQAGbPJObT59B/PQ==}
 
   tinyglobby@0.2.15:
     resolution: {integrity: sha512-j2Zq4NyQYG5XMST4cbs02Ak8iJUdxRM0XI5QyxXuZOzKOINmWurp3smXu3y5wDcJrptwpSjgXHzIQxR0omXljQ==}
@@ -3204,6 +3213,12 @@ snapshots:
     dependencies:
       '@jridgewell/resolve-uri': 3.1.2
       '@jridgewell/sourcemap-codec': 1.5.5
+
+  '@litertjs/core@0.2.1':
+    dependencies:
+      '@litertjs/wasm-utils': 0.2.1
+
+  '@litertjs/wasm-utils@0.2.1': {}
 
   '@rollup/plugin-babel@5.3.1(@babel/core@7.28.5)(rollup@2.79.2)':
     dependencies:
@@ -4626,7 +4641,7 @@ snapshots:
       commander: 2.20.3
       source-map-support: 0.5.21
 
-  three@0.158.0: {}
+  three@0.171.0: {}
 
   tinyglobby@0.2.15:
     dependencies:

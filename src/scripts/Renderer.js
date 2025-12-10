@@ -3,6 +3,7 @@
  */
 
 import { Scene, OrthographicCamera, WebGLRenderer, PlaneGeometry, Mesh, Clock, Vector2 } from 'three';
+import { WebGPURenderer } from 'three/webgpu';
 
 export class Renderer {
     /**
@@ -16,14 +17,15 @@ export class Renderer {
         this.renderer = null;
         this.mesh = null;
         this.clock = new Clock();
+        this.isWebGPUSupported = false;
         
-        this.init();
+        // Removed this.init() call from constructor to avoid race condition
     }
 
     /**
      * Inicializa la escena, cámara, renderer y geometría
      */
-    init() {
+    async init() {
         this.scene = new Scene();
 
         // Cámara ortográfica fija que cubre el espacio NDC (-1 a 1)
@@ -31,13 +33,37 @@ export class Renderer {
         this.camera = new OrthographicCamera(-1, 1, 1, -1, 0, 10);
         this.camera.position.z = 1;
 
-        this.renderer = new WebGLRenderer({ 
-            canvas: this.canvas, 
-            antialias: true, 
-            alpha: false,
-            precision: 'highp',
-            powerPreference: 'high-performance'
-        });
+        // Check WebGPU support
+        if (navigator.gpu) {
+            try {
+                const adapter = await navigator.gpu.requestAdapter();
+                if (adapter) {
+                    this.isWebGPUSupported = true;
+                    console.log('WebGPU is supported. Initializing WebGPURenderer...');
+                }
+            } catch (e) {
+                console.warn('WebGPU check failed:', e);
+            }
+        }
+
+        if (this.isWebGPUSupported) {
+            this.renderer = new WebGPURenderer({ 
+                canvas: this.canvas, 
+                antialias: true, 
+                alpha: false,
+                precision: 'highp'
+            });
+        } else {
+            console.log('WebGPU not supported. Fallback to WebGLRenderer.');
+            this.renderer = new WebGLRenderer({ 
+                canvas: this.canvas, 
+                antialias: true, 
+                alpha: false,
+                precision: 'highp',
+                powerPreference: 'high-performance'
+            });
+        }
+        
         this.renderer.setSize(window.innerWidth, window.innerHeight);
         this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 
@@ -78,8 +104,12 @@ export class Renderer {
     /**
      * Renderiza la escena
      */
-    render() {
-        this.renderer.render(this.scene, this.camera);
+    async render() {
+        if (this.isWebGPUSupported) {
+            await this.renderer.renderAsync(this.scene, this.camera);
+        } else {
+            this.renderer.render(this.scene, this.camera);
+        }
     }
 
     /**

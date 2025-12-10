@@ -21,6 +21,7 @@ import { Renderer } from './scripts/Renderer.js';
 import { ShaderManager } from './scripts/ShaderManager.js';
 import { ColorManager } from './scripts/ColorManager.js';
 import { UIController } from './scripts/UIController.js';
+import { LiteRTManager } from './scripts/LiteRTManager.js';
 import { createIcons, Sunset, Waves, Trees, Zap, Flame, Snowflake, Moon, Gem } from 'lucide';
 
 class GradientApp {
@@ -30,9 +31,12 @@ class GradientApp {
      */
     constructor() {
         this.renderer = new Renderer('bg-canvas');
-        this.shaderManager = new ShaderManager(this.renderer);
-        this.colorManager = new ColorManager(this.shaderManager);
-        this.uiController = new UIController(this.shaderManager, this.colorManager);
+        this.liteRTManager = new LiteRTManager();
+        
+        // Defer initialization of dependent managers until renderer is ready
+        this.shaderManager = null;
+        this.colorManager = null;
+        this.uiController = null;
         
         this.init();
     }
@@ -40,7 +44,18 @@ class GradientApp {
     /**
      * Inicializa la aplicación cargando colores y comenzando la animación
      */
-    init() {
+    async init() {
+        // Initialize LiteRT first to avoid WASM memory issues
+        await this.liteRTManager.init();
+
+        // Initialize Renderer (async)
+        await this.renderer.init();
+
+        // Now initialize managers that depend on the renderer
+        this.shaderManager = new ShaderManager(this.renderer);
+        this.colorManager = new ColorManager(this.shaderManager);
+        this.uiController = new UIController(this.shaderManager, this.colorManager);
+
         createIcons({
             icons: {
                 Sunset,

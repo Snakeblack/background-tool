@@ -3,7 +3,21 @@
  */
 
 import { ShaderMaterial, Color, Vector2 } from 'three';
+import { MeshBasicNodeMaterial } from 'three/webgpu';
 import { SHADERS } from './shaders/index.js';
+import { auroraTSL } from './shaders/auroraNode.js';
+import { wavesTSL } from './shaders/wavesNode.js';
+import { cloudsTSL } from './shaders/cloudsNode.js';
+import { flowTSL } from './shaders/flowNode.js';
+import { galaxyTSL } from './shaders/galaxyNode.js';
+import { geometricTSL } from './shaders/geometricNode.js';
+import { liquidTSL } from './shaders/liquidNode.js';
+import { meshTSL } from './shaders/meshNode.js';
+import { neonGridTSL } from './shaders/neonGridNode.js';
+import { particlesTSL } from './shaders/particlesNode.js';
+import { stripesTSL } from './shaders/stripesNode.js';
+import { voronoiTSL } from './shaders/voronoiNode.js';
+import * as TSLUniforms from './shaders/commonUniforms.js';
 
 export class ShaderManager {
     /**
@@ -98,6 +112,43 @@ export class ShaderManager {
             });
         }
 
+        if (this.renderer.isWebGPUSupported) {
+            let tslShader = null;
+            if (shaderName === 'aurora') tslShader = auroraTSL();
+            else if (shaderName === 'waves') tslShader = wavesTSL();
+            else if (shaderName === 'clouds') tslShader = cloudsTSL();
+            else if (shaderName === 'flow') tslShader = flowTSL();
+            else if (shaderName === 'galaxy') tslShader = galaxyTSL();
+            else if (shaderName === 'geometric') tslShader = geometricTSL();
+            else if (shaderName === 'liquid') tslShader = liquidTSL();
+            else if (shaderName === 'mesh') tslShader = meshTSL();
+            else if (shaderName === 'neon_grid') tslShader = neonGridTSL();
+            else if (shaderName === 'particles') tslShader = particlesTSL();
+            else if (shaderName === 'stripes') tslShader = stripesTSL();
+            else if (shaderName === 'voronoi') tslShader = voronoiTSL();
+            
+            if (tslShader) {
+                console.log(`Using WebGPU TSL material for ${shaderName}`);
+                
+                // Sync TSL uniforms with current values
+                Object.keys(this.uniforms).forEach(key => {
+                    if (TSLUniforms[key]) {
+                        if (this.uniforms[key].value && (this.uniforms[key].value.isColor || this.uniforms[key].value.isVector2)) {
+                            TSLUniforms[key].value.copy(this.uniforms[key].value);
+                        } else {
+                            TSLUniforms[key].value = this.uniforms[key].value;
+                        }
+                    }
+                });
+
+                this.material = new MeshBasicNodeMaterial();
+                this.material.colorNode = tslShader;
+                this.renderer.setMaterial(this.material);
+                return shaderConfig;
+            }
+        }
+        
+        // Fallback to WebGL ShaderMaterial
         this.material = new ShaderMaterial({
             uniforms: this.uniforms,
             vertexShader: shaderConfig.vertex,
@@ -117,6 +168,15 @@ export class ShaderManager {
     updateUniform(name, value) {
         if (this.uniforms[name]) {
             this.uniforms[name].value = value;
+            
+            // Update TSL uniforms if active
+            if (this.renderer.isWebGPUSupported && TSLUniforms[name]) {
+                if (TSLUniforms[name].value && (TSLUniforms[name].value.isColor || TSLUniforms[name].value.isVector2)) {
+                    TSLUniforms[name].value.copy(value);
+                } else {
+                    TSLUniforms[name].value = value;
+                }
+            }
         }
     }
 
@@ -124,14 +184,22 @@ export class ShaderManager {
      * Actualiza el uniform de tiempo con el tiempo transcurrido
      */
     updateTime() {
-        this.uniforms.u_time.value = this.renderer.getElapsedTime();
+        const time = this.renderer.getElapsedTime();
+        this.uniforms.u_time.value = time;
+        if (this.renderer.isWebGPUSupported) {
+            TSLUniforms.u_time.value = time;
+        }
     }
 
     /**
      * Actualiza el uniform de resolución con las dimensiones actuales
      */
     updateResolution() {
-        this.uniforms.u_resolution.value = this.renderer.getResolution();
+        const res = this.renderer.getResolution();
+        this.uniforms.u_resolution.value = res;
+        if (this.renderer.isWebGPUSupported) {
+            TSLUniforms.u_resolution.value.copy(res);
+        }
     }
 
     /**
