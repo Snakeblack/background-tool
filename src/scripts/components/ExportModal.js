@@ -552,10 +552,26 @@ export class ExportModal extends HTMLElement {
         this.generateOptimizationsContent();
     }
 
+    /**
+     * Procesa el código fuente TSL para asegurar que exporte 'main'
+     * @param {string} tslSource - Código fuente original
+     * @returns {string} Código fuente procesado
+     */
+    processTSLSource(tslSource) {
+        if (!tslSource) return '// TSL Source not available';
+        
+        // Case 1: export const somethingTSL = main; -> export { main };
+        if (/export const \w+TSL = main;/.test(tslSource)) {
+            return tslSource.replace(/export const \w+TSL = main;/, 'export { main };');
+        }
+        
+        // Case 2: export const somethingTSL = Fn(...) -> export const main = Fn(...)
+        return tslSource.replace(/export const \w+TSL =/, 'export const main =');
+    }
+
     generateVanillaContent() {
         const container = this.shadowRoot.getElementById('vanilla-content');
-        let tslSource = this.config.tslSource || '// TSL Source not available';
-        tslSource = tslSource.replace(/export const \w+TSL = main;/, 'export { main };');
+        const tslSource = this.processTSLSource(this.config.tslSource);
 
         const commonUniformsCode = this.getCommonUniformsCode();
 
@@ -661,8 +677,7 @@ export const u_border_width = uniform(0.1);`;
 
     generateReactContent() {
         const container = this.shadowRoot.getElementById('react-content');
-        let tslSource = this.config.tslSource || '// TSL Source not available';
-        tslSource = tslSource.replace(/export const \w+TSL = main;/, 'export { main };');
+        const tslSource = this.processTSLSource(this.config.tslSource);
         const commonUniformsCode = this.getCommonUniformsCode();
 
         container.innerHTML = `
@@ -716,8 +731,7 @@ export const u_border_width = uniform(0.1);`;
 
     generateVueContent() {
         const container = this.shadowRoot.getElementById('vue-content');
-        let tslSource = this.config.tslSource || '// TSL Source not available';
-        tslSource = tslSource.replace(/export const \w+TSL = main;/, 'export { main };');
+        const tslSource = this.processTSLSource(this.config.tslSource);
         const commonUniformsCode = this.getCommonUniformsCode();
 
         container.innerHTML = `
@@ -767,8 +781,7 @@ export const u_border_width = uniform(0.1);`;
 
     generateAngularContent() {
         const container = this.shadowRoot.getElementById('angular-content');
-        let tslSource = this.config.tslSource || '// TSL Source not available';
-        tslSource = tslSource.replace(/export const \w+TSL = main;/, 'export { main };');
+        const tslSource = this.processTSLSource(this.config.tslSource);
         const commonUniformsCode = this.getCommonUniformsCode();
 
         container.innerHTML = `
@@ -1153,7 +1166,7 @@ export const u_border_width = uniform(0.1);`;
 
         return `import * as THREE from 'three';
 import { WebGPURenderer } from 'three/webgpu';
-import { MeshBasicNodeMaterial } from 'three/tsl';
+import { MeshBasicNodeMaterial } from 'three/webgpu';
 import * as culori from 'culori';
 import { main } from './shaderNode.js';
 import { 
@@ -1234,7 +1247,7 @@ new WebGPUGradient('gradient-canvas');`;
         return `import { useEffect, useRef } from 'react';
 import * as THREE from 'three';
 import { WebGPURenderer } from 'three/webgpu';
-import { MeshBasicNodeMaterial } from 'three/tsl';
+import { MeshBasicNodeMaterial } from 'three/webgpu';
 import * as culori from 'culori';
 import { main } from './shaderNode.js';
 import { 
@@ -1357,7 +1370,7 @@ function App() {
         return `import { ref, onMounted, onUnmounted } from 'vue';
 import * as THREE from 'three';
 import { WebGPURenderer } from 'three/webgpu';
-import { MeshBasicNodeMaterial } from 'three/tsl';
+import { MeshBasicNodeMaterial } from 'three/webgpu';
 import * as culori from 'culori';
 import { main } from './shaderNode.js';
 import { 
@@ -1492,7 +1505,7 @@ const { canvasRef } = useGradientBackground();
         return `import { Injectable, signal, effect } from '@angular/core';
 import * as THREE from 'three';
 import { WebGPURenderer } from 'three/webgpu';
-import { MeshBasicNodeMaterial } from 'three/tsl';
+import { MeshBasicNodeMaterial } from 'three/webgpu';
 import * as culori from 'culori';
 import { main } from './shaderNode.js';
 import { 
