@@ -515,6 +515,7 @@ export class UIController {
         const parameters = this.shaderManager.getShaderParameters(shaderName);
         const shaderCode = this.shaderManager.getShaderCode(shaderName);
         const vertexCode = this.shaderManager.getVertexShaderCode();
+        const shaderConfig = this.shaderManager.getCurrentShaderConfig();
 
         return {
             shader: shaderName,
@@ -522,7 +523,8 @@ export class UIController {
             colors: colors,
             parameters: parameters,
             shaderCode: shaderCode,
-            vertexCode: vertexCode
+            vertexCode: vertexCode,
+            tslSource: shaderConfig.tslSource
         };
     }
 }

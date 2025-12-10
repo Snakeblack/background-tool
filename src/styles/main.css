@@ -233,6 +233,11 @@ hud-dock {
 /* ============================================
    Form Controls
    ============================================ */
+
+#mobile-sheet {
+    backdrop-filter: blur(50px);
+}
+
 #content-colors {
     padding-inline: .5rem;
 }
