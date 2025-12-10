@@ -1,11 +1,11 @@
-# 🎨 MMRG Background Generator | Generador de Fondos Animados WebGL
+# 🎨 MMRG Background Generator | Generador de Fondos Animados WebGPU
 
 [![Live Demo](https://img.shields.io/badge/demo-online-brightgreen.svg)](https://background.mretamozo.com)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Made with Three.js](https://img.shields.io/badge/Made%20with-Three.js-black.svg)](https://threejs.org/)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.6-blue.svg)](https://www.typescriptlang.org/)
+[![Made with WebGPU](https://img.shields.io/badge/Made%20with-WebGPU-black.svg)](https://www.w3.org/TR/webgpu/)
+[![LiteRT.js](https://img.shields.io/badge/Powered%20by-LiteRT.js-orange.svg)](https://github.com/Snakeblack/LiteRT.js)
 
-Generador profesional de fondos animados con **WebGL**, **Three.js** y espacio de color **OKLCH**. Crea fondos únicos con 8 shaders personalizables y exporta el código listo para React, Vue, Angular o Vanilla JS.
+Generador profesional de fondos animados de alto rendimiento utilizando **WebGPU** y **LiteRT.js**. Crea fondos únicos con shaders personalizables, espacio de color **OKLCH** y exporta el código listo para React, Vue, Angular o Vanilla JS.
 
 🌐 **[Ver Demo en Vivo](https://background.mretamozo.com)** | 📖 **[Documentación](docs/)** | 🚀 **[Guía de Uso](docs/GUIA_USO.md)**
 
@@ -13,109 +13,103 @@ Generador profesional de fondos animados con **WebGL**, **Three.js** y espacio d
 
 ## 🌟 ¿Por qué usar MMRG Background Generator?
 
+✅ **Rendimiento Extremo** - WebGPU + LiteRT.js para animaciones a 60fps estables  
 ✅ **Sin suscripciones ni límites** - 100% gratuito y open source  
 ✅ **Exportación inteligente** - Código optimizado para tu framework favorito  
 ✅ **Colores vibrantes** - Espacio OKLCH para colores perceptualmente uniformes  
 ✅ **8 efectos únicos** - Aurora, Waves, Liquid, Mesh, Stripes, Geometric, Particles  
 ✅ **Responsive por defecto** - Optimizado para desktop, tablet y móvil  
-✅ **Rendimiento** - WebGL acelerado por GPU para animaciones fluidas
+
+## 🚀 Migración a WebGPU y LiteRT.js
+
+Este proyecto ha evolucionado de WebGL a **WebGPU**, la próxima generación de gráficos web. Gracias a la integración con **LiteRT.js**, hemos logrado:
+
+*   **Mayor Rendimiento:** Acceso de bajo nivel a la GPU para cálculos más complejos sin bloquear el hilo principal.
+*   **Menor Consumo:** Shaders optimizados que consumen menos batería en dispositivos móviles.
+*   **Mejor Calidad Visual:** Gradientes más suaves y efectos más detallados.
 
 ## ✨ Características
 
 - 🎪 **Paneles flotantes y minimizables** - Interfaz moderna y flexible
 - 🎨 **Espacio de color OKLCH** - Control perceptual de colores
-- ⚡ **WebGL Shaders** - Múltiples efectos en tiempo real
+- ⚡ **WebGPU Shaders** - Múltiples efectos en tiempo real con alto rendimiento
 - 📱 **Responsive Design** - Funciona en desktop, tablet y móvil
 - 🔧 **Controles intuitivos** - Ajusta cada parámetro con sliders
 - 🎬 **Animaciones suaves** - Transiciones fluidas
-- 💾 **Exportable** - Descarga tu gradiente como imagen
+- 💾 **Exportable** - Descarga tu gradiente como código listo para usar
 
 ## 🚀 Comenzar
 
 ### Requisitos
-- **Node.js** 16+
-- **npm** o **yarn**
+- **Node.js** 18+
+- **Navegador compatible con WebGPU** (Chrome 113+, Edge 113+, Firefox Nightly)
 
 ### Instalación
 
 ```bash
 # Instalar dependencias
-npm install
+pnpm install
 
 # Iniciar servidor de desarrollo
-npm run dev
+pnpm dev
 ```
 
-Abre `http://localhost:3000` en tu navegador.
+Abre `http://localhost:5173` en tu navegador.
 
 ### Compilación para producción
 
 ```bash
-npm run build
+pnpm build
 ```
 
 ## 📁 Estructura del Proyecto
 
 ```
-gradient-generator-webgl/
+background-tool/
 ├── src/
 │   ├── index.html              # HTML principal
-│   ├── main.ts                 # Punto de entrada
+│   ├── main.js                 # Punto de entrada
 │   ├── scripts/
-│   │   ├── renderer.ts         # Inicialización Three.js
-│   │   ├── shaders.ts          # Gestión de shaders
-│   │   ├── colors.ts           # Control de colores OKLCH
-│   │   ├── ui.ts               # Lógica de interfaz
-│   │   └── utils.ts            # Utilidades
+│   │   ├── LiteRTManager.js    # Gestión de WebGPU con LiteRT
+│   │   ├── ShaderManager.js    # Gestión de shaders
+│   │   ├── ColorManager.js     # Control de colores OKLCH
+│   │   ├── UIController.js     # Lógica de interfaz
+│   │   └── components/         # Web Components
 │   ├── shaders/
+│   │   ├── aurora.glsl         # Shader de aurora
 │   │   ├── liquid.glsl         # Shader de líquido
-│   │   ├── stripes.glsl        # Shader de rayas
-│   │   └── common.glsl         # Código compartido
+│   │   └── ...                 # Otros shaders
 │   ├── styles/
 │   │   ├── main.css            # Estilos globales
-│   │   ├── panels.css          # Estilos de paneles
-│   │   ├── controls.css        # Estilos de controles
-│   │   └── responsive.css      # Media queries
-│   └── assets/
-│       └── icons/              # Iconos SVG (opcional)
 ├── public/                      # Archivos estáticos
 ├── docs/                        # Documentación
-├── dist/                        # Build de producción
-├── config/                      # Configuración
 ├── package.json
-├── tsconfig.json
-├── vite.config.ts
-├── .eslintrc.json
-├── .prettierrc.json
-└── .gitignore
+├── vite.config.js
 ```
 
 ## 🎯 Tecnologías
 
 | Stack | Componentes |
 |-------|------------|
-| **Frontend** | TypeScript, HTML5, CSS3 |
-| **3D & Graphics** | Three.js r158, WebGL |
-| **Colors** | Culori.js, OKLCH Color Space |
-| **Build** | Vite 5.x, ESBuild |
+| **Frontend** | Vanilla JS, Web Components, CSS3 |
+| **Graphics** | **WebGPU**, **LiteRT.js** |
+| **Colors** | OKLCH Color Space |
+| **Build** | Vite |
 | **Tooling** | ESLint, Prettier |
-| **Package Manager** | npm |
+| **Package Manager** | pnpm |
 
 ## 🛠️ Scripts Disponibles
 
 ```bash
-npm run dev           # Inicia servidor de desarrollo (http://localhost:3000)
-npm run build         # Compila para producción en /dist
-npm run preview       # Preview de la build compilada
-npm run lint          # Verifica código con ESLint
-npm run format        # Formatea código con Prettier
-npm run format:check  # Verifica formato sin cambiar
+pnpm dev              # Inicia servidor de desarrollo (http://localhost:5173)
+pnpm build            # Compila para producción en /dist
+pnpm preview          # Preview de la build compilada
 ```
 
 ## 🎨 Paneles de Control
 
 ### Panel Izquierdo: Configuración
-- **Tipo de Fondo**: Líquido o Rayas
+- **Tipo de Fondo**: Aurora, Waves, Liquid, Mesh, etc.
 - **Velocidad Global**: Controla animación
 - **Controles Específicos**: Parámetros por shader
 
@@ -128,112 +122,61 @@ npm run format:check  # Verifica formato sin cambiar
 
 ---
 
-## ⚙️ Archivo: `script.js`
+## ⚙️ Archivo: `main.js`
 
-**Responsabilidad:** Lógica de aplicación y comportamiento
+**Responsabilidad:** Punto de entrada y orquestación
 
 **Funciones principales:**
 
-| Función | Descripción |
+| Clase | Descripción |
 |---------|-------------|
-| `oklchToThreeColor()` | Convierte valores OKLCH a THREE.Color |
-| `init()` | Inicializa la escena de Three.js |
-| `animate()` | Loop de animación |
-| `onWindowResize()` | Maneja el redimensionamiento de ventana |
-| `updateColorFromOKLCH()` | Actualiza colores desde sliders |
-| `setupControls()` | Configura todos los event listeners |
+| `LiteRTManager` | Gestiona el contexto WebGPU y el pipeline de renderizado |
+| `ShaderManager` | Carga y compila los shaders WGSL/GLSL |
+| `ColorManager` | Gestiona la conversión y estado de colores OKLCH |
+| `UIController` | Maneja la interacción con el usuario y Web Components |
 
 **Características:**
-- Separación clara de responsabilidades
-- Comentarios JSDoc para documentación
-- Event delegation para eficiencia
-- Gestión de uniforms de shaders
-- Soporte para cambio dinámico de shaders
+- Arquitectura basada en componentes
+- Web Components nativos para la UI
+- Gestión eficiente de recursos WebGPU
 
 ---
 
 ## 🚀 Cómo Usar
 
-1. Abre `index.html` en un navegador moderno (que soporte WebGL)
+1. Abre `index.html` en un navegador compatible con WebGPU (Chrome, Edge, etc.)
 2. Usa los controles para ajustar:
-   - Tipo de shader (Líquido o Rayas)
+   - Tipo de shader
    - Velocidad global
    - Parámetros específicos del shader
    - Colores en formato OKLCH
+3. Haz clic en "Exportar" para obtener el código.
 
 ---
 
 ## ✅ Buenas Prácticas Implementadas
 
-### 1. **Separación de Responsabilidades**
-   - HTML para estructura
-   - CSS para estilos
-   - JavaScript para lógica
+### 1. **WebGPU First**
+   - Uso de Compute Shaders para simulaciones complejas
+   - Pipelines optimizados
 
 ### 2. **Arquitectura Modular**
-   - Funciones pequeñas y reutilizables
-   - Uniforms centralizados
-   - Event delegation eficiente
+   - Separación clara entre lógica de renderizado y UI
+   - Uso de módulos ES6
 
-### 3. **Código Limpio**
-   - Nombres descriptivos
-   - Comentarios en funciones complejas
-   - Documentación JSDoc
+### 3. **Rendimiento**
+   - Minimización de cambios de estado en la GPU
+   - Uso eficiente de buffers uniformes
 
-### 4. **Rendimiento**
-   - Caché de elementos del DOM
-   - Event delegation (no listeners individuales)
-   - Pixel ratio optimizado para dispositivos
-
-### 5. **Compatibilidad**
-   - Estilos cross-browser para inputs range
-   - Fallbacks CSS
-   - Soporte para Firefox, Chrome, Safari
-
-### 6. **Responsive Design**
-   - Media queries para móviles
-   - Viewport meta tag
-   - Layout adaptativo
-
-### 7. **Mantenibilidad**
-   - Variables CSS reutilizables
-   - Comentarios de sección
-   - Estructura coherente
-
----
-
-## 🔧 Estructura de Shaders
-
-Los shaders GLSL están definidos en `index.html` como scripts de tipo `x-shader`:
-
-### Vertex Shader
-- Común para todos los shaders
-- Renderiza la geometría al espacio pantalla
-
-### Fragment Shaders
-1. **Líquido (FBM)**: Ruido Perlin fractal
-2. **Rayas**: Patrones de seno/coseno animados
-
----
-
-## 📱 Variables CSS (Temas)
-
-Todas las propiedades de color y transición están definidas en `:root`:
-
-```css
---color-gray-200, --color-gray-300, --color-gray-800, --color-gray-900
---color-white, --color-blue-500
---transition-default: 0.3s ease
---backdrop-blur: 10px
-```
-
-Fácil de customizar para temas oscuros/claros.
+### 4. **Accesibilidad**
+   - Controles etiquetados correctamente
+   - Soporte para navegación por teclado
 
 ---
 
 ## 🔗 Referencias Externas
 
-- [Three.js Documentation](https://threejs.org/docs/)
-- [Culori.js](https://culorijs.org/)
+- [WebGPU API](https://developer.mozilla.org/en-US/docs/Web/API/WebGPU_API)
+- [LiteRT.js](https://github.com/Snakeblack/LiteRT.js)
 - [OKLCH Color Format](https://oklch.com/)
-- [WebGL Shaders](https://www.khronos.org/opengl/wiki/OpenGL_Shading_Language)
+

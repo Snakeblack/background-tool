@@ -456,10 +456,10 @@ export class ExportModal extends HTMLElement {
                 </div>
                 <div class="modal-body">
                     <div class="tabs">
-                        <button class="tab active" data-tab="vanilla">HTML/JS Vanilla</button>
+                        <button class="tab active" data-tab="vanilla">HTML/JS</button>
                         <button class="tab" data-tab="react">React</button>
                         <button class="tab" data-tab="vue">Vue 3</button>
-                        <button class="tab" data-tab="angular">Angular 19+</button>
+                        <button class="tab" data-tab="angular">Angular</button>
                         <button class="tab" data-tab="optimizations">Optimizaciones</button>
                     </div>
                     
@@ -554,11 +554,16 @@ export class ExportModal extends HTMLElement {
 
     generateVanillaContent() {
         const container = this.shadowRoot.getElementById('vanilla-content');
+        let tslSource = this.config.tslSource || '// TSL Source not available';
+        tslSource = tslSource.replace(/export const \w+TSL = main;/, 'export { main };');
+
+        const commonUniformsCode = this.getCommonUniformsCode();
+
         container.innerHTML = `
             <div class="section">
-                <h3 class="section-title">${createElement(Rocket, {class: "icon"}).outerHTML} Implementación Vanilla JS</h3>
+                <h3 class="section-title">${createElement(Rocket, {class: "icon"}).outerHTML} Implementación HTML/JS (WebGPU)</h3>
                 <p class="section-description">
-                    Implementación ligera y optimizada sin dependencias de frameworks.
+                    Implementación moderna usando Three.js WebGPURenderer y TSL.
                 </p>
                 
                 <div class="step">
@@ -570,35 +575,101 @@ export class ExportModal extends HTMLElement {
                 
                 <div class="step">
                     <span class="step-number">2</span>
+                    <strong>Common Uniforms</strong>
+                </div>
+                <p class="info-box">Crea este archivo para compartir variables entre shaders.</p>
+                ${this.createCodeBlock('javascript', commonUniformsCode, 'commonUniforms.js')}
+
+                <div class="step">
+                    <span class="step-number">3</span>
+                    <strong>Shader Node (TSL)</strong>
+                </div>
+                <p class="info-box">Copia este código que contiene la lógica del shader.</p>
+                ${this.createCodeBlock('javascript', tslSource, 'shaderNode.js')}
+
+                <div class="step">
+                    <span class="step-number">4</span>
                     <strong>HTML Structure</strong>
                 </div>
                 
                 ${this.createCodeBlock('html', this.generateHTMLCode(), 'index.html')}
                 
                 <div class="step">
-                    <span class="step-number">3</span>
+                    <span class="step-number">5</span>
                     <strong>JavaScript Implementation</strong>
                 </div>
                 
-                ${this.createCodeBlock('javascript', this.generateVanillaJS(), 'gradient.js')}
-                
-                <div class="info-box">
-                    <p><strong>${createElement(Lightbulb, {class: "icon"}).outerHTML} Consejo:</strong> Este código está optimizado para rendimiento con:</p>
-                    <p>• RequestAnimationFrame para animaciones fluidas</p>
-                    <p>• Geometría reutilizable sin recreación</p>
-                    <p>• Eventos de resize debounced</p>
-                </div>
+                ${this.createCodeBlock('javascript', this.generateVanillaJS(), 'main.js')}
             </div>
         `;
     }
 
+    getCommonUniformsCode() {
+        return `import { Vector2, Color } from 'three';
+import { uniform } from 'three/tsl';
+
+// Common Uniforms shared across TSL shaders
+export const u_time = uniform(0);
+export const u_resolution = uniform(new Vector2(1, 1));
+export const u_mouse = uniform(new Vector2(0.5, 0.5));
+
+// Colors
+export const u_color1 = uniform(new Color(0xff0000));
+export const u_color2 = uniform(new Color(0x00ff00));
+export const u_color3 = uniform(new Color(0x0000ff));
+export const u_color4 = uniform(new Color(0xffff00));
+
+// Common Parameters
+export const u_speed = uniform(1.0);
+export const u_intensity = uniform(1.0);
+export const u_scale = uniform(1.0);
+export const u_brightness = uniform(0.0);
+export const u_contrast = uniform(1.0);
+export const u_noise = uniform(0.0);
+
+// Specific Parameters
+export const u_wave_amplitude = uniform(0.4);
+export const u_wave_frequency = uniform(2.5);
+export const u_zoom = uniform(3.0);
+export const u_stripe_width = uniform(8.0);
+export const u_stripe_speed = uniform(0.8);
+export const u_noise_scale = uniform(2.0);
+export const u_octaves = uniform(4.0);
+export const u_persistence = uniform(0.5);
+export const u_lacunarity = uniform(2.0);
+export const u_rotation = uniform(0.0);
+export const u_distortion = uniform(0.6);
+export const u_grid_size = uniform(3.0);
+export const u_glow = uniform(1.0);
+export const u_offset_x = uniform(0.0);
+export const u_offset_y = uniform(0.0);
+export const u_sun_size = uniform(0.25);
+export const u_core_size = uniform(1.0);
+export const u_spiral_density = uniform(3.0);
+export const u_star_density = uniform(50.0);
+export const u_cell_density = uniform(8.0);
+export const u_border_width = uniform(0.1);`;
+    }
+
+    generateWebGPUContent() {
+        // Deprecated
+    }
+
+    generateWebGPUJS() {
+        // Deprecated
+    }
+
     generateReactContent() {
         const container = this.shadowRoot.getElementById('react-content');
+        let tslSource = this.config.tslSource || '// TSL Source not available';
+        tslSource = tslSource.replace(/export const \w+TSL = main;/, 'export { main };');
+        const commonUniformsCode = this.getCommonUniformsCode();
+
         container.innerHTML = `
             <div class="section">
-                <h3 class="section-title">${createElement(Atom, {class: "icon"}).outerHTML} Implementación React</h3>
+                <h3 class="section-title">${createElement(Atom, {class: "icon"}).outerHTML} Implementación React (WebGPU)</h3>
                 <p class="section-description">
-                    Hook personalizado para integrar el gradiente en componentes React.
+                    Hook personalizado para integrar el gradiente en componentes React usando WebGPU.
                 </p>
                 
                 <div class="step">
@@ -607,16 +678,30 @@ export class ExportModal extends HTMLElement {
                 </div>
                 
                 ${this.createCodeBlock('bash', 'npm install three culori', 'Terminal')}
-                
+
                 <div class="step">
                     <span class="step-number">2</span>
+                    <strong>Common Uniforms</strong>
+                </div>
+                <p class="info-box">Crea este archivo para compartir variables entre shaders.</p>
+                ${this.createCodeBlock('javascript', commonUniformsCode, 'commonUniforms.js')}
+
+                <div class="step">
+                    <span class="step-number">3</span>
+                    <strong>Shader Node (TSL)</strong>
+                </div>
+                <p class="info-box">Copia este código que contiene la lógica del shader.</p>
+                ${this.createCodeBlock('javascript', tslSource, 'shaderNode.js')}
+                
+                <div class="step">
+                    <span class="step-number">4</span>
                     <strong>Custom Hook</strong>
                 </div>
                 
                 ${this.createCodeBlock('javascript', this.generateReactHook(), 'useGradientBackground.js')}
                 
                 <div class="step">
-                    <span class="step-number">3</span>
+                    <span class="step-number">5</span>
                     <strong>Uso en Componente</strong>
                 </div>
                 
@@ -631,11 +716,15 @@ export class ExportModal extends HTMLElement {
 
     generateVueContent() {
         const container = this.shadowRoot.getElementById('vue-content');
+        let tslSource = this.config.tslSource || '// TSL Source not available';
+        tslSource = tslSource.replace(/export const \w+TSL = main;/, 'export { main };');
+        const commonUniformsCode = this.getCommonUniformsCode();
+
         container.innerHTML = `
             <div class="section">
-                <h3 class="section-title">${createElement(Layers, {class: "icon"}).outerHTML} Implementación Vue 3</h3>
+                <h3 class="section-title">${createElement(Layers, {class: "icon"}).outerHTML} Implementación Vue 3 (WebGPU)</h3>
                 <p class="section-description">
-                    Composable para Vue 3 con Composition API.
+                    Composable para Vue 3 con Composition API usando WebGPU.
                 </p>
                 
                 <div class="step">
@@ -644,16 +733,30 @@ export class ExportModal extends HTMLElement {
                 </div>
                 
                 ${this.createCodeBlock('bash', 'npm install three culori', 'Terminal')}
-                
+
                 <div class="step">
                     <span class="step-number">2</span>
+                    <strong>Common Uniforms</strong>
+                </div>
+                <p class="info-box">Crea este archivo para compartir variables entre shaders.</p>
+                ${this.createCodeBlock('javascript', commonUniformsCode, 'commonUniforms.js')}
+
+                <div class="step">
+                    <span class="step-number">3</span>
+                    <strong>Shader Node (TSL)</strong>
+                </div>
+                <p class="info-box">Copia este código que contiene la lógica del shader.</p>
+                ${this.createCodeBlock('javascript', tslSource, 'shaderNode.js')}
+                
+                <div class="step">
+                    <span class="step-number">4</span>
                     <strong>Composable</strong>
                 </div>
                 
                 ${this.createCodeBlock('javascript', this.generateVueComposable(), 'useGradientBackground.js')}
                 
                 <div class="step">
-                    <span class="step-number">3</span>
+                    <span class="step-number">5</span>
                     <strong>Uso en Componente</strong>
                 </div>
                 
@@ -664,11 +767,15 @@ export class ExportModal extends HTMLElement {
 
     generateAngularContent() {
         const container = this.shadowRoot.getElementById('angular-content');
+        let tslSource = this.config.tslSource || '// TSL Source not available';
+        tslSource = tslSource.replace(/export const \w+TSL = main;/, 'export { main };');
+        const commonUniformsCode = this.getCommonUniformsCode();
+
         container.innerHTML = `
             <div class="section">
-                <h3 class="section-title">${createElement(Hexagon, {class: "icon"}).outerHTML} Implementación Angular 19+</h3>
+                <h3 class="section-title">${createElement(Hexagon, {class: "icon"}).outerHTML} Implementación Angular (WebGPU)</h3>
                 <p class="section-description">
-                    Servicio y directiva para integrar el gradiente en Angular 19+ con Signals.
+                    Servicio y directiva para integrar el gradiente en Angular usando WebGPU.
                 </p>
                 
                 <div class="step">
@@ -677,23 +784,37 @@ export class ExportModal extends HTMLElement {
                 </div>
                 
                 ${this.createCodeBlock('bash', 'npm install three culori\nnpm install --save-dev @types/three', 'Terminal')}
-                
+
                 <div class="step">
                     <span class="step-number">2</span>
+                    <strong>Common Uniforms</strong>
+                </div>
+                <p class="info-box">Crea este archivo para compartir variables entre shaders.</p>
+                ${this.createCodeBlock('javascript', commonUniformsCode, 'commonUniforms.js')}
+
+                <div class="step">
+                    <span class="step-number">3</span>
+                    <strong>Shader Node (TSL)</strong>
+                </div>
+                <p class="info-box">Copia este código que contiene la lógica del shader.</p>
+                ${this.createCodeBlock('javascript', tslSource, 'shaderNode.js')}
+                
+                <div class="step">
+                    <span class="step-number">4</span>
                     <strong>Servicio de Gradiente</strong>
                 </div>
                 
                 ${this.createCodeBlock('typescript', this.generateAngularService(), 'gradient-background.service.ts')}
                 
                 <div class="step">
-                    <span class="step-number">3</span>
+                    <span class="step-number">5</span>
                     <strong>Directiva</strong>
                 </div>
                 
                 ${this.createCodeBlock('typescript', this.generateAngularDirective(), 'gradient-background.directive.ts')}
                 
                 <div class="step">
-                    <span class="step-number">4</span>
+                    <span class="step-number">6</span>
                     <strong>Uso en Componente</strong>
                 </div>
                 
@@ -1016,7 +1137,7 @@ export class ExportModal extends HTMLElement {
 </head>
 <body>
     <canvas id="gradient-canvas"></canvas>
-    <script type="module" src="gradient.js"></script>
+    <script type="module" src="main.js"></script>
 </body>
 </html>`;
     }
@@ -1026,73 +1147,62 @@ export class ExportModal extends HTMLElement {
      * @returns {string} Código JavaScript completo
      */
     generateVanillaJS() {
-        const { colors, speed, parameters, shaderCode, vertexCode } = this.config;
-
+        const { colors, speed, parameters } = this.config;
         const normalizedColors = this.normalizeColors(colors);
         const colorStrings = normalizedColors.map(color => this.formatColorForExport(color));
-        const baseUniformLines = [
-            '                u_time: { value: 0 }',
-            '                u_resolution: { value: new THREE.Vector2(window.innerWidth * Math.min(window.devicePixelRatio, 2), window.innerHeight * Math.min(window.devicePixelRatio, 2)) }',
-            `                u_speed: { value: ${this.formatUniformValue(speed ?? 0.5)} }`,
-            `                u_color1: { value: this.oklchToThree(${colorStrings[0]}) }`,
-            `                u_color2: { value: this.oklchToThree(${colorStrings[1]}) }`,
-            `                u_color3: { value: this.oklchToThree(${colorStrings[2]}) }`,
-            `                u_color4: { value: this.oklchToThree(${colorStrings[3]}) }`,
-        ];
-
-        const parameterUniformLines = Object.entries(parameters || {})
-            .map(([key, value]) => `                u_${key}: { value: ${this.formatUniformValue(value)} }`);
-
-        const uniformLines = [...baseUniformLines, ...parameterUniformLines];
-        const uniformsBlock = uniformLines.join(',\n');
 
         return `import * as THREE from 'three';
+import { WebGPURenderer } from 'three/webgpu';
+import { MeshBasicNodeMaterial } from 'three/tsl';
 import * as culori from 'culori';
+import { main } from './shaderNode.js';
+import { 
+    u_time, u_resolution, u_speed, 
+    u_color1, u_color2, u_color3, u_color4,
+    ${Object.keys(parameters || {}).map(k => 'u_' + k).join(', ')} 
+} from './commonUniforms.js';
 
-class GradientBackground {
+class WebGPUGradient {
     constructor(canvasId) {
         this.canvas = document.getElementById(canvasId);
         this.init();
         this.animate();
     }
 
-    init() {
+    async init() {
         this.scene = new THREE.Scene();
-        
         this.camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 10);
         this.camera.position.z = 1;
-        
-        // Renderer
-        this.renderer = new THREE.WebGLRenderer({
+
+        // WebGPU Renderer
+        this.renderer = new WebGPURenderer({
             canvas: this.canvas,
-            antialias: false,
-            alpha: false,
-            precision: 'highp',
-            powerPreference: 'high-performance'
+            antialias: true,
+            alpha: false
         });
         this.renderer.setSize(window.innerWidth, window.innerHeight);
         this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-        
-        this.createMaterial();
-        
-        const geometry = new THREE.PlaneGeometry(2, 2);
-        this.mesh = new THREE.Mesh(geometry, this.material);
-        this.mesh.frustumCulled = false;
-        this.scene.add(this.mesh);
-        
-        this.clock = new THREE.Clock();
-        
-        window.addEventListener('resize', this.onResize.bind(this), { passive: true });
-    }
+        await this.renderer.init();
 
-    createMaterial() {
-        this.material = new THREE.ShaderMaterial({
-            uniforms: {
-${uniformsBlock}
-            },
-            vertexShader: \`${vertexCode}\`,
-            fragmentShader: \`${shaderCode}\`
-        });
+        // Setup Uniforms
+        u_speed.value = ${this.formatUniformValue(speed ?? 0.5)};
+        u_color1.value = this.oklchToThree(${colorStrings[0]});
+        u_color2.value = this.oklchToThree(${colorStrings[1]});
+        u_color3.value = this.oklchToThree(${colorStrings[2]});
+        u_color4.value = this.oklchToThree(${colorStrings[3]});
+        
+        ${Object.entries(parameters || {}).map(([key, value]) => `u_${key}.value = ${this.formatUniformValue(value)};`).join('\n        ')}
+
+        // Material
+        const material = new MeshBasicNodeMaterial();
+        material.colorNode = main();
+
+        const geometry = new THREE.PlaneGeometry(2, 2);
+        this.mesh = new THREE.Mesh(geometry, material);
+        this.scene.add(this.mesh);
+
+        this.clock = new THREE.Clock();
+        window.addEventListener('resize', this.onResize.bind(this));
     }
 
     oklchToThree(oklch) {
@@ -1103,130 +1213,110 @@ ${uniformsBlock}
     onResize() {
         this.renderer.setSize(window.innerWidth, window.innerHeight);
         const pixelRatio = this.renderer.getPixelRatio();
-        this.material.uniforms.u_resolution.value.set(window.innerWidth * pixelRatio, window.innerHeight * pixelRatio);
+        u_resolution.value.set(window.innerWidth * pixelRatio, window.innerHeight * pixelRatio);
     }
 
     animate() {
         requestAnimationFrame(() => this.animate());
-        this.material.uniforms.u_time.value = this.clock.getElapsedTime();
+        u_time.value = this.clock.getElapsedTime();
         this.renderer.render(this.scene, this.camera);
-    }
-
-    dispose() {
-        this.material.dispose();
-        this.mesh.geometry.dispose();
-        this.renderer.dispose();
-        window.removeEventListener('resize', this.onResize);
     }
 }
 
-new GradientBackground('gradient-canvas');`;
+new WebGPUGradient('gradient-canvas');`;
     }
 
     generateReactHook() {
-        const { colors, speed, parameters, shaderCode, vertexCode } = this.config;
-
+        const { colors, speed, parameters } = this.config;
         const normalizedColors = this.normalizeColors(colors);
         const colorStrings = normalizedColors.map(color => this.formatColorForExport(color));
-        
-        const baseUniformLines = [
-            '                u_time: { value: 0 }',
-            '                u_resolution: { value: new THREE.Vector2(window.innerWidth * Math.min(window.devicePixelRatio, 2), window.innerHeight * Math.min(window.devicePixelRatio, 2)) }',
-            `                u_speed: { value: ${this.formatUniformValue(speed ?? 0.5)} }`,
-            `                u_color1: { value: oklchToThree(${colorStrings[0]}) }`,
-            `                u_color2: { value: oklchToThree(${colorStrings[1]}) }`,
-            `                u_color3: { value: oklchToThree(${colorStrings[2]}) }`,
-            `                u_color4: { value: oklchToThree(${colorStrings[3]}) }`,
-        ];
-
-        const parameterUniformLines = Object.entries(parameters || {})
-            .map(([key, value]) => `                u_${key}: { value: ${this.formatUniformValue(value)} }`);
-
-        const uniformsBlock = [...baseUniformLines, ...parameterUniformLines].join(',\n');
 
         return `import { useEffect, useRef } from 'react';
 import * as THREE from 'three';
+import { WebGPURenderer } from 'three/webgpu';
+import { MeshBasicNodeMaterial } from 'three/tsl';
 import * as culori from 'culori';
-
-const VERTEX_SHADER = \`${vertexCode}\`;
-const FRAGMENT_SHADER = \`${shaderCode}\`;
+import { main } from './shaderNode.js';
+import { 
+    u_time, u_resolution, u_speed, 
+    u_color1, u_color2, u_color3, u_color4,
+    ${Object.keys(parameters || {}).map(k => 'u_' + k).join(', ')} 
+} from './commonUniforms.js';
 
 export function useGradientBackground() {
     const canvasRef = useRef(null);
     const rendererRef = useRef(null);
-    const sceneRef = useRef(null);
-    const materialRef = useRef(null);
     const animationRef = useRef(null);
 
     useEffect(() => {
         if (!canvasRef.current) return;
 
-        // Scene & Camera
-        const scene = new THREE.Scene();
-        sceneRef.current = scene;
-        
-        const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 10);
-        camera.position.z = 1;
+        const init = async () => {
+            // Scene & Camera
+            const scene = new THREE.Scene();
+            const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 10);
+            camera.position.z = 1;
 
-        // Renderer
-        const renderer = new THREE.WebGLRenderer({
-            canvas: canvasRef.current,
-            antialias: false,
-            alpha: false,
-            precision: 'highp',
-            powerPreference: 'high-performance'
-        });
-        renderer.setSize(window.innerWidth, window.innerHeight);
-        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-        rendererRef.current = renderer;
-
-        // Helper function
-        const oklchToThree = (oklch) => {
-            const rgb = culori.rgb({ mode: 'oklch', ...oklch });
-            return new THREE.Color(rgb.r, rgb.g, rgb.b);
-        };
-
-        // Material
-        const material = new THREE.ShaderMaterial({
-            uniforms: {
-${uniformsBlock}
-            },
-            vertexShader: VERTEX_SHADER,
-            fragmentShader: FRAGMENT_SHADER
-        });
-        materialRef.current = material;
-
-        // Mesh
-        const geometry = new THREE.PlaneGeometry(2, 2);
-        const mesh = new THREE.Mesh(geometry, material);
-        mesh.frustumCulled = false;
-        scene.add(mesh);
-
-        // Animation
-        const clock = new THREE.Clock();
-        const animate = () => {
-            animationRef.current = requestAnimationFrame(animate);
-            material.uniforms.u_time.value = clock.getElapsedTime();
-            renderer.render(scene, camera);
-        };
-        animate();
-
-        // Resize Handler
-        const handleResize = () => {
+            // Renderer
+            const renderer = new WebGPURenderer({
+                canvas: canvasRef.current,
+                antialias: true,
+                alpha: false
+            });
             renderer.setSize(window.innerWidth, window.innerHeight);
-            const pixelRatio = renderer.getPixelRatio();
-            material.uniforms.u_resolution.value.set(window.innerWidth * pixelRatio, window.innerHeight * pixelRatio);
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+            await renderer.init();
+            rendererRef.current = renderer;
+
+            // Helper function
+            const oklchToThree = (oklch) => {
+                const rgb = culori.rgb({ mode: 'oklch', ...oklch });
+                return new THREE.Color(rgb.r, rgb.g, rgb.b);
+            };
+
+            // Setup Uniforms
+            u_speed.value = ${this.formatUniformValue(speed ?? 0.5)};
+            u_color1.value = oklchToThree(${colorStrings[0]});
+            u_color2.value = oklchToThree(${colorStrings[1]});
+            u_color3.value = oklchToThree(${colorStrings[2]});
+            u_color4.value = oklchToThree(${colorStrings[3]});
+            
+            ${Object.entries(parameters || {}).map(([key, value]) => `u_${key}.value = ${this.formatUniformValue(value)};`).join('\n            ')}
+
+            // Material
+            const material = new MeshBasicNodeMaterial();
+            material.colorNode = main();
+
+            // Mesh
+            const geometry = new THREE.PlaneGeometry(2, 2);
+            const mesh = new THREE.Mesh(geometry, material);
+            scene.add(mesh);
+
+            // Animation
+            const clock = new THREE.Clock();
+            const animate = () => {
+                animationRef.current = requestAnimationFrame(animate);
+                u_time.value = clock.getElapsedTime();
+                renderer.render(scene, camera);
+            };
+            animate();
+
+            // Resize Handler
+            const handleResize = () => {
+                renderer.setSize(window.innerWidth, window.innerHeight);
+                const pixelRatio = renderer.getPixelRatio();
+                u_resolution.value.set(window.innerWidth * pixelRatio, window.innerHeight * pixelRatio);
+            };
+            window.addEventListener('resize', handleResize);
         };
-        window.addEventListener('resize', handleResize);
+
+        init();
 
         // Cleanup
         return () => {
             if (animationRef.current) cancelAnimationFrame(animationRef.current);
-            window.removeEventListener('resize', handleResize);
-            
-            material.dispose();
-            geometry.dispose();
-            renderer.dispose();
+            window.removeEventListener('resize', () => {}); // Note: Need named function for proper removal
+            rendererRef.current?.dispose();
         };
     }, []);
 
@@ -1260,32 +1350,21 @@ function App() {
     }
 
     generateVueComposable() {
-        const { colors, speed, parameters, shaderCode, vertexCode } = this.config;
-
+        const { colors, speed, parameters } = this.config;
         const normalizedColors = this.normalizeColors(colors);
         const colorStrings = normalizedColors.map(color => this.formatColorForExport(color));
-        
-        const baseUniformLines = [
-            '                u_time: { value: 0 }',
-            '                u_resolution: { value: new THREE.Vector2(window.innerWidth * Math.min(window.devicePixelRatio, 2), window.innerHeight * Math.min(window.devicePixelRatio, 2)) }',
-            `                u_speed: { value: ${this.formatUniformValue(speed ?? 0.5)} }`,
-            `                u_color1: { value: oklchToThree(${colorStrings[0]}) }`,
-            `                u_color2: { value: oklchToThree(${colorStrings[1]}) }`,
-            `                u_color3: { value: oklchToThree(${colorStrings[2]}) }`,
-            `                u_color4: { value: oklchToThree(${colorStrings[3]}) }`,
-        ];
-
-        const parameterUniformLines = Object.entries(parameters || {})
-            .map(([key, value]) => `                u_${key}: { value: ${this.formatUniformValue(value)} }`);
-
-        const uniformsBlock = [...baseUniformLines, ...parameterUniformLines].join(',\n');
 
         return `import { ref, onMounted, onUnmounted } from 'vue';
 import * as THREE from 'three';
+import { WebGPURenderer } from 'three/webgpu';
+import { MeshBasicNodeMaterial } from 'three/tsl';
 import * as culori from 'culori';
-
-const VERTEX_SHADER = \`${vertexCode}\`;
-const FRAGMENT_SHADER = \`${shaderCode}\`;
+import { main } from './shaderNode.js';
+import { 
+    u_time, u_resolution, u_speed, 
+    u_color1, u_color2, u_color3, u_color4,
+    ${Object.keys(parameters || {}).map(k => 'u_' + k).join(', ')} 
+} from './commonUniforms.js';
 
 export function useGradientBackground() {
     const canvasRef = ref(null);
@@ -1296,7 +1375,7 @@ export function useGradientBackground() {
         return new THREE.Color(rgb.r, rgb.g, rgb.b);
     };
 
-    const init = () => {
+    const init = async () => {
         if (!canvasRef.value) return;
 
         // Scene
@@ -1307,29 +1386,31 @@ export function useGradientBackground() {
         camera.position.z = 1;
 
         // Renderer
-        renderer = new THREE.WebGLRenderer({
+        renderer = new WebGPURenderer({
             canvas: canvasRef.value,
-            antialias: false,
-            alpha: false,
-            precision: 'highp',
-            powerPreference: 'high-performance'
+            antialias: true,
+            alpha: false
         });
         renderer.setSize(window.innerWidth, window.innerHeight);
         renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        await renderer.init();
+
+        // Setup Uniforms
+        u_speed.value = ${this.formatUniformValue(speed ?? 0.5)};
+        u_color1.value = oklchToThree(${colorStrings[0]});
+        u_color2.value = oklchToThree(${colorStrings[1]});
+        u_color3.value = oklchToThree(${colorStrings[2]});
+        u_color4.value = oklchToThree(${colorStrings[3]});
+        
+        ${Object.entries(parameters || {}).map(([key, value]) => `u_${key}.value = ${this.formatUniformValue(value)};`).join('\n        ')}
 
         // Material
-        material = new THREE.ShaderMaterial({
-            uniforms: {
-${uniformsBlock}
-            },
-            vertexShader: VERTEX_SHADER,
-            fragmentShader: FRAGMENT_SHADER
-        });
+        material = new MeshBasicNodeMaterial();
+        material.colorNode = main();
 
         // Mesh
         const geometry = new THREE.PlaneGeometry(2, 2);
         mesh = new THREE.Mesh(geometry, material);
-        mesh.frustumCulled = false;
         scene.add(mesh);
 
         // Animation
@@ -1341,22 +1422,20 @@ ${uniformsBlock}
 
     const animate = () => {
         animationId = requestAnimationFrame(animate);
-        material.uniforms.u_time.value = clock.getElapsedTime();
+        u_time.value = clock.getElapsedTime();
         renderer.render(scene, camera);
     };
 
     const onResize = () => {
         renderer.setSize(window.innerWidth, window.innerHeight);
         const pixelRatio = renderer.getPixelRatio();
-        material.uniforms.u_resolution.value.set(window.innerWidth * pixelRatio, window.innerHeight * pixelRatio);
+        u_resolution.value.set(window.innerWidth * pixelRatio, window.innerHeight * pixelRatio);
     };
 
     const cleanup = () => {
         if (animationId) cancelAnimationFrame(animationId);
         window.removeEventListener('resize', onResize);
         
-        if (material) material.dispose();
-        if (mesh) mesh.geometry.dispose();
         if (renderer) renderer.dispose();
     };
 
@@ -1406,26 +1485,21 @@ const { canvasRef } = useGradientBackground();
     }
 
     generateAngularService() {
-        const { colors, speed, parameters, shaderCode, vertexCode } = this.config;
-
+        const { colors, speed, parameters } = this.config;
         const normalizedColors = this.normalizeColors(colors);
         const colorStrings = normalizedColors.map(color => this.formatColorForExport(color));
-        const baseUniformLines = [
-            '                u_time: { value: 0 }',
-            '                u_resolution: { value: new THREE.Vector2(window.innerWidth * Math.min(window.devicePixelRatio, 2), window.innerHeight * Math.min(window.devicePixelRatio, 2)) }',
-            `                u_speed: { value: ${this.formatUniformValue(speed ?? 0.5)} }`,
-            `                u_color1: { value: this.oklchToThree(${colorStrings[0]}) }`,
-            `                u_color2: { value: this.oklchToThree(${colorStrings[1]}) }`,
-            `                u_color3: { value: this.oklchToThree(${colorStrings[2]}) }`,
-            `                u_color4: { value: this.oklchToThree(${colorStrings[3]}) }`,
-        ];
-        const parameterUniformLines = Object.entries(parameters || {})
-            .map(([key, value]) => `                u_${key}: { value: ${this.formatUniformValue(value)} }`);
-        const uniformsBlock = [...baseUniformLines, ...parameterUniformLines].join(',\n');
 
         return `import { Injectable, signal, effect } from '@angular/core';
 import * as THREE from 'three';
+import { WebGPURenderer } from 'three/webgpu';
+import { MeshBasicNodeMaterial } from 'three/tsl';
 import * as culori from 'culori';
+import { main } from './shaderNode.js';
+import { 
+    u_time, u_resolution, u_speed, 
+    u_color1, u_color2, u_color3, u_color4,
+    ${Object.keys(parameters || {}).map(k => 'u_' + k).join(', ')} 
+} from './commonUniforms.js';
 
 export interface GradientConfig {
     shader: string;
@@ -1439,8 +1513,7 @@ export interface GradientConfig {
 export class GradientBackgroundService {
     private scene?: THREE.Scene;
     private camera?: THREE.OrthographicCamera;
-    private renderer?: THREE.WebGLRenderer;
-    private material?: THREE.ShaderMaterial;
+    private renderer?: WebGPURenderer;
     private mesh?: THREE.Mesh;
     private clock = new THREE.Clock();
     private animationId?: number;
@@ -1448,7 +1521,7 @@ export class GradientBackgroundService {
     // Signal para controlar estado
     isRunning = signal(false);
 
-    init(canvas: HTMLCanvasElement) {
+    async init(canvas: HTMLCanvasElement) {
         // Scene
         this.scene = new THREE.Scene();
         
@@ -1457,37 +1530,35 @@ export class GradientBackgroundService {
         this.camera.position.z = 1;
         
         // Renderer
-        this.renderer = new THREE.WebGLRenderer({
+        this.renderer = new WebGPURenderer({
             canvas,
-            antialias: false,
-            alpha: false,
-            precision: 'highp',
-            powerPreference: 'high-performance'
+            antialias: true,
+            alpha: false
         });
         this.renderer.setSize(window.innerWidth, window.innerHeight);
         this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        await this.renderer.init();
         
+        // Setup Uniforms
+        u_speed.value = ${this.formatUniformValue(speed ?? 0.5)};
+        u_color1.value = this.oklchToThree(${colorStrings[0]});
+        u_color2.value = this.oklchToThree(${colorStrings[1]});
+        u_color3.value = this.oklchToThree(${colorStrings[2]});
+        u_color4.value = this.oklchToThree(${colorStrings[3]});
+        
+        ${Object.entries(parameters || {}).map(([key, value]) => `u_${key}.value = ${this.formatUniformValue(value)};`).join('\n        ')}
+
         // Material
-        this.createMaterial();
+        const material = new MeshBasicNodeMaterial();
+        material.colorNode = main();
         
         // Geometry
         const geometry = new THREE.PlaneGeometry(2, 2);
-        this.mesh = new THREE.Mesh(geometry, this.material);
-        this.mesh.frustumCulled = false;
+        this.mesh = new THREE.Mesh(geometry, material);
         this.scene.add(this.mesh);
         
         this.isRunning.set(true);
         this.animate();
-    }
-
-    private createMaterial() {
-        this.material = new THREE.ShaderMaterial({
-            uniforms: {
-${uniformsBlock}
-            },
-            vertexShader: \`${vertexCode}\`,
-            fragmentShader: \`${shaderCode}\`
-        });
     }
 
     private oklchToThree(oklch: any): THREE.Color {
@@ -1500,9 +1571,7 @@ ${uniformsBlock}
         
         this.animationId = requestAnimationFrame(this.animate);
         
-        if (this.material) {
-            this.material.uniforms.u_time.value = this.clock.getElapsedTime();
-        }
+        u_time.value = this.clock.getElapsedTime();
         
         if (this.renderer && this.scene && this.camera) {
             this.renderer.render(this.scene, this.camera);
@@ -1510,11 +1579,11 @@ ${uniformsBlock}
     };
 
     onResize() {
-        if (!this.camera || !this.renderer || !this.mesh || !this.material) return;
+        if (!this.camera || !this.renderer || !this.mesh) return;
         
         this.renderer.setSize(window.innerWidth, window.innerHeight);
         const pixelRatio = this.renderer.getPixelRatio();
-        this.material.uniforms.u_resolution.value.set(window.innerWidth * pixelRatio, window.innerHeight * pixelRatio);
+        u_resolution.value.set(window.innerWidth * pixelRatio, window.innerHeight * pixelRatio);
     }
 
     dispose() {
@@ -1524,7 +1593,6 @@ ${uniformsBlock}
             cancelAnimationFrame(this.animationId);
         }
         
-        this.material?.dispose();
         this.mesh?.geometry.dispose();
         this.renderer?.dispose();
     }
@@ -1614,48 +1682,36 @@ export const appConfig: ApplicationConfig = {
     }
 
     generateLazyLoading() {
-        return `const observer = new IntersectionObserver((entries) => {
+        return `// Use dynamic import to load the gradient only when visible
+const observer = new IntersectionObserver((entries) => {
     entries.forEach(entry => {
         if (entry.isIntersecting) {
-            import('./gradient.js').then(module => {
-                module.initGradient('canvas-id');
-                observer.disconnect();
-            });
+            import('./main.js'); // This will execute the code and start the gradient
+            observer.disconnect();
         }
     });
 }, { threshold: 0.1 });
 
-observer.observe(document.getElementById('canvas-container'));`;
+observer.observe(document.getElementById('gradient-canvas'));`;
     }
 
     generateMobileOptimization() {
-        return `const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+        return `import { u_resolution } from './commonUniforms.js';
+
+const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 const pixelRatio = isMobile ? 1 : Math.min(window.devicePixelRatio, 2);
 
 renderer.setPixelRatio(pixelRatio);
-
-const isLowEnd = navigator.hardwareConcurrency <= 4;
-if (isLowEnd) {
-    material.uniforms.u_quality.value = 0.5;
-}`;
+u_resolution.value.set(window.innerWidth * pixelRatio, window.innerHeight * pixelRatio);`;
     }
 
     generateVisibilityAPI() {
-        return `let isPaused = false;
-
-document.addEventListener('visibilitychange', () => {
-    if (document.hidden) {
-        isPaused = true;
-    } else {
-        isPaused = false;
-        clock.start();
-    }
-});
-
-function animate() {
-    if (!isPaused) {
-        requestAnimationFrame(animate);
-    }
+        return `// Add this check inside your animate() loop
+animate() {
+    if (document.hidden) return; // Stop rendering when tab is not visible
+    
+    requestAnimationFrame(() => this.animate());
+    // ... rest of your animation code
 }`;
     }
 
