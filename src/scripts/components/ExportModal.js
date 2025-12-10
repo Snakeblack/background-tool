@@ -586,7 +586,7 @@ export class ExportModal extends HTMLElement {
                     <span class="step-number">1</span>
                     <strong>Instalar dependencias</strong>
                 </div>
-                
+                <p class="info-box">Ejecuta el siguiente comando para instalar Three.js y las utilidades de color:</p>
                 ${this.createCodeBlock('bash', 'npm install three culori', 'Terminal')}
                 
                 <div class="step">
@@ -691,7 +691,7 @@ export const u_border_width = uniform(0.1);`;
                     <span class="step-number">1</span>
                     <strong>Instalar dependencias</strong>
                 </div>
-                
+                <p class="info-box">Ejecuta el siguiente comando para instalar Three.js y las utilidades de color:</p>
                 ${this.createCodeBlock('bash', 'npm install three culori', 'Terminal')}
 
                 <div class="step">
@@ -745,7 +745,7 @@ export const u_border_width = uniform(0.1);`;
                     <span class="step-number">1</span>
                     <strong>Instalar dependencias</strong>
                 </div>
-                
+                <p class="info-box">Ejecuta el siguiente comando para instalar Three.js y las utilidades de color:</p>
                 ${this.createCodeBlock('bash', 'npm install three culori', 'Terminal')}
 
                 <div class="step">
@@ -795,7 +795,7 @@ export const u_border_width = uniform(0.1);`;
                     <span class="step-number">1</span>
                     <strong>Instalar dependencias</strong>
                 </div>
-                
+                <p class="info-box">Ejecuta el siguiente comando para instalar Three.js y las utilidades de color:</p>
                 ${this.createCodeBlock('bash', 'npm install three culori\nnpm install --save-dev @types/three', 'Terminal')}
 
                 <div class="step">
