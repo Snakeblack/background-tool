@@ -779,9 +779,23 @@ export const u_border_width = uniform(0.1);`;
         `;
     }
 
+    processTSLForTypeScript(tslSource) {
+        let tsSource = tslSource;
+        
+        // Fix 1: Add type annotation to Fn results to allow calling them with arguments
+        // const random = Fn(...) -> const random: any = Fn(...)
+        tsSource = tsSource.replace(/const (\w+) = Fn\(/g, 'const $1: any = Fn(');
+        
+        // Fix 2: Handle destructuring in Fn arguments
+        // Fn(([p]) => -> Fn(([p]: any) =>
+        tsSource = tsSource.replace(/Fn\(\s*\(\s*\[(.*?)\]\s*\)\s*=>/g, 'Fn( ([$1]: any) =>');
+
+        return tsSource;
+    }
+
     generateAngularContent() {
         const container = this.shadowRoot.getElementById('angular-content');
-        const tslSource = this.processTSLSource(this.config.tslSource);
+        const tslSource = this.processTSLForTypeScript(this.processTSLSource(this.config.tslSource));
         const commonUniformsCode = this.getCommonUniformsCode();
 
         container.innerHTML = `
@@ -800,38 +814,49 @@ export const u_border_width = uniform(0.1);`;
 
                 <div class="step">
                     <span class="step-number">2</span>
-                    <strong>Common Uniforms</strong>
+                    <strong>Declaración de Tipos</strong>
                 </div>
-                <p class="info-box">Crea este archivo para compartir variables entre shaders.</p>
-                ${this.createCodeBlock('javascript', commonUniformsCode, 'commonUniforms.js')}
+                <p class="info-box">Crea este archivo en <code>src/types.d.ts</code> para evitar errores con culori.</p>
+                ${this.createCodeBlock('typescript', "declare module 'culori';", 'src/types.d.ts')}
+
+                <div class="warning-box">
+                    <p><strong>${createElement(AlertTriangle, {class: "icon"}).outerHTML} Importante:</strong> Asegúrate de que los archivos generados tengan la extensión <strong>.ts</strong> (TypeScript). Si tienes archivos .js de intentos anteriores, elimínalos para evitar conflictos.</p>
+                </div>
 
                 <div class="step">
                     <span class="step-number">3</span>
-                    <strong>Shader Node (TSL)</strong>
+                    <strong>Common Uniforms</strong>
                 </div>
-                <p class="info-box">Copia este código que contiene la lógica del shader.</p>
-                ${this.createCodeBlock('javascript', tslSource, 'shaderNode.js')}
-                
+                <p class="info-box">Crea este archivo en <code>src/app/commonUniforms.ts</code>.</p>
+                ${this.createCodeBlock('typescript', commonUniformsCode, 'src/app/commonUniforms.ts')}
+
                 <div class="step">
                     <span class="step-number">4</span>
-                    <strong>Servicio de Gradiente</strong>
+                    <strong>Shader Node (TSL)</strong>
                 </div>
-                
-                ${this.createCodeBlock('typescript', this.generateAngularService(), 'gradient-background.service.ts')}
+                <p class="info-box">Copia este código en <code>src/app/shaderNode.ts</code>.</p>
+                ${this.createCodeBlock('typescript', tslSource, 'src/app/shaderNode.ts')}
                 
                 <div class="step">
                     <span class="step-number">5</span>
-                    <strong>Directiva</strong>
+                    <strong>Servicio de Gradiente</strong>
                 </div>
                 
-                ${this.createCodeBlock('typescript', this.generateAngularDirective(), 'gradient-background.directive.ts')}
+                ${this.createCodeBlock('typescript', this.generateAngularService(), 'src/app/gradient-background.service.ts')}
                 
                 <div class="step">
                     <span class="step-number">6</span>
-                    <strong>Uso en Componente</strong>
+                    <strong>Directiva</strong>
                 </div>
                 
-                ${this.createCodeBlock('typescript', this.generateAngularUsage(), 'app.component.ts')}
+                ${this.createCodeBlock('typescript', this.generateAngularDirective(), 'src/app/gradient-background.directive.ts')}
+                
+                <div class="step">
+                    <span class="step-number">7</span>
+                    <strong>Uso en Componente</strong>
+                </div>
+                <p class="info-box">Reemplaza el contenido de tu componente principal (ej. <code>src/app/app.ts</code>).</p>
+                ${this.createCodeBlock('typescript', this.generateAngularUsage(), 'src/app/app.ts')}
                 
                 <div class="info-box">
                     <p><strong>${createElement(Lightbulb, {class: "icon"}).outerHTML} Nota:</strong> Este código usa Angular 19+ con Signals y standalone components.</p>
@@ -1503,19 +1528,47 @@ import { useGradientBackground } from './useGradientBackground';
 const { canvasRef } = useGradientBackground();
 </script>
 
+<style>
+html, body {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+}
+#app {
+    width: 100%;
+    height: 100%;
+}
+</style>
+
 <style scoped>
+.app {
+    width: 100%;
+    height: 100%;
+    position: relative;
+}
+
 .gradient-bg {
-    position: fixed;
+    position: absolute;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    z-index: -1;
+    display: block;
+    z-index: 0;
 }
+
 .content {
     position: relative;
     z-index: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    height: 100%;
     color: white;
+    font-family: Arial, sans-serif;
 }
 </style>`;
     }
@@ -1530,12 +1583,12 @@ import * as THREE from 'three';
 import { WebGPURenderer } from 'three/webgpu';
 import { MeshBasicNodeMaterial } from 'three/webgpu';
 import * as culori from 'culori';
-import { main } from './shaderNode.js';
+import { main } from './shaderNode';
 import { 
     u_time, u_resolution, u_speed, 
     u_color1, u_color2, u_color3, u_color4,
     ${Object.keys(parameters || {}).map(k => 'u_' + k).join(', ')} 
-} from './commonUniforms.js';
+} from './commonUniforms';
 
 export interface GradientConfig {
     shader: string;
@@ -1667,7 +1720,7 @@ export class GradientBackgroundDirective implements OnInit, OnDestroy {
     }
 
     generateAngularUsage() {
-        return `import { Component } from '@angular/core';
+        return `import { Component, ViewEncapsulation } from '@angular/core';
 import { GradientBackgroundDirective } from './gradient-background.directive';
 
 @Component({
@@ -1676,17 +1729,25 @@ import { GradientBackgroundDirective } from './gradient-background.directive';
     imports: [GradientBackgroundDirective],
     template: \`
         <div class="app-container">
-            <canvas 
-                appGradientBackground 
+            <canvas
+                appGradientBackground
                 class="gradient-canvas">
             </canvas>
-            
+
             <div class="content">
                 <h1>Mi Aplicación</h1>
             </div>
         </div>
     \`,
     styles: [\`
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+        }
+
         .gradient-canvas {
             position: fixed;
             top: 0;
@@ -1695,26 +1756,21 @@ import { GradientBackgroundDirective } from './gradient-background.directive';
             height: 100%;
             z-index: -1;
         }
-        
+
         .content {
             position: relative;
             z-index: 1;
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            width: 100vw;
         }
-    \`]
+    \`],
+    encapsulation: ViewEncapsulation.None
 })
-export class AppComponent {
-    title = 'gradient-app';
-}
-
-// En tu app.config.ts, asegúrate de proporcionar el servicio:
-import { ApplicationConfig } from '@angular/core';
-import { GradientBackgroundService } from './gradient-background.service';
-
-export const appConfig: ApplicationConfig = {
-    providers: [
-        GradientBackgroundService
-    ]
-};`;
+export class App {}`;
     }
 
     generateLazyLoading() {
