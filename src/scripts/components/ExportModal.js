@@ -1259,10 +1259,13 @@ import {
 export function useGradientBackground() {
     const canvasRef = useRef(null);
     const rendererRef = useRef(null);
-    const animationRef = useRef(null);
 
     useEffect(() => {
         if (!canvasRef.current) return;
+
+        let isMounted = true;
+        let animationId;
+        let resizeHandler;
 
         const init = async () => {
             // Scene & Camera
@@ -1278,7 +1281,19 @@ export function useGradientBackground() {
             });
             renderer.setSize(window.innerWidth, window.innerHeight);
             renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-            await renderer.init();
+            
+            try {
+                await renderer.init();
+            } catch (error) {
+                console.error('Failed to initialize WebGPURenderer:', error);
+                return;
+            }
+
+            if (!isMounted) {
+                renderer.dispose();
+                return;
+            }
+            
             rendererRef.current = renderer;
 
             // Helper function
@@ -1308,28 +1323,34 @@ export function useGradientBackground() {
             // Animation
             const clock = new THREE.Clock();
             const animate = () => {
-                animationRef.current = requestAnimationFrame(animate);
+                if (!isMounted) return;
+                animationId = requestAnimationFrame(animate);
                 u_time.value = clock.getElapsedTime();
                 renderer.render(scene, camera);
             };
             animate();
 
             // Resize Handler
-            const handleResize = () => {
+            resizeHandler = () => {
+                if (!isMounted || !renderer) return;
                 renderer.setSize(window.innerWidth, window.innerHeight);
                 const pixelRatio = renderer.getPixelRatio();
                 u_resolution.value.set(window.innerWidth * pixelRatio, window.innerHeight * pixelRatio);
             };
-            window.addEventListener('resize', handleResize);
+            window.addEventListener('resize', resizeHandler);
         };
 
         init();
 
         // Cleanup
         return () => {
-            if (animationRef.current) cancelAnimationFrame(animationRef.current);
-            window.removeEventListener('resize', () => {}); // Note: Need named function for proper removal
-            rendererRef.current?.dispose();
+            isMounted = false;
+            if (animationId) cancelAnimationFrame(animationId);
+            if (resizeHandler) window.removeEventListener('resize', resizeHandler);
+            if (rendererRef.current) {
+                rendererRef.current.dispose();
+                rendererRef.current = null;
+            }
         };
     }, []);
 
@@ -1344,7 +1365,7 @@ function App() {
     const canvasRef = useGradientBackground();
 
     return (
-        <div className="App">
+        <div className="App" style={{ width: '100vw', height: '100vh'}}>
             <canvas ref={canvasRef} style={{
                 position: 'fixed',
                 top: 0,
@@ -1354,12 +1375,14 @@ function App() {
                 zIndex: -1
             }} />
             
-            <main style={{ position: 'relative', zIndex: 1, color: 'white' }}>
+            <main style={{ position: 'relative', zIndex: 1, color: 'white', display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', width: '100%' }}>
                 <h1>Mi Aplicación React</h1>
             </main>
         </div>
     );
-}`;
+}
+
+export default App;`;
     }
 
     generateVueComposable() {
