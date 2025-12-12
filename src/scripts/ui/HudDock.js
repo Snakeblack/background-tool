@@ -218,9 +218,9 @@ export class HudDock extends HTMLElement {
                             ${createElement(Shuffle, { class: "icon" }).outerHTML}
                             <span>Random</span>
                         </button>
-                        <button class="dock-item" data-action="export" aria-label="Exportar Código">
+                        <button class="dock-item" data-panel="saved" aria-label="Guardados">
                             ${createElement(Package, { class: "icon" }).outerHTML}
-                            <span>Export</span>
+                            <span>Saved</span>
                         </button>
                     </div>
                 </div>

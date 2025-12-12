@@ -23,6 +23,27 @@ export class ColorManager {
     }
 
     /**
+     * Establece los colores actuales desde un mapa OKLCH (sin parsear JSON)
+     * @param {{[key: string]: {l:number,c:number,h:number}}|{[key: number]: {l:number,c:number,h:number}}} colorsByIndex
+     */
+    setColors(colorsByIndex) {
+        if (!colorsByIndex || typeof colorsByIndex !== 'object') return;
+
+        for (let i = 1; i <= 4; i++) {
+            const src = colorsByIndex[i] || colorsByIndex[String(i)];
+            if (!src) continue;
+
+            const l = src.l;
+            const c = src.c;
+            const h = src.h;
+            if (typeof l !== 'number' || typeof c !== 'number' || typeof h !== 'number') continue;
+            if (!Number.isFinite(l) || !Number.isFinite(c) || !Number.isFinite(h)) continue;
+
+            this.updateColor(i, l, c, h);
+        }
+    }
+
+    /**
      * Convierte un color OKLCH a THREE.Color
      * @param {{ l: number, c: number, h: number }} oklch - Color en formato OKLCH
      * @returns {THREE.Color} Color en formato Three.js

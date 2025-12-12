@@ -21,6 +21,8 @@ import { Renderer } from './scripts/Renderer.js';
 import { ShaderManager } from './scripts/ShaderManager.js';
 import { ColorManager } from './scripts/ColorManager.js';
 import { UIController } from './scripts/UIController.js';
+import { PersistenceManager } from './scripts/PersistenceManager.js';
+import { BackgroundLibraryManager } from './scripts/BackgroundLibraryManager.js';
 import { LiteRTManager } from './scripts/LiteRTManager.js';
 import { createIcons, Sunset, Waves, Trees, Zap, Flame, Snowflake, Moon, Gem } from 'lucide';
 
@@ -54,7 +56,9 @@ class GradientApp {
         // Now initialize managers that depend on the renderer
         this.shaderManager = new ShaderManager(this.renderer);
         this.colorManager = new ColorManager(this.shaderManager);
-        this.uiController = new UIController(this.shaderManager, this.colorManager);
+        this.persistenceManager = new PersistenceManager();
+        this.backgroundLibraryManager = new BackgroundLibraryManager();
+        this.uiController = new UIController(this.shaderManager, this.colorManager, this.persistenceManager, this.backgroundLibraryManager);
 
         createIcons({
             icons: {

@@ -3,9 +3,11 @@
  */
 
 export class UIController {
-    constructor(shaderManager, colorManager) {
+    constructor(shaderManager, colorManager, persistenceManager = null, backgroundLibraryManager = null) {
         this.shaderManager = shaderManager;
         this.colorManager = colorManager;
+        this.persistence = persistenceManager;
+        this.library = backgroundLibraryManager;
         
         // Cache DOM elements
         this.dock = document.querySelector('hud-dock');
@@ -21,6 +23,55 @@ export class UIController {
         this.init();
     }
 
+    getCurrentShaderName() {
+        return this.shaderManager?.currentShader || null;
+    }
+
+    applyPersistedForShader(shaderName, shaderConfig) {
+        if (!this.persistence || !shaderName || !shaderConfig) return;
+
+        const persisted = this.persistence.getShaderState(shaderName);
+        if (!persisted) return;
+
+        // Apply persisted uniform values (numbers) to both shader runtime + UI config
+        if (persisted.uniforms && shaderConfig.controls) {
+            shaderConfig.controls.forEach(control => {
+                const uniformName = control.uniform;
+                const savedValue = persisted.uniforms[uniformName];
+                if (typeof savedValue === 'number' && Number.isFinite(savedValue)) {
+                    control.value = savedValue;
+                    this.shaderManager.updateUniform(uniformName, savedValue);
+                }
+            });
+        }
+
+        // Apply persisted colors if present
+        if (persisted.colors) {
+            this.colorManager.setColors(persisted.colors);
+            for (let i = 1; i <= 4; i++) {
+                const color = this.colorManager.getColor(i);
+                if (!color) continue;
+                const component = document.querySelector(`color-control[color-index="${i}"]`);
+                if (component) {
+                    component.setAttribute('l-value', color.l);
+                    component.setAttribute('c-value', color.c);
+                    component.setAttribute('h-value', color.h);
+                }
+                this.initializeColorComponent(i);
+            }
+        }
+
+        // Sync speed UI if present (u_speed can be persisted per shader)
+        const speedInput = document.getElementById('speed');
+        const speedVal = document.getElementById('speed-value');
+        const savedSpeed = persisted.uniforms?.u_speed;
+        if (speedInput && typeof savedSpeed === 'number' && Number.isFinite(savedSpeed)) {
+            speedInput.value = String(savedSpeed);
+            if (speedVal) speedVal.textContent = Math.round(savedSpeed * 100);
+            this.shaderManager.updateUniform('u_speed', savedSpeed);
+        }
+    }
+
     init() {
         this.createGlobalTooltip();
         this.setupResizeListener();
@@ -29,9 +80,216 @@ export class UIController {
         this.setupColorControls();
         this.setupPresets();
         this.setupExportButton();
+        this.setupSavedBackgrounds();
         
         // Initial setup
         this.updateLayoutMode();
+    }
+
+    getBackgroundSnapshot() {
+        const shader = this.getCurrentShaderName();
+        if (!shader) return null;
+
+        const config = this.shaderManager.getCurrentShaderConfig();
+        const uniforms = {};
+
+        // Only save numeric uniforms relevant to the shader controls (small + stable)
+        if (config?.controls) {
+            config.controls.forEach(control => {
+                const uniformName = control.uniform;
+                const u = this.shaderManager.uniforms?.[uniformName];
+                const value = u?.value;
+                if (typeof value === 'number' && Number.isFinite(value)) {
+                    uniforms[uniformName] = value;
+                }
+            });
+        }
+
+        // Also include global speed
+        const speed = this.shaderManager.uniforms?.u_speed?.value;
+        if (typeof speed === 'number' && Number.isFinite(speed)) {
+            uniforms.u_speed = speed;
+        }
+
+        // OKLCH colors (deep copy)
+        const colors = {};
+        for (let i = 1; i <= 4; i++) {
+            const c = this.colorManager.getColor(i);
+            if (c) colors[String(i)] = { l: c.l, c: c.c, h: c.h };
+        }
+
+        return { shader, uniforms, colors };
+    }
+
+    applyBackgroundSnapshot(snapshot) {
+        if (!snapshot || typeof snapshot !== 'object') return;
+        if (!snapshot.shader || typeof snapshot.shader !== 'string') return;
+
+        const shaderName = snapshot.shader;
+
+        // Update selector visually (no event)
+        const selector = document.getElementById('shader-type');
+        const available = this.shaderManager.getAvailableShaders();
+        if (!available.includes(shaderName)) return;
+        if (selector) {
+            selector.value = shaderName;
+            if (selector.updateDisplay) selector.updateDisplay();
+        }
+
+        if (this.persistence) this.persistence.setLastShader(shaderName);
+
+        const shaderConfig = this.shaderManager.loadShader(shaderName);
+        if (!shaderConfig) return;
+
+        // Apply uniforms (numbers)
+        const uniforms = snapshot.uniforms && typeof snapshot.uniforms === 'object' ? snapshot.uniforms : {};
+        Object.entries(uniforms).forEach(([uniformName, value]) => {
+            if (typeof value !== 'number' || !Number.isFinite(value)) return;
+            this.shaderManager.updateUniform(uniformName, value);
+            if (this.persistence) this.persistence.setShaderUniform(shaderName, uniformName, value);
+
+            if (shaderConfig.controls) {
+                const control = shaderConfig.controls.find(c => c.uniform === uniformName);
+                if (control) control.value = value;
+            }
+        });
+
+        // Apply colors
+        if (snapshot.colors) {
+            this.colorManager.setColors(snapshot.colors);
+            for (let i = 1; i <= 4; i++) {
+                const color = this.colorManager.getColor(i);
+                if (!color) continue;
+                const component = document.querySelector(`color-control[color-index="${i}"]`);
+                if (component) {
+                    component.setAttribute('l-value', color.l);
+                    component.setAttribute('c-value', color.c);
+                    component.setAttribute('h-value', color.h);
+                }
+                this.initializeColorComponent(i);
+            }
+
+            if (this.persistence) this.persistence.setShaderColors(shaderName, this.colorManager.colors);
+        }
+
+        // Sync speed UI
+        const speedInput = document.getElementById('speed');
+        const speedVal = document.getElementById('speed-value');
+        const speed = uniforms.u_speed;
+        if (speedInput && typeof speed === 'number' && Number.isFinite(speed)) {
+            speedInput.value = String(speed);
+            if (speedVal) speedVal.textContent = Math.round(speed * 100);
+        }
+
+        this.updateShaderControls(shaderConfig);
+    }
+
+    setupSavedBackgrounds() {
+        const nameInput = document.getElementById('bg-save-name');
+        const saveBtn = document.getElementById('bg-save-btn');
+        const exportBtn = document.getElementById('bg-export-btn');
+        const listEl = document.getElementById('bg-saved-list');
+
+        if (!nameInput || !saveBtn || !listEl || !this.library) return;
+
+        const render = () => {
+            const items = this.library.list();
+            listEl.innerHTML = '';
+
+            if (!items.length) {
+                const empty = document.createElement('div');
+                empty.className = 'saved-bg-empty';
+                empty.textContent = 'No saved backgrounds yet.';
+                listEl.appendChild(empty);
+                return;
+            }
+
+            const frag = document.createDocumentFragment();
+            items.forEach(item => {
+                const row = document.createElement('div');
+                row.className = 'saved-bg-item-row';
+
+                const loadBtn = document.createElement('button');
+                loadBtn.type = 'button';
+                loadBtn.className = 'saved-bg-item';
+                loadBtn.dataset.bgId = item.id;
+                loadBtn.dataset.bgAction = 'load';
+
+                const title = document.createElement('div');
+                title.className = 'saved-bg-title';
+                title.textContent = item.name;
+
+                const meta = document.createElement('div');
+                meta.className = 'saved-bg-meta';
+                meta.textContent = `v${item.version} • ${item.shader}`;
+
+                loadBtn.appendChild(title);
+                loadBtn.appendChild(meta);
+
+                const delBtn = document.createElement('button');
+                delBtn.type = 'button';
+                delBtn.className = 'saved-bg-save-btn saved-bg-icon-btn saved-bg-delete-btn';
+                delBtn.textContent = '×';
+                delBtn.setAttribute('aria-label', 'Delete');
+                delBtn.title = 'Delete';
+                delBtn.dataset.bgId = item.id;
+                delBtn.dataset.bgAction = 'delete';
+
+                row.appendChild(loadBtn);
+                row.appendChild(delBtn);
+                frag.appendChild(row);
+            });
+
+            listEl.appendChild(frag);
+        };
+
+        saveBtn.addEventListener('click', () => {
+            const name = (nameInput.value || '').trim();
+            if (!name) return;
+            const snapshot = this.getBackgroundSnapshot();
+            if (!snapshot) return;
+            this.library.saveNewVersion(name, snapshot);
+            render();
+        });
+
+        if (exportBtn) {
+            exportBtn.addEventListener('click', () => {
+                const exportModal = document.getElementById('export-modal');
+                if (!exportModal) return;
+                const config = this.getCurrentConfiguration();
+                exportModal.open(config);
+            });
+        }
+
+        listEl.addEventListener('click', (e) => {
+            const btn = e.target.closest('[data-bg-action]');
+            if (!btn) return;
+
+            const id = btn.dataset.bgId;
+            const action = btn.dataset.bgAction;
+
+            if (action === 'delete') {
+                const item = this.library.get(id);
+                if (!item) return;
+                const ok = confirm(`Delete saved background "${item.name}"?`);
+                if (!ok) return;
+                this.library.remove(id);
+                render();
+                return;
+            }
+
+            if (action === 'load') {
+                const item = this.library.get(id);
+                if (!item) return;
+                this.applyBackgroundSnapshot({
+                    shader: item.shader,
+                    uniforms: item.uniforms,
+                    colors: item.colors
+                });
+            }
+        });
+
+        render();
     }
 
     createGlobalTooltip() {
@@ -176,12 +434,6 @@ export class UIController {
     handleAction(action) {
         if (action === 'random') {
             this.randomize();
-        } else if (action === 'export') {
-            const exportModal = document.getElementById('export-modal');
-            if (exportModal) {
-                const config = this.getCurrentConfiguration();
-                exportModal.open(config);
-            }
         }
     }
 
@@ -201,6 +453,11 @@ export class UIController {
                 component.setAttribute('h-value', h);
                 component.updatePreview(this.colorManager.oklchToHex({l, c, h}));
             }
+        }
+
+        const shaderName = this.getCurrentShaderName();
+        if (this.persistence && shaderName) {
+            this.persistence.setShaderColors(shaderName, this.colorManager.colors);
         }
     }
 
@@ -239,10 +496,16 @@ export class UIController {
         });
 
         selector.addEventListener('change', (e) => {
-            const shaderConfig = this.shaderManager.loadShader(e.detail.value);
-            
-            // Sync ColorManager with new defaults if they exist
-            if (shaderConfig?.defaults) {
+            const nextShader = e.detail.value;
+            if (this.persistence) this.persistence.setLastShader(nextShader);
+
+            const shaderConfig = this.shaderManager.loadShader(nextShader);
+
+            const persisted = this.persistence ? this.persistence.getShaderState(nextShader) : null;
+            const hasPersistedColors = !!persisted?.colors;
+
+            // Sync ColorManager with new defaults if they exist (only if no persisted colors)
+            if (!hasPersistedColors && shaderConfig?.defaults) {
                 const { u_color1, u_color2, u_color3, u_color4 } = shaderConfig.defaults;
                 if (u_color1 && u_color2 && u_color3 && u_color4) {
                     this.colorManager.setColorsFromThreeColors(u_color1, u_color2, u_color3, u_color4);
@@ -253,6 +516,9 @@ export class UIController {
                 }
             }
 
+            // Apply persisted uniforms/colors after loadShader (overrides defaults)
+            this.applyPersistedForShader(nextShader, shaderConfig);
+
             this.updateShaderControls(shaderConfig);
         });
 
@@ -260,14 +526,20 @@ export class UIController {
             // Select first option without triggering event initially if needed, 
             // or just load shader. CustomSelect.select triggers event.
             // Let's just load the shader manually and set the value visually.
-            const initialShader = shaders[0];
+            const persistedShader = this.persistence ? this.persistence.getLastShader() : null;
+            const initialShader = (persistedShader && shaders.includes(persistedShader)) ? persistedShader : shaders[0];
             selector.value = initialShader;
             selector.updateDisplay();
             
             const initialConfig = this.shaderManager.loadShader(initialShader);
+
+            if (this.persistence) this.persistence.setLastShader(initialShader);
+
+            const persisted = this.persistence ? this.persistence.getShaderState(initialShader) : null;
+            const hasPersistedColors = !!persisted?.colors;
             
             // Sync ColorManager with initial defaults
-            if (initialConfig?.defaults) {
+            if (!hasPersistedColors && initialConfig?.defaults) {
                 const { u_color1, u_color2, u_color3, u_color4 } = initialConfig.defaults;
                 if (u_color1 && u_color2 && u_color3 && u_color4) {
                     this.colorManager.setColorsFromThreeColors(u_color1, u_color2, u_color3, u_color4);
@@ -277,6 +549,8 @@ export class UIController {
                     }
                 }
             }
+
+            this.applyPersistedForShader(initialShader, initialConfig);
 
             this.updateShaderControls(initialConfig);
         }
@@ -384,7 +658,13 @@ export class UIController {
                 if (valueSpan) {
                     valueSpan.textContent = this.getVisualValue(value, control.min, control.max);
                 }
+                control.value = value;
                 this.shaderManager.updateUniform(control.uniform, value);
+
+                const shaderName = this.getCurrentShaderName();
+                if (this.persistence && shaderName) {
+                    this.persistence.setShaderUniform(shaderName, control.uniform, value);
+                }
             });
 
             controlDiv.appendChild(headerDiv);
@@ -426,6 +706,11 @@ export class UIController {
                     // Speed is 0.0 to 1.0
                     speedVal.textContent = Math.round(value * 100);
                 }
+
+                const shaderName = this.getCurrentShaderName();
+                if (this.persistence && shaderName) {
+                    this.persistence.setShaderUniform(shaderName, 'u_speed', value);
+                }
             });
         }
 
@@ -444,6 +729,11 @@ export class UIController {
         const component = document.querySelector(`color-control[color-index="${colorIndex}"]`);
         if (component) {
             component.updatePreview(hex);
+        }
+
+        const shaderName = this.getCurrentShaderName();
+        if (this.persistence && shaderName) {
+            this.persistence.setShaderColors(shaderName, this.colorManager.colors);
         }
     }
 
@@ -479,6 +769,11 @@ export class UIController {
                             component.updatePreview(hex);
                         }
                     }
+                }
+
+                const shaderName = this.getCurrentShaderName();
+                if (this.persistence && shaderName) {
+                    this.persistence.setShaderColors(shaderName, this.colorManager.colors);
                 }
             }
         });
