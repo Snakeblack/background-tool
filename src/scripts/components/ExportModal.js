@@ -460,6 +460,7 @@ export class ExportModal extends HTMLElement {
                         <button class="tab" data-tab="react">React</button>
                         <button class="tab" data-tab="vue">Vue 3</button>
                         <button class="tab" data-tab="angular">Angular</button>
+                        <button class="tab" data-tab="astro">Astro</button>
                         <button class="tab" data-tab="optimizations">Optimizaciones</button>
                     </div>
                     
@@ -467,6 +468,7 @@ export class ExportModal extends HTMLElement {
                     <div class="tab-content" id="react-content"></div>
                     <div class="tab-content" id="vue-content"></div>
                     <div class="tab-content" id="angular-content"></div>
+                    <div class="tab-content" id="astro-content"></div>
                     <div class="tab-content" id="optimizations-content"></div>
                 </div>
             </div>
@@ -549,6 +551,7 @@ export class ExportModal extends HTMLElement {
         this.generateReactContent();
         this.generateVueContent();
         this.generateAngularContent();
+        this.generateAstroContent();
         this.generateOptimizationsContent();
     }
 
@@ -619,6 +622,212 @@ export class ExportModal extends HTMLElement {
             </div>
         `;
     }
+
+    generateAstroContent() {
+        const container = this.shadowRoot.getElementById('astro-content');
+        const tslSource = this.processTSLSource(this.config.tslSource);
+        const commonUniformsCode = this.getCommonUniformsCode();
+
+        container.innerHTML = `
+            <div class="section">
+                <h3 class="section-title">${createElement(Lightbulb, {class: "icon"}).outerHTML} Implementación Astro (WebGPU)</h3>
+                <p class="section-description">
+                    Montaje en cliente con un módulo en <code>src/</code>, ideal para SSR y compatible con View Transitions.
+                </p>
+
+                <div class="step">
+                    <span class="step-number">1</span>
+                    <strong>Instalar dependencias</strong>
+                </div>
+                <p class="info-box">Ejecuta el siguiente comando para instalar Three.js y las utilidades de color:</p>
+                ${this.createCodeBlock('bash', 'npm install three culori', 'Terminal')}
+
+                <div class="step">
+                    <span class="step-number">2</span>
+                    <strong>Common Uniforms</strong>
+                </div>
+                <p class="info-box">Crea este archivo en <code>src/lib/gradient/commonUniforms.js</code>.</p>
+                ${this.createCodeBlock('javascript', commonUniformsCode, 'src/lib/gradient/commonUniforms.js')}
+
+                <div class="step">
+                    <span class="step-number">3</span>
+                    <strong>Shader Node (TSL)</strong>
+                </div>
+                <p class="info-box">Copia este código en <code>src/lib/gradient/shaderNode.js</code>.</p>
+                ${this.createCodeBlock('javascript', tslSource, 'src/lib/gradient/shaderNode.js')}
+
+                <div class="step">
+                    <span class="step-number">4</span>
+                    <strong>Módulo de montaje</strong>
+                </div>
+                <div class="info-box">
+                    <p><strong>Importante:</strong> Mantén <code>mountGradient.js</code>, <code>commonUniforms.js</code> y <code>shaderNode.js</code> en la misma carpeta para que los imports relativos funcionen.</p>
+                    <p>En Astro, usa un <code>&lt;script&gt;</code> <em>sin atributos</em> (salvo <code>src</code>) para que Astro procese y resuelva imports.</p>
+                </div>
+                ${this.createCodeBlock('javascript', this.generateAstroMountModule(), 'src/lib/gradient/mountGradient.js')}
+
+                <div class="step">
+                    <span class="step-number">5</span>
+                    <strong>Componente Astro</strong>
+                </div>
+                ${this.createCodeBlock('astro', this.generateAstroComponent(), 'src/components/GradientBackground.astro')}
+
+                <div class="step">
+                    <span class="step-number">6</span>
+                    <strong>Uso en una página</strong>
+                </div>
+                ${this.createCodeBlock('astro', this.generateAstroUsage(), 'src/pages/index.astro')}
+            </div>
+        `;
+    }
+
+        generateAstroMountModule() {
+                const { colors, speed, parameters } = this.config;
+                const normalizedColors = this.normalizeColors(colors);
+                const colorStrings = normalizedColors.map(color => this.formatColorForExport(color));
+
+                return `import * as THREE from 'three';
+import { WebGPURenderer } from 'three/webgpu';
+import { MeshBasicNodeMaterial } from 'three/webgpu';
+import * as culori from 'culori';
+import { main } from './shaderNode.js';
+import {
+    u_time, u_resolution, u_speed,
+    u_color1, u_color2, u_color3, u_color4,
+    ${Object.keys(parameters || {}).map(k => 'u_' + k).join(', ')}
+} from './commonUniforms.js';
+
+export async function mountGradient(canvas) {
+    if (!canvas) return () => {};
+
+    const scene = new THREE.Scene();
+    const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 10);
+    camera.position.z = 1;
+
+    const renderer = new WebGPURenderer({
+        canvas,
+        antialias: true,
+        alpha: false
+    });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+    await renderer.init();
+
+    const oklchToThree = (oklch) => {
+        const rgb = culori.rgb({ mode: 'oklch', ...oklch });
+        return new THREE.Color(rgb.r, rgb.g, rgb.b);
+    };
+
+    // Uniforms
+    u_speed.value = ${this.formatUniformValue(speed ?? 0.5)};
+    u_color1.value = oklchToThree(${colorStrings[0]});
+    u_color2.value = oklchToThree(${colorStrings[1]});
+    u_color3.value = oklchToThree(${colorStrings[2]});
+    u_color4.value = oklchToThree(${colorStrings[3]});
+
+    ${Object.entries(parameters || {}).map(([key, value]) => `u_${key}.value = ${this.formatUniformValue(value)};`).join('\n  ')}
+
+    const material = new MeshBasicNodeMaterial();
+    material.colorNode = main();
+
+    const geometry = new THREE.PlaneGeometry(2, 2);
+    const mesh = new THREE.Mesh(geometry, material);
+    scene.add(mesh);
+
+    const onResize = () => {
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        const pixelRatio = renderer.getPixelRatio();
+        u_resolution.value.set(window.innerWidth * pixelRatio, window.innerHeight * pixelRatio);
+    };
+    window.addEventListener('resize', onResize);
+    onResize();
+
+    const clock = new THREE.Clock();
+    let rafId = 0;
+
+    const animate = () => {
+        rafId = requestAnimationFrame(animate);
+        u_time.value = clock.getElapsedTime();
+        renderer.render(scene, camera);
+    };
+    animate();
+
+    return () => {
+        cancelAnimationFrame(rafId);
+        window.removeEventListener('resize', onResize);
+        geometry.dispose?.();
+        material.dispose?.();
+        renderer.dispose?.();
+    };
+}`;
+        }
+
+        generateAstroComponent() {
+                return `---
+// Componente 100% Astro (SSR) + montaje WebGPU en cliente
+// Nota: el <script> NO debe tener atributos (salvo src) para que Astro procese y resuelva imports.
+---
+
+<canvas id="gradient-canvas" class="gradient-canvas" aria-hidden="true"></canvas>
+
+<style>
+    .gradient-canvas {
+        position: fixed;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        z-index: -1;
+    }
+</style>
+
+<script>
+    import { mountGradient } from '../lib/gradient/mountGradient.js';
+
+    let cleanup;
+
+    async function setupGradient() {
+        if (cleanup) return;
+        const canvas = document.getElementById('gradient-canvas');
+        if (!canvas) return;
+
+        cleanup = await mountGradient(canvas);
+    }
+
+    function teardownGradient() {
+        cleanup?.();
+        cleanup = undefined;
+    }
+
+    // View Transitions (Astro v3+): usar astro:page-load para re-montar en cada navegación
+    document.addEventListener('astro:page-load', setupGradient);
+    document.addEventListener('astro:before-swap', teardownGradient);
+
+    // Fallback si no estás usando View Transitions
+    document.addEventListener('DOMContentLoaded', setupGradient, { once: true });
+</script>`;
+        }
+
+        generateAstroUsage() {
+                return `---
+import GradientBackground from '../components/GradientBackground.astro';
+---
+
+<html lang="es">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>Mi página con fondo animado</title>
+    </head>
+    <body>
+        <GradientBackground />
+
+        <main style="position: relative; z-index: 1;">
+            <h1>Contenido encima del fondo</h1>
+        </main>
+    </body>
+</html>`;
+        }
 
     getCommonUniformsCode() {
         return `import { Vector2, Color } from 'three';
