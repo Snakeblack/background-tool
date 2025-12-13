@@ -2,7 +2,10 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">
   <url>
     <loc>https://background.mretamozo.com/</loc>
-    <lastmod>2025-12-10</lastmod>
+    <xhtml:link rel="alternate" hreflang="en" href="https://background.mretamozo.com/?lang=en" />
+    <xhtml:link rel="alternate" hreflang="es" href="https://background.mretamozo.com/?lang=es" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://background.mretamozo.com/" />
+    <lastmod>2025-12-13</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
