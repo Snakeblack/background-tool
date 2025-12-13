@@ -25,9 +25,16 @@ const copyWasmPlugin = () => {
   }
 }
 
-export default defineConfig({
+export default defineConfig(({ mode }) => ({
   root: 'src',
   publicDir: '../public',
+
+  // Keep dev logs; strip them in production bundles.
+  esbuild: mode === 'production'
+    ? {
+        drop: ['console', 'debugger'],
+      }
+    : undefined,
   
   css: {
     transformer: 'lightningcss',
@@ -154,4 +161,4 @@ export default defineConfig({
     }),
     copyWasmPlugin(),
   ],
-});
+}));
