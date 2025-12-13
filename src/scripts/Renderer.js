@@ -18,6 +18,11 @@ export class Renderer {
         this.mesh = null;
         this.clock = new Clock();
         this.isWebGPUSupported = false;
+
+        this._pixelRatio = 1;
+        this._resolution = new Vector2(1, 1);
+        this._resolutionDirty = true;
+        this._isRendering = false;
         
         // Removed this.init() call from constructor to avoid race condition
     }
@@ -63,9 +68,11 @@ export class Renderer {
                 powerPreference: 'high-performance'
             });
         }
-        
+
+        this._pixelRatio = Math.min(window.devicePixelRatio || 1, 2);
+        this.renderer.setPixelRatio(this._pixelRatio);
         this.renderer.setSize(window.innerWidth, window.innerHeight);
-        this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        this._updateResolutionCache();
 
         // Geometría fija de 2x2 para cubrir todo el viewport
         const geometry = new PlaneGeometry(2, 2);
@@ -73,7 +80,7 @@ export class Renderer {
         this.mesh.frustumCulled = false;
         this.scene.add(this.mesh);
 
-        window.addEventListener('resize', () => this.onWindowResize());
+        window.addEventListener('resize', () => this.onWindowResize(), { passive: true });
     }
 
     /**
@@ -81,8 +88,28 @@ export class Renderer {
      * Actualiza dimensiones del renderer
      */
     onWindowResize() {
+        const nextPixelRatio = Math.min(window.devicePixelRatio || 1, 2);
+        if (nextPixelRatio !== this._pixelRatio) {
+            this._pixelRatio = nextPixelRatio;
+            this.renderer.setPixelRatio(this._pixelRatio);
+        }
         this.renderer.setSize(window.innerWidth, window.innerHeight);
+        this._updateResolutionCache();
         // No es necesario actualizar cámara ni geometría ya que usamos NDC
+    }
+
+    _updateResolutionCache() {
+        this._resolution.set(window.innerWidth * this._pixelRatio, window.innerHeight * this._pixelRatio);
+        this._resolutionDirty = true;
+    }
+
+    /**
+     * Devuelve true una sola vez cuando cambió el tamaño/pixelRatio.
+     */
+    consumeResolutionChanged() {
+        if (!this._resolutionDirty) return false;
+        this._resolutionDirty = false;
+        return true;
     }
 
     /**
@@ -104,12 +131,20 @@ export class Renderer {
     /**
      * Renderiza la escena
      */
-    async render() {
+    render() {
         if (this.isWebGPUSupported) {
-            await this.renderer.renderAsync(this.scene, this.camera);
-        } else {
-            this.renderer.render(this.scene, this.camera);
+            if (this._isRendering) return;
+            this._isRendering = true;
+            this.renderer
+                .renderAsync(this.scene, this.camera)
+                .catch(() => {})
+                .finally(() => {
+                    this._isRendering = false;
+                });
+            return;
         }
+
+        this.renderer.render(this.scene, this.camera);
     }
 
     /**
@@ -117,10 +152,6 @@ export class Renderer {
      * @returns {Vector2} Resolución en píxeles (ancho * pixelRatio, alto * pixelRatio)
      */
     getResolution() {
-        const pixelRatio = this.renderer.getPixelRatio();
-        return new Vector2(
-            window.innerWidth * pixelRatio, 
-            window.innerHeight * pixelRatio
-        );
+        return this._resolution;
     }
 }

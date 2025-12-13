@@ -196,7 +196,13 @@ export class ShaderManager {
      */
     updateResolution() {
         const res = this.renderer.getResolution();
-        this.uniforms.u_resolution.value = res;
+
+        // Keep the WebGL uniform referencing the cached Vector2 (no allocations).
+        if (this.uniforms.u_resolution.value !== res) {
+            this.uniforms.u_resolution.value = res;
+        }
+
+        // WebGPU TSL uniforms need an explicit copy.
         if (this.renderer.isWebGPUSupported) {
             TSLUniforms.u_resolution.value.copy(res);
         }

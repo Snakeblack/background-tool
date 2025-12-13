@@ -40,6 +40,8 @@ class GradientApp {
         this.shaderManager = null;
         this.colorManager = null;
         this.uiController = null;
+
+        this._tick = this._tick.bind(this);
         
         this.init();
     }
@@ -82,18 +84,22 @@ class GradientApp {
             }
         }
 
-        this.animate();
+        // Ensure uniforms are correct before the first frame
+        this.shaderManager.updateResolution();
+        this._tick();
     }
 
     /**
      * Loop de animación principal
      * Actualiza uniformes y renderiza cada frame
      */
-    animate() {
-        requestAnimationFrame(() => this.animate());
-        
+    _tick() {
+        requestAnimationFrame(this._tick);
+
         this.shaderManager.updateTime();
-        this.shaderManager.updateResolution();
+        if (this.renderer.consumeResolutionChanged()) {
+            this.shaderManager.updateResolution();
+        }
         this.renderer.render();
     }
 }
