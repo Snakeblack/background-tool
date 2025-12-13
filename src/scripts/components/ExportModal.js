@@ -3,6 +3,141 @@
  */
 import { Package, Rocket, Atom, Layers, Hexagon, Zap, Lightbulb, AlertTriangle, Clipboard, Check, AlertCircle, BarChart, X, createElement } from 'lucide';
 
+const EXPORT_MODAL_I18N = {
+    en: {
+        modalTitle: 'Export to Your Project',
+        languageLabel: 'Language',
+        tabVanilla: 'HTML/JS',
+        tabReact: 'React',
+        tabVue: 'Vue 3',
+        tabAngular: 'Angular',
+        tabAstro: 'Astro',
+        tabOptimizations: 'Optimizations',
+        copy: 'Copy',
+        copied: 'Copied!',
+        copyError: 'Error',
+
+        vanillaTitle: 'HTML/JS Implementation (WebGPU)',
+        vanillaDesc: 'Modern implementation using Three.js WebGPURenderer and TSL.',
+        astroTitle: 'Astro Implementation (WebGPU)',
+        astroDesc: 'Client-side mount with a module in src/, ideal for SSR and compatible with View Transitions.',
+        reactTitle: 'React Implementation (WebGPU)',
+        reactDesc: 'Custom hook to integrate the gradient into React components using WebGPU.',
+        vueTitle: 'Vue 3 Implementation (WebGPU)',
+        vueDesc: 'Composable for Vue 3 with the Composition API using WebGPU.',
+        angularTitle: 'Angular Implementation (WebGPU)',
+        angularDesc: 'Service and directive to integrate the gradient into Angular using WebGPU.',
+        optimizationsTitle: 'Performance Optimizations',
+
+        installDeps: 'Install dependencies',
+        runCommand: 'Run the following command to install Three.js and color utilities:',
+        commonUniforms: 'Common Uniforms',
+        commonUniformsInfo: 'Create this file to share variables between shaders.',
+        commonUniformsAstroInfo: 'Create this file at src/lib/gradient/commonUniforms.js.',
+        shaderNode: 'Shader Node (TSL)',
+        shaderNodeInfo: 'Copy this code containing the shader logic.',
+        shaderNodeAstroInfo: 'Copy this code into src/lib/gradient/shaderNode.js.',
+        htmlStructure: 'HTML Structure',
+        jsImplementation: 'JavaScript Implementation',
+
+        mountModule: 'Mount module',
+        important: 'Important:',
+        astroImportantKeep: 'Keep mountGradient.js, commonUniforms.js and shaderNode.js in the same folder so relative imports work.',
+        astroImportantScript: 'In Astro, use a <script> with no attributes (except src) so Astro can process and resolve imports.',
+        astroComponent: 'Astro component',
+        astroUsage: 'Usage in a page',
+
+        customHook: 'Custom Hook',
+        usageInComponent: 'Usage in component',
+        reactCleanupImportant: 'Make sure to clean up resources in the useEffect cleanup.',
+
+        typeDecl: 'Type Declaration',
+        typeDeclInfo: 'Create this file at src/types.d.ts to avoid culori type errors.',
+        angularTsImportant: 'Make sure generated files use the .ts extension (TypeScript). If you have older .js attempts, delete them to avoid conflicts.',
+        angularCommonUniformsInfo: 'Create this file at src/app/commonUniforms.ts.',
+        angularShaderNodeInfo: 'Copy this code into src/app/shaderNode.ts.',
+        gradientService: 'Gradient service',
+        directive: 'Directive',
+        angularUsageInfo: 'Replace the content of your main component (e.g. src/app/app.ts).',
+        note: 'Note:',
+        angularNote: 'This code uses Angular 19+ with Signals and standalone components.',
+
+        lazyLoading: 'Lazy-load the shader',
+        mobileReduce: 'Reduce calculations on mobile',
+        pauseInactive: 'Pause on inactive tab',
+        metrics: 'Performance metrics:',
+        fpsTarget: '• FPS target: 60fps',
+        gpuUsage: '• GPU usage: ~5-10% (depends on shader complexity)',
+        memory: '• Memory: ~10-20MB'
+    },
+    es: {
+        modalTitle: 'Exportar a tu Proyecto',
+        languageLabel: 'Idioma',
+        tabVanilla: 'HTML/JS',
+        tabReact: 'React',
+        tabVue: 'Vue 3',
+        tabAngular: 'Angular',
+        tabAstro: 'Astro',
+        tabOptimizations: 'Optimizaciones',
+        copy: 'Copiar',
+        copied: 'Copiado!',
+        copyError: 'Error',
+
+        vanillaTitle: 'Implementación HTML/JS (WebGPU)',
+        vanillaDesc: 'Implementación moderna usando Three.js WebGPURenderer y TSL.',
+        astroTitle: 'Implementación Astro (WebGPU)',
+        astroDesc: 'Montaje en cliente con un módulo en src/, ideal para SSR y compatible con View Transitions.',
+        reactTitle: 'Implementación React (WebGPU)',
+        reactDesc: 'Hook personalizado para integrar el gradiente en componentes React usando WebGPU.',
+        vueTitle: 'Implementación Vue 3 (WebGPU)',
+        vueDesc: 'Composable para Vue 3 con Composition API usando WebGPU.',
+        angularTitle: 'Implementación Angular (WebGPU)',
+        angularDesc: 'Servicio y directiva para integrar el gradiente en Angular usando WebGPU.',
+        optimizationsTitle: 'Optimizaciones de Rendimiento',
+
+        installDeps: 'Instalar dependencias',
+        runCommand: 'Ejecuta el siguiente comando para instalar Three.js y las utilidades de color:',
+        commonUniforms: 'Common Uniforms',
+        commonUniformsInfo: 'Crea este archivo para compartir variables entre shaders.',
+        commonUniformsAstroInfo: 'Crea este archivo en src/lib/gradient/commonUniforms.js.',
+        shaderNode: 'Shader Node (TSL)',
+        shaderNodeInfo: 'Copia este código que contiene la lógica del shader.',
+        shaderNodeAstroInfo: 'Copia este código en src/lib/gradient/shaderNode.js.',
+        htmlStructure: 'HTML Structure',
+        jsImplementation: 'JavaScript Implementation',
+
+        mountModule: 'Módulo de montaje',
+        important: 'Importante:',
+        astroImportantKeep: 'Mantén mountGradient.js, commonUniforms.js y shaderNode.js en la misma carpeta para que los imports relativos funcionen.',
+        astroImportantScript: 'En Astro, usa un <script> sin atributos (salvo src) para que Astro procese y resuelva imports.',
+        astroComponent: 'Componente Astro',
+        astroUsage: 'Uso en una página',
+
+        customHook: 'Custom Hook',
+        usageInComponent: 'Uso en Componente',
+        reactCleanupImportant: 'Asegúrate de limpiar los recursos en el cleanup de useEffect.',
+
+        typeDecl: 'Declaración de Tipos',
+        typeDeclInfo: 'Crea este archivo en src/types.d.ts para evitar errores con culori.',
+        angularTsImportant: 'Asegúrate de que los archivos generados tengan la extensión .ts (TypeScript). Si tienes archivos .js de intentos anteriores, elimínalos para evitar conflictos.',
+        angularCommonUniformsInfo: 'Crea este archivo en src/app/commonUniforms.ts.',
+        angularShaderNodeInfo: 'Copia este código en src/app/shaderNode.ts.',
+        gradientService: 'Servicio de Gradiente',
+        directive: 'Directiva',
+        angularUsageInfo: 'Reemplaza el contenido de tu componente principal (ej. src/app/app.ts).',
+        note: 'Nota:',
+        angularNote: 'Este código usa Angular 19+ con Signals y standalone components.',
+
+        lazyLoading: 'Lazy Loading del Shader',
+        mobileReduce: 'Reducir Cálculos en Móviles',
+        pauseInactive: 'Pausar en Pestaña Inactiva',
+        metrics: 'Métricas de Rendimiento:',
+        fpsTarget: '• FPS Target: 60fps',
+        gpuUsage: '• GPU Usage: ~5-10% (según complejidad del shader)',
+        memory: '• Memory: ~10-20MB'
+    }
+};
+
 export class ExportModal extends HTMLElement {
     /**
      * Constructor del componente ExportModal
@@ -11,6 +146,8 @@ export class ExportModal extends HTMLElement {
         super();
         this.attachShadow({ mode: 'open' });
         this.codeBlocks = new Map();
+        this.persistence = null;
+        this._language = 'en';
     }
 
     /**
@@ -20,10 +157,52 @@ export class ExportModal extends HTMLElement {
         this.render();
     }
 
+    setPersistenceManager(persistenceManager) {
+        this.persistence = persistenceManager;
+        const persisted = this.persistence?.getLanguage?.();
+        if (persisted === 'auto') {
+            const raw = (navigator?.languages && navigator.languages.length ? navigator.languages[0] : navigator?.language) || 'en';
+            const effective = String(raw).toLowerCase().startsWith('es') ? 'es' : 'en';
+            this.setLanguage(effective, { persist: false });
+        } else {
+            this.setLanguage(persisted, { persist: false });
+        }
+    }
+
+    getLanguage() {
+        return this._language === 'es' ? 'es' : 'en';
+    }
+
+    setLanguage(language, { persist = true } = {}) {
+        const normalized = language === 'es' ? 'es' : 'en';
+        if (this._language === normalized) return;
+
+        this._language = normalized;
+        if (persist && this.persistence?.setLanguage) {
+            this.persistence.setLanguage(normalized);
+        }
+
+        const wasOpen = this.classList.contains('open');
+        this.render();
+        if (wasOpen) {
+            this.classList.add('open');
+            if (this.config) {
+                this.generateContent();
+            }
+        }
+    }
+
+    t(key) {
+        const lang = this.getLanguage();
+        return EXPORT_MODAL_I18N[lang]?.[key] ?? EXPORT_MODAL_I18N.en[key] ?? key;
+    }
+
     /**
      * Renderiza el modal con su estructura HTML y estilos
      */
     render() {
+        const lang = this.getLanguage();
+        const title = this.t('modalTitle');
         this.shadowRoot.innerHTML = `
             <style>
                 :host {
@@ -65,6 +244,38 @@ export class ExportModal extends HTMLElement {
                     display: flex;
                     align-items: center;
                     justify-content: space-between;
+                }
+                .header-actions {
+                    display: flex;
+                    align-items: center;
+                    gap: 0.75rem;
+                }
+                .lang-switch {
+                    display: inline-flex;
+                    gap: 0.25rem;
+                    padding: 0.25rem;
+                    border-radius: 9999px;
+                    background: rgba(255, 255, 255, 0.05);
+                    border: 1px solid rgba(255, 255, 255, 0.1);
+                }
+                .lang-btn {
+                    padding: 0.375rem 0.625rem;
+                    border: none;
+                    background: transparent;
+                    color: #a0a0a0;
+                    cursor: pointer;
+                    border-radius: 9999px;
+                    font-weight: 600;
+                    font-size: 0.75rem;
+                    transition: all 0.2s;
+                }
+                .lang-btn:hover {
+                    color: white;
+                    background: rgba(255, 255, 255, 0.08);
+                }
+                .lang-btn.active {
+                    color: #ccff00;
+                    background: rgba(204, 255, 0, 0.1);
                 }
                 .modal-title {
                     font-family: 'Space Grotesk', sans-serif;
@@ -451,17 +662,23 @@ export class ExportModal extends HTMLElement {
             
             <div class="modal-container">
                 <div class="modal-header">
-                    <h2 class="modal-title">${createElement(Package, {class: "icon-lg"}).outerHTML} Exportar a tu Proyecto</h2>
-                    <button class="close-btn" id="close-btn">${createElement(X, {class: "icon"}).outerHTML}</button>
+                    <h2 class="modal-title">${createElement(Package, {class: "icon-lg"}).outerHTML} ${title}</h2>
+                    <div class="header-actions">
+                        <div class="lang-switch" role="group" aria-label="${this.t('languageLabel')}">
+                            <button class="lang-btn ${lang === 'en' ? 'active' : ''}" type="button" data-lang="en">EN</button>
+                            <button class="lang-btn ${lang === 'es' ? 'active' : ''}" type="button" data-lang="es">ES</button>
+                        </div>
+                        <button class="close-btn" id="close-btn">${createElement(X, {class: "icon"}).outerHTML}</button>
+                    </div>
                 </div>
                 <div class="modal-body">
                     <div class="tabs">
-                        <button class="tab active" data-tab="vanilla">HTML/JS</button>
-                        <button class="tab" data-tab="react">React</button>
-                        <button class="tab" data-tab="vue">Vue 3</button>
-                        <button class="tab" data-tab="angular">Angular</button>
-                        <button class="tab" data-tab="astro">Astro</button>
-                        <button class="tab" data-tab="optimizations">Optimizaciones</button>
+                        <button class="tab active" data-tab="vanilla">${this.t('tabVanilla')}</button>
+                        <button class="tab" data-tab="react">${this.t('tabReact')}</button>
+                        <button class="tab" data-tab="vue">${this.t('tabVue')}</button>
+                        <button class="tab" data-tab="angular">${this.t('tabAngular')}</button>
+                        <button class="tab" data-tab="astro">${this.t('tabAstro')}</button>
+                        <button class="tab" data-tab="optimizations">${this.t('tabOptimizations')}</button>
                     </div>
                     
                     <div class="tab-content active" id="vanilla-content"></div>
@@ -483,6 +700,14 @@ export class ExportModal extends HTMLElement {
     setupEventListeners() {
         const closeBtn = this.shadowRoot.getElementById('close-btn');
         closeBtn.addEventListener('click', () => this.close());
+
+        const langButtons = this.shadowRoot.querySelectorAll('.lang-btn');
+        langButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const next = btn.getAttribute('data-lang');
+                this.setLanguage(next, { persist: true });
+            });
+        });
 
         const modalContainer = this.shadowRoot.querySelector('.modal-container');
         
@@ -532,6 +757,12 @@ export class ExportModal extends HTMLElement {
     open(config) {
         this.config = config;
         this.codeBlocks = new Map();
+
+        const persisted = this.persistence?.getLanguage?.();
+        if (persisted && persisted !== this.getLanguage()) {
+            this.setLanguage(persisted, { persist: false });
+        }
+
         this.generateContent();
         this.classList.add('open');
     }
@@ -580,42 +811,40 @@ export class ExportModal extends HTMLElement {
 
         container.innerHTML = `
             <div class="section">
-                <h3 class="section-title">${createElement(Rocket, {class: "icon"}).outerHTML} Implementación HTML/JS (WebGPU)</h3>
-                <p class="section-description">
-                    Implementación moderna usando Three.js WebGPURenderer y TSL.
-                </p>
+                <h3 class="section-title">${createElement(Rocket, {class: "icon"}).outerHTML} ${this.t('vanillaTitle')}</h3>
+                <p class="section-description">${this.t('vanillaDesc')}</p>
                 
                 <div class="step">
                     <span class="step-number">1</span>
-                    <strong>Instalar dependencias</strong>
+                    <strong>${this.t('installDeps')}</strong>
                 </div>
-                <p class="info-box">Ejecuta el siguiente comando para instalar Three.js y las utilidades de color:</p>
+                <p class="info-box">${this.t('runCommand')}</p>
                 ${this.createCodeBlock('bash', 'npm install three culori', 'Terminal')}
                 
                 <div class="step">
                     <span class="step-number">2</span>
-                    <strong>Common Uniforms</strong>
+                    <strong>${this.t('commonUniforms')}</strong>
                 </div>
-                <p class="info-box">Crea este archivo para compartir variables entre shaders.</p>
+                <p class="info-box">${this.t('commonUniformsInfo')}</p>
                 ${this.createCodeBlock('javascript', commonUniformsCode, 'commonUniforms.js')}
 
                 <div class="step">
                     <span class="step-number">3</span>
-                    <strong>Shader Node (TSL)</strong>
+                    <strong>${this.t('shaderNode')}</strong>
                 </div>
-                <p class="info-box">Copia este código que contiene la lógica del shader.</p>
+                <p class="info-box">${this.t('shaderNodeInfo')}</p>
                 ${this.createCodeBlock('javascript', tslSource, 'shaderNode.js')}
 
                 <div class="step">
                     <span class="step-number">4</span>
-                    <strong>HTML Structure</strong>
+                    <strong>${this.t('htmlStructure')}</strong>
                 </div>
                 
                 ${this.createCodeBlock('html', this.generateHTMLCode(), 'index.html')}
                 
                 <div class="step">
                     <span class="step-number">5</span>
-                    <strong>JavaScript Implementation</strong>
+                    <strong>${this.t('jsImplementation')}</strong>
                 </div>
                 
                 ${this.createCodeBlock('javascript', this.generateVanillaJS(), 'main.js')}
@@ -630,51 +859,51 @@ export class ExportModal extends HTMLElement {
 
         container.innerHTML = `
             <div class="section">
-                <h3 class="section-title">${createElement(Lightbulb, {class: "icon"}).outerHTML} Implementación Astro (WebGPU)</h3>
+                <h3 class="section-title">${createElement(Lightbulb, {class: "icon"}).outerHTML} ${this.t('astroTitle')}</h3>
                 <p class="section-description">
-                    Montaje en cliente con un módulo en <code>src/</code>, ideal para SSR y compatible con View Transitions.
+                    ${this.t('astroDesc')}
                 </p>
 
                 <div class="step">
                     <span class="step-number">1</span>
-                    <strong>Instalar dependencias</strong>
+                    <strong>${this.t('installDeps')}</strong>
                 </div>
-                <p class="info-box">Ejecuta el siguiente comando para instalar Three.js y las utilidades de color:</p>
+                <p class="info-box">${this.t('runCommand')}</p>
                 ${this.createCodeBlock('bash', 'npm install three culori', 'Terminal')}
 
                 <div class="step">
                     <span class="step-number">2</span>
-                    <strong>Common Uniforms</strong>
+                    <strong>${this.t('commonUniforms')}</strong>
                 </div>
-                <p class="info-box">Crea este archivo en <code>src/lib/gradient/commonUniforms.js</code>.</p>
+                <p class="info-box">${this.t('commonUniformsAstroInfo')}</p>
                 ${this.createCodeBlock('javascript', commonUniformsCode, 'src/lib/gradient/commonUniforms.js')}
 
                 <div class="step">
                     <span class="step-number">3</span>
-                    <strong>Shader Node (TSL)</strong>
+                    <strong>${this.t('shaderNode')}</strong>
                 </div>
-                <p class="info-box">Copia este código en <code>src/lib/gradient/shaderNode.js</code>.</p>
+                <p class="info-box">${this.t('shaderNodeAstroInfo')}</p>
                 ${this.createCodeBlock('javascript', tslSource, 'src/lib/gradient/shaderNode.js')}
 
                 <div class="step">
                     <span class="step-number">4</span>
-                    <strong>Módulo de montaje</strong>
+                    <strong>${this.t('mountModule')}</strong>
                 </div>
                 <div class="info-box">
-                    <p><strong>Importante:</strong> Mantén <code>mountGradient.js</code>, <code>commonUniforms.js</code> y <code>shaderNode.js</code> en la misma carpeta para que los imports relativos funcionen.</p>
-                    <p>En Astro, usa un <code>&lt;script&gt;</code> <em>sin atributos</em> (salvo <code>src</code>) para que Astro procese y resuelva imports.</p>
+                    <p><strong>${this.t('important')}</strong> ${this.t('astroImportantKeep')}</p>
+                    <p>${this.t('astroImportantScript')}</p>
                 </div>
                 ${this.createCodeBlock('javascript', this.generateAstroMountModule(), 'src/lib/gradient/mountGradient.js')}
 
                 <div class="step">
                     <span class="step-number">5</span>
-                    <strong>Componente Astro</strong>
+                    <strong>${this.t('astroComponent')}</strong>
                 </div>
                 ${this.createCodeBlock('astro', this.generateAstroComponent(), 'src/components/GradientBackground.astro')}
 
                 <div class="step">
                     <span class="step-number">6</span>
-                    <strong>Uso en una página</strong>
+                    <strong>${this.t('astroUsage')}</strong>
                 </div>
                 ${this.createCodeBlock('astro', this.generateAstroUsage(), 'src/pages/index.astro')}
             </div>
@@ -809,21 +1038,26 @@ export async function mountGradient(canvas) {
         }
 
         generateAstroUsage() {
+                const isEs = this.getLanguage() === 'es';
+                const htmlLang = isEs ? 'es' : 'en';
+                const title = isEs ? 'Mi página con fondo animado' : 'My page with an animated background';
+                const heading = isEs ? 'Contenido encima del fondo' : 'Content above the background';
+
                 return `---
 import GradientBackground from '../components/GradientBackground.astro';
 ---
 
-<html lang="es">
+<html lang="${htmlLang}">
     <head>
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <title>Mi página con fondo animado</title>
+        <title>${title}</title>
     </head>
     <body>
         <GradientBackground />
 
         <main style="position: relative; z-index: 1;">
-            <h1>Contenido encima del fondo</h1>
+            <h1>${heading}</h1>
         </main>
     </body>
 </html>`;
@@ -891,48 +1125,48 @@ export const u_border_width = uniform(0.1);`;
 
         container.innerHTML = `
             <div class="section">
-                <h3 class="section-title">${createElement(Atom, {class: "icon"}).outerHTML} Implementación React (WebGPU)</h3>
+                <h3 class="section-title">${createElement(Atom, {class: "icon"}).outerHTML} ${this.t('reactTitle')}</h3>
                 <p class="section-description">
-                    Hook personalizado para integrar el gradiente en componentes React usando WebGPU.
+                    ${this.t('reactDesc')}
                 </p>
                 
                 <div class="step">
                     <span class="step-number">1</span>
-                    <strong>Instalar dependencias</strong>
+                    <strong>${this.t('installDeps')}</strong>
                 </div>
-                <p class="info-box">Ejecuta el siguiente comando para instalar Three.js y las utilidades de color:</p>
+                <p class="info-box">${this.t('runCommand')}</p>
                 ${this.createCodeBlock('bash', 'npm install three culori', 'Terminal')}
 
                 <div class="step">
                     <span class="step-number">2</span>
-                    <strong>Common Uniforms</strong>
+                    <strong>${this.t('commonUniforms')}</strong>
                 </div>
-                <p class="info-box">Crea este archivo para compartir variables entre shaders.</p>
+                <p class="info-box">${this.t('commonUniformsInfo')}</p>
                 ${this.createCodeBlock('javascript', commonUniformsCode, 'commonUniforms.js')}
 
                 <div class="step">
                     <span class="step-number">3</span>
-                    <strong>Shader Node (TSL)</strong>
+                    <strong>${this.t('shaderNode')}</strong>
                 </div>
-                <p class="info-box">Copia este código que contiene la lógica del shader.</p>
+                <p class="info-box">${this.t('shaderNodeInfo')}</p>
                 ${this.createCodeBlock('javascript', tslSource, 'shaderNode.js')}
                 
                 <div class="step">
                     <span class="step-number">4</span>
-                    <strong>Custom Hook</strong>
+                    <strong>${this.t('customHook')}</strong>
                 </div>
                 
                 ${this.createCodeBlock('javascript', this.generateReactHook(), 'useGradientBackground.js')}
                 
                 <div class="step">
                     <span class="step-number">5</span>
-                    <strong>Uso en Componente</strong>
+                    <strong>${this.t('usageInComponent')}</strong>
                 </div>
                 
                 ${this.createCodeBlock('jsx', this.generateReactUsage(), 'App.jsx')}
                 
                 <div class="warning-box">
-                    <p><strong>${createElement(AlertTriangle, {class: "icon"}).outerHTML} Importante:</strong> Asegúrate de limpiar los recursos en el cleanup de useEffect</p>
+                    <p><strong>${createElement(AlertTriangle, {class: "icon"}).outerHTML} ${this.t('important')}</strong> ${this.t('reactCleanupImportant')}</p>
                 </div>
             </div>
         `;
@@ -945,30 +1179,30 @@ export const u_border_width = uniform(0.1);`;
 
         container.innerHTML = `
             <div class="section">
-                <h3 class="section-title">${createElement(Layers, {class: "icon"}).outerHTML} Implementación Vue 3 (WebGPU)</h3>
+                <h3 class="section-title">${createElement(Layers, {class: "icon"}).outerHTML} ${this.t('vueTitle')}</h3>
                 <p class="section-description">
-                    Composable para Vue 3 con Composition API usando WebGPU.
+                    ${this.t('vueDesc')}
                 </p>
                 
                 <div class="step">
                     <span class="step-number">1</span>
-                    <strong>Instalar dependencias</strong>
+                    <strong>${this.t('installDeps')}</strong>
                 </div>
-                <p class="info-box">Ejecuta el siguiente comando para instalar Three.js y las utilidades de color:</p>
+                <p class="info-box">${this.t('runCommand')}</p>
                 ${this.createCodeBlock('bash', 'npm install three culori', 'Terminal')}
 
                 <div class="step">
                     <span class="step-number">2</span>
-                    <strong>Common Uniforms</strong>
+                    <strong>${this.t('commonUniforms')}</strong>
                 </div>
-                <p class="info-box">Crea este archivo para compartir variables entre shaders.</p>
+                <p class="info-box">${this.t('commonUniformsInfo')}</p>
                 ${this.createCodeBlock('javascript', commonUniformsCode, 'commonUniforms.js')}
 
                 <div class="step">
                     <span class="step-number">3</span>
-                    <strong>Shader Node (TSL)</strong>
+                    <strong>${this.t('shaderNode')}</strong>
                 </div>
-                <p class="info-box">Copia este código que contiene la lógica del shader.</p>
+                <p class="info-box">${this.t('shaderNodeInfo')}</p>
                 ${this.createCodeBlock('javascript', tslSource, 'shaderNode.js')}
                 
                 <div class="step">
@@ -980,7 +1214,7 @@ export const u_border_width = uniform(0.1);`;
                 
                 <div class="step">
                     <span class="step-number">5</span>
-                    <strong>Uso en Componente</strong>
+                    <strong>${this.t('usageInComponent')}</strong>
                 </div>
                 
                 ${this.createCodeBlock('vue', this.generateVueUsage(), 'App.vue')}
@@ -1009,66 +1243,66 @@ export const u_border_width = uniform(0.1);`;
 
         container.innerHTML = `
             <div class="section">
-                <h3 class="section-title">${createElement(Hexagon, {class: "icon"}).outerHTML} Implementación Angular (WebGPU)</h3>
+                <h3 class="section-title">${createElement(Hexagon, {class: "icon"}).outerHTML} ${this.t('angularTitle')}</h3>
                 <p class="section-description">
-                    Servicio y directiva para integrar el gradiente en Angular usando WebGPU.
+                    ${this.t('angularDesc')}
                 </p>
                 
                 <div class="step">
                     <span class="step-number">1</span>
-                    <strong>Instalar dependencias</strong>
+                    <strong>${this.t('installDeps')}</strong>
                 </div>
-                <p class="info-box">Ejecuta el siguiente comando para instalar Three.js y las utilidades de color:</p>
+                <p class="info-box">${this.t('runCommand')}</p>
                 ${this.createCodeBlock('bash', 'npm install three culori\nnpm install --save-dev @types/three', 'Terminal')}
 
                 <div class="step">
                     <span class="step-number">2</span>
-                    <strong>Declaración de Tipos</strong>
+                    <strong>${this.t('typeDecl')}</strong>
                 </div>
-                <p class="info-box">Crea este archivo en <code>src/types.d.ts</code> para evitar errores con culori.</p>
+                <p class="info-box">${this.t('typeDeclInfo')}</p>
                 ${this.createCodeBlock('typescript', "declare module 'culori';", 'src/types.d.ts')}
 
                 <div class="warning-box">
-                    <p><strong>${createElement(AlertTriangle, {class: "icon"}).outerHTML} Importante:</strong> Asegúrate de que los archivos generados tengan la extensión <strong>.ts</strong> (TypeScript). Si tienes archivos .js de intentos anteriores, elimínalos para evitar conflictos.</p>
+                    <p><strong>${createElement(AlertTriangle, {class: "icon"}).outerHTML} ${this.t('important')}</strong> ${this.t('angularTsImportant')}</p>
                 </div>
 
                 <div class="step">
                     <span class="step-number">3</span>
-                    <strong>Common Uniforms</strong>
+                    <strong>${this.t('commonUniforms')}</strong>
                 </div>
-                <p class="info-box">Crea este archivo en <code>src/app/commonUniforms.ts</code>.</p>
+                <p class="info-box">${this.t('angularCommonUniformsInfo')}</p>
                 ${this.createCodeBlock('typescript', commonUniformsCode, 'src/app/commonUniforms.ts')}
 
                 <div class="step">
                     <span class="step-number">4</span>
-                    <strong>Shader Node (TSL)</strong>
+                    <strong>${this.t('shaderNode')}</strong>
                 </div>
-                <p class="info-box">Copia este código en <code>src/app/shaderNode.ts</code>.</p>
+                <p class="info-box">${this.t('angularShaderNodeInfo')}</p>
                 ${this.createCodeBlock('typescript', tslSource, 'src/app/shaderNode.ts')}
                 
                 <div class="step">
                     <span class="step-number">5</span>
-                    <strong>Servicio de Gradiente</strong>
+                    <strong>${this.t('gradientService')}</strong>
                 </div>
                 
                 ${this.createCodeBlock('typescript', this.generateAngularService(), 'src/app/gradient-background.service.ts')}
                 
                 <div class="step">
                     <span class="step-number">6</span>
-                    <strong>Directiva</strong>
+                    <strong>${this.t('directive')}</strong>
                 </div>
                 
                 ${this.createCodeBlock('typescript', this.generateAngularDirective(), 'src/app/gradient-background.directive.ts')}
                 
                 <div class="step">
                     <span class="step-number">7</span>
-                    <strong>Uso en Componente</strong>
+                    <strong>${this.t('usageInComponent')}</strong>
                 </div>
-                <p class="info-box">Reemplaza el contenido de tu componente principal (ej. <code>src/app/app.ts</code>).</p>
+                <p class="info-box">${this.t('angularUsageInfo')}</p>
                 ${this.createCodeBlock('typescript', this.generateAngularUsage(), 'src/app/app.ts')}
                 
                 <div class="info-box">
-                    <p><strong>${createElement(Lightbulb, {class: "icon"}).outerHTML} Nota:</strong> Este código usa Angular 19+ con Signals y standalone components.</p>
+                    <p><strong>${createElement(Lightbulb, {class: "icon"}).outerHTML} ${this.t('note')}</strong> ${this.t('angularNote')}</p>
                 </div>
             </div>
         `;
@@ -1078,34 +1312,34 @@ export const u_border_width = uniform(0.1);`;
         const container = this.shadowRoot.getElementById('optimizations-content');
         container.innerHTML = `
             <div class="section">
-                <h3 class="section-title">${createElement(Zap, {class: "icon"}).outerHTML} Optimizaciones de Rendimiento</h3>
+                <h3 class="section-title">${createElement(Zap, {class: "icon"}).outerHTML} ${this.t('optimizationsTitle')}</h3>
                 
                 <div class="step">
                     <span class="step-number">1</span>
-                    <strong>Lazy Loading del Shader</strong>
+                    <strong>${this.t('lazyLoading')}</strong>
                 </div>
                 
                 ${this.createCodeBlock('javascript', this.generateLazyLoading(), 'lazyGradient.js')}
                 
                 <div class="step">
                     <span class="step-number">2</span>
-                    <strong>Reducir Cálculos en Móviles</strong>
+                    <strong>${this.t('mobileReduce')}</strong>
                 </div>
                 
                 ${this.createCodeBlock('javascript', this.generateMobileOptimization(), 'mobileOptimization.js')}
                 
                 <div class="step">
                     <span class="step-number">3</span>
-                    <strong>Pausar en Pestaña Inactiva</strong>
+                    <strong>${this.t('pauseInactive')}</strong>
                 </div>
                 
                 ${this.createCodeBlock('javascript', this.generateVisibilityAPI(), 'visibilityOptimization.js')}
                 
                 <div class="info-box">
-                    <p><strong>${createElement(BarChart, {class: "icon"}).outerHTML} Métricas de Rendimiento:</strong></p>
-                    <p>• FPS Target: 60fps</p>
-                    <p>• GPU Usage: ~5-10% (según complejidad del shader)</p>
-                    <p>• Memory: ~10-20MB</p>
+                    <p><strong>${createElement(BarChart, {class: "icon"}).outerHTML} ${this.t('metrics')}</strong></p>
+                    <p>${this.t('fpsTarget')}</p>
+                    <p>${this.t('gpuUsage')}</p>
+                    <p>${this.t('memory')}</p>
                 </div>
             </div>
         `;
@@ -1131,7 +1365,7 @@ export const u_border_width = uniform(0.1);`;
                 <div class="code-header">
                     <span class="code-title">${title}</span>
                     <button class="copy-btn" data-block-id="${blockId}">
-                        ${createElement(Clipboard, {class: "icon"}).outerHTML} Copiar
+                        ${createElement(Clipboard, {class: "icon"}).outerHTML} ${this.t('copy')}
                     </button>
                 </div>
                 <pre><code>${this.escapeHtml(code)}</code></pre>
@@ -1253,7 +1487,7 @@ export const u_border_width = uniform(0.1);`;
      */
     showCopySuccess(button) {
         const originalText = button.innerHTML;
-        button.innerHTML = `${createElement(Check, {class: "icon"}).outerHTML} Copiado!`;
+        button.innerHTML = `${createElement(Check, {class: "icon"}).outerHTML} ${this.t('copied')}`;
         button.classList.add('copied');
         
         setTimeout(() => {
@@ -1268,7 +1502,7 @@ export const u_border_width = uniform(0.1);`;
      */
     showCopyError(button) {
         const originalText = button.innerHTML;
-        button.innerHTML = `${createElement(AlertCircle, {class: "icon"}).outerHTML} Error`;
+        button.innerHTML = `${createElement(AlertCircle, {class: "icon"}).outerHTML} ${this.t('copyError')}`;
         button.classList.add('copy-error');
 
         setTimeout(() => {
@@ -1358,8 +1592,9 @@ export const u_border_width = uniform(0.1);`;
 
     // Code generators
     generateHTMLCode() {
+        const lang = this.getLanguage() === 'es' ? 'es' : 'en';
         return `<!DOCTYPE html>
-<html lang="es">
+<html lang="${lang}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
