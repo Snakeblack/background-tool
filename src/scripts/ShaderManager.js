@@ -211,6 +211,15 @@ export class ShaderManager {
     }
 
     /**
+     * Obtiene la configuración de un shader específico
+     * @param {string} shaderName
+     * @returns {Object|undefined}
+     */
+    getShaderConfig(shaderName) {
+        return SHADERS?.[shaderName];
+    }
+
+    /**
      * Obtiene la configuración del shader actual
      * @returns {Object} Configuración del shader actual
      */

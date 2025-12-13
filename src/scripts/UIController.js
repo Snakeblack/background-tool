@@ -3,11 +3,12 @@
  */
 
 export class UIController {
-    constructor(shaderManager, colorManager, persistenceManager = null, backgroundLibraryManager = null) {
+    constructor(shaderManager, colorManager, persistenceManager = null, backgroundLibraryManager = null, i18nManager = null) {
         this.shaderManager = shaderManager;
         this.colorManager = colorManager;
         this.persistence = persistenceManager;
         this.library = backgroundLibraryManager;
+        this.i18n = i18nManager;
         
         // Cache DOM elements
         this.dock = document.querySelector('hud-dock');
@@ -20,7 +21,15 @@ export class UIController {
         this.isMobile = window.innerWidth <= 768;
         this.tooltipElement = null;
 
+        this._renderSavedBackgrounds = null;
+
         this.init();
+    }
+
+    t(key, params = null, fallback = null) {
+        if (!this.i18n?.t) return fallback ?? key;
+        const value = this.i18n.t(key, params);
+        return value ?? fallback ?? key;
     }
 
     getCurrentShaderName() {
@@ -76,6 +85,7 @@ export class UIController {
         this.createGlobalTooltip();
         this.setupResizeListener();
         this.setupHudListeners();
+        this.setupI18n();
         this.setupShaderSelector();
         this.setupColorControls();
         this.setupPresets();
@@ -84,6 +94,133 @@ export class UIController {
         
         // Initial setup
         this.updateLayoutMode();
+    }
+
+    setupI18n() {
+        if (!this.i18n) return;
+
+        this.applyI18nToDocument();
+
+        if (this.dock?.setI18nManager) {
+            this.dock.setI18nManager(this.i18n);
+        }
+
+        if (this.bottomSheet?.setI18nManager) {
+            this.bottomSheet.setI18nManager(this.i18n);
+        }
+
+        const langSelect = document.getElementById('language-select');
+        if (langSelect && typeof langSelect.clearOptions === 'function' && typeof langSelect.addOption === 'function') {
+            langSelect.clearOptions();
+            langSelect.addOption('auto', 'Auto');
+            langSelect.addOption('en', 'English');
+            langSelect.addOption('es', 'Español');
+
+            const pref = this.i18n.getPreference?.() ?? 'auto';
+            langSelect.value = pref;
+            if (langSelect.updateDisplay) langSelect.updateDisplay();
+
+            langSelect.addEventListener('change', (e) => {
+                const next = e?.detail?.value;
+                this.i18n.setPreference?.(next);
+            });
+        }
+
+        document.addEventListener('i18n:change', () => {
+            this.applyI18nToDocument();
+            this.refreshShaderSelectorOptions();
+
+            if (this.bottomSheet?.applyTranslations) {
+                this.bottomSheet.applyTranslations();
+            }
+
+            if (typeof this._renderSavedBackgrounds === 'function') {
+                this._renderSavedBackgrounds();
+            }
+
+            // Rebuild controls so labels/tooltips update, but keep current slider values.
+            const shaderConfig = this.shaderManager?.getCurrentShaderConfig?.();
+            if (shaderConfig?.controls) {
+                shaderConfig.controls.forEach(c => {
+                    const input = document.getElementById(c.id);
+                    if (!input) return;
+                    const v = parseFloat(input.value);
+                    if (Number.isFinite(v)) c.value = v;
+                });
+                this.updateShaderControls(shaderConfig);
+            }
+        });
+    }
+
+    applyI18nToDocument() {
+        // textContent
+        document.querySelectorAll('[data-i18n]').forEach(el => {
+            const key = el.getAttribute('data-i18n');
+            if (!key) return;
+            el.textContent = this.t(key, null, el.textContent);
+        });
+
+        // placeholders
+        document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+            const key = el.getAttribute('data-i18n-placeholder');
+            if (!key) return;
+            el.setAttribute('placeholder', this.t(key, null, el.getAttribute('placeholder') || ''));
+        });
+
+        // aria-label
+        document.querySelectorAll('[data-i18n-aria]').forEach(el => {
+            const key = el.getAttribute('data-i18n-aria');
+            if (!key) return;
+            el.setAttribute('aria-label', this.t(key, null, el.getAttribute('aria-label') || ''));
+        });
+    }
+
+    getShaderDisplayName(shaderName) {
+        const prettyNames = {
+            'neon_grid': 'Synthwave Grid',
+            'aurora': 'Northern Lights',
+            'voronoi': 'Organic Cells',
+            'flow': 'Vanta Flow',
+            'clouds': 'Dream Flight',
+            'liquid': 'Liquid Metal',
+            'geometric': 'Geometric Patterns',
+            'galaxy': 'Cosmic Galaxy',
+            'stripes': 'Retro Stripes',
+            'mesh': 'Wireframe Mesh',
+            'particles': 'Starfield',
+            'waves': 'Waves'
+        };
+
+        const base = this.shaderManager?.getShaderConfig?.(shaderName) || {};
+        const localized = this.i18n?.localizeShader ? this.i18n.localizeShader(shaderName, base) : base;
+
+        if (localized?.name) return localized.name;
+
+        let label = prettyNames[shaderName];
+        if (!label) {
+            label = shaderName.split('_')
+                .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+                .join(' ');
+        }
+        return label;
+    }
+
+    refreshShaderSelectorOptions() {
+        const selector = document.getElementById('shader-type');
+        if (!selector) return;
+
+        const shaders = this.shaderManager.getAvailableShaders();
+        const current = selector.value;
+
+        if (selector.clearOptions) selector.clearOptions();
+        shaders.forEach(shaderName => {
+            selector.addOption(shaderName, this.getShaderDisplayName(shaderName));
+        });
+
+        if (current && shaders.includes(current)) {
+            selector.value = current;
+            if (selector.updateDisplay) selector.updateDisplay();
+        }
     }
 
     getBackgroundSnapshot() {
@@ -199,7 +336,7 @@ export class UIController {
             if (!items.length) {
                 const empty = document.createElement('div');
                 empty.className = 'saved-bg-empty';
-                empty.textContent = 'No saved backgrounds yet.';
+                empty.textContent = this.t('saved.empty', null, 'No saved backgrounds yet.');
                 listEl.appendChild(empty);
                 return;
             }
@@ -230,8 +367,8 @@ export class UIController {
                 delBtn.type = 'button';
                 delBtn.className = 'saved-bg-save-btn saved-bg-icon-btn saved-bg-delete-btn';
                 delBtn.textContent = '×';
-                delBtn.setAttribute('aria-label', 'Delete');
-                delBtn.title = 'Delete';
+                delBtn.setAttribute('aria-label', this.t('saved.deleteAria', null, 'Delete'));
+                delBtn.title = this.t('saved.deleteTitle', null, 'Delete');
                 delBtn.dataset.bgId = item.id;
                 delBtn.dataset.bgAction = 'delete';
 
@@ -242,6 +379,8 @@ export class UIController {
 
             listEl.appendChild(frag);
         };
+
+        this._renderSavedBackgrounds = render;
 
         saveBtn.addEventListener('click', () => {
             const name = (nameInput.value || '').trim();
@@ -256,6 +395,17 @@ export class UIController {
             exportBtn.addEventListener('click', () => {
                 const exportModal = document.getElementById('export-modal');
                 if (!exportModal) return;
+
+                if (this.persistence && typeof exportModal.setPersistenceManager === 'function') {
+                    exportModal.setPersistenceManager(this.persistence);
+                } else if (this.persistence) {
+                    exportModal.persistence = this.persistence;
+                }
+
+                if (this.i18n?.getLanguage && typeof exportModal.setLanguage === 'function') {
+                    exportModal.setLanguage(this.i18n.getLanguage(), { persist: false });
+                }
+
                 const config = this.getCurrentConfiguration();
                 exportModal.open(config);
             });
@@ -271,7 +421,7 @@ export class UIController {
             if (action === 'delete') {
                 const item = this.library.get(id);
                 if (!item) return;
-                const ok = confirm(`Delete saved background "${item.name}"?`);
+                const ok = confirm(this.t('saved.deleteConfirm', { name: item.name }, `Delete saved background "${item.name}"?`));
                 if (!ok) return;
                 this.library.remove(id);
                 render();
@@ -466,34 +616,8 @@ export class UIController {
         if (!selector) return;
 
         const shaders = this.shaderManager.getAvailableShaders();
-        
-        // Custom names map for better presentation
-        const prettyNames = {
-            'neon_grid': 'Synthwave Grid',
-            'aurora': 'Northern Lights',
-            'voronoi': 'Organic Cells',
-            'flow': 'Vanta Flow',
-            'clouds': 'Dream Flight',
-            'liquid': 'Liquid Metal',
-            'geometric': 'Geometric Patterns',
-            'galaxy': 'Cosmic Galaxy',
-            'stripes': 'Retro Stripes',
-            'mesh': 'Wireframe Mesh',
-            'particles': 'Starfield'
-        };
 
-        // Clear existing options if any (though custom-select starts empty)
-        if (selector.clearOptions) selector.clearOptions();
-
-        shaders.forEach(shaderName => {
-            let label = prettyNames[shaderName];
-            if (!label) {
-                label = shaderName.split('_')
-                    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-                    .join(' ');
-            }
-            selector.addOption(shaderName, label);
-        });
+        this.refreshShaderSelectorOptions();
 
         selector.addEventListener('change', (e) => {
             const nextShader = e.detail.value;
@@ -519,7 +643,8 @@ export class UIController {
             // Apply persisted uniforms/colors after loadShader (overrides defaults)
             this.applyPersistedForShader(nextShader, shaderConfig);
 
-            this.updateShaderControls(shaderConfig);
+            const localized = this.i18n?.localizeShader ? this.i18n.localizeShader(nextShader, shaderConfig) : shaderConfig;
+            this.updateShaderControls(localized);
         });
 
         if (shaders.length > 0) {
@@ -552,7 +677,8 @@ export class UIController {
 
             this.applyPersistedForShader(initialShader, initialConfig);
 
-            this.updateShaderControls(initialConfig);
+            const localized = this.i18n?.localizeShader ? this.i18n.localizeShader(initialShader, initialConfig) : initialConfig;
+            this.updateShaderControls(localized);
         }
     }
 
@@ -561,16 +687,21 @@ export class UIController {
     }
 
     updateShaderControls(shaderConfig) {
-        this.updateColorLabels(shaderConfig);
+        const shaderName = this.getCurrentShaderName();
+        const localizedConfig = this.i18n?.localizeShader
+            ? this.i18n.localizeShader(shaderName, shaderConfig)
+            : shaderConfig;
+
+        this.updateColorLabels(localizedConfig);
 
         const container = document.getElementById('shader-controls-content');
         if (!container) return;
         
         container.innerHTML = '';
 
-        if (!shaderConfig?.controls) return;
+        if (!localizedConfig?.controls) return;
 
-        shaderConfig.controls.forEach(control => {
+        localizedConfig.controls.forEach(control => {
             const controlDiv = document.createElement('div');
             controlDiv.className = 'control-group';
 
@@ -785,8 +916,19 @@ export class UIController {
 
         if (!exportBtn || !exportModal) return;
 
+        if (this.persistence && typeof exportModal.setPersistenceManager === 'function') {
+            exportModal.setPersistenceManager(this.persistence);
+        } else if (this.persistence) {
+            exportModal.persistence = this.persistence;
+        }
+
         exportBtn.addEventListener('click', () => {
             const config = this.getCurrentConfiguration();
+
+            if (this.i18n?.getLanguage && typeof exportModal.setLanguage === 'function') {
+                exportModal.setLanguage(this.i18n.getLanguage(), { persist: false });
+            }
+
             exportModal.open(config);
         });
     }
