@@ -24,6 +24,7 @@ import { UIController } from './scripts/UIController.js';
 import { PersistenceManager } from './scripts/PersistenceManager.js';
 import { BackgroundLibraryManager } from './scripts/BackgroundLibraryManager.js';
 import { LiteRTManager } from './scripts/LiteRTManager.js';
+import { I18nManager } from './scripts/I18nManager.js';
 import { createIcons, Sunset, Waves, Trees, Zap, Flame, Snowflake, Moon, Gem } from 'lucide';
 
 class GradientApp {
@@ -57,8 +58,9 @@ class GradientApp {
         this.shaderManager = new ShaderManager(this.renderer);
         this.colorManager = new ColorManager(this.shaderManager);
         this.persistenceManager = new PersistenceManager();
+        this.i18n = new I18nManager(this.persistenceManager);
         this.backgroundLibraryManager = new BackgroundLibraryManager();
-        this.uiController = new UIController(this.shaderManager, this.colorManager, this.persistenceManager, this.backgroundLibraryManager);
+        this.uiController = new UIController(this.shaderManager, this.colorManager, this.persistenceManager, this.backgroundLibraryManager, this.i18n);
 
         createIcons({
             icons: {

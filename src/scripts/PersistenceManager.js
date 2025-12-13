@@ -22,7 +22,10 @@ export class PersistenceManager {
         this._state = {
             version: STORAGE_VERSION,
             lastShader: null,
-            shaders: {}
+            shaders: {},
+            ui: {
+                language: 'auto'
+            }
         };
 
         this._writeTimer = null;
@@ -68,10 +71,18 @@ export class PersistenceManager {
             if (typeof parsed !== 'object' || !parsed) return;
             if (!parsed.shaders || typeof parsed.shaders !== 'object') return;
 
+            const persistedLanguage = parsed?.ui?.language;
+            const language = persistedLanguage === 'es' || persistedLanguage === 'en' || persistedLanguage === 'auto'
+                ? persistedLanguage
+                : 'auto';
+
             this._state = {
                 version: STORAGE_VERSION,
                 lastShader: typeof parsed.lastShader === 'string' ? parsed.lastShader : null,
-                shaders: parsed.shaders
+                shaders: parsed.shaders,
+                ui: {
+                    language
+                }
             };
 
             this._lastSerialized = raw;
@@ -179,6 +190,21 @@ export class PersistenceManager {
         }
 
         entry.colors = Object.keys(normalized).length ? normalized : null;
+        this._scheduleWrite();
+    }
+
+    getLanguage() {
+        const lang = this._state?.ui?.language;
+        return lang === 'es' || lang === 'en' || lang === 'auto' ? lang : 'auto';
+    }
+
+    setLanguage(language) {
+        if (language !== 'es' && language !== 'en' && language !== 'auto') return;
+        if (!this._state.ui || typeof this._state.ui !== 'object') {
+            this._state.ui = { language: 'auto' };
+        }
+        if (this._state.ui.language === language) return;
+        this._state.ui.language = language;
         this._scheduleWrite();
     }
 }
