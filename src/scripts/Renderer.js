@@ -20,6 +20,10 @@ export class Renderer {
         this.isWebGPUSupported = false;
 
         this._pixelRatio = 1;
+        this._qualityScale = 1;
+        this._isMobileLike = false;
+        this._frameTimeEwmaMs = 16.7;
+        this._qualitySampleFrames = 0;
         this._resolution = new Vector2(1, 1);
         this._resolutionDirty = true;
         this._isRendering = false;
@@ -69,10 +73,7 @@ export class Renderer {
             });
         }
 
-        this._pixelRatio = Math.min(window.devicePixelRatio || 1, 2);
-        this.renderer.setPixelRatio(this._pixelRatio);
-        this.renderer.setSize(window.innerWidth, window.innerHeight);
-        this._updateResolutionCache();
+        this._applyPixelRatioAndSize();
 
         // Geometría fija de 2x2 para cubrir todo el viewport
         const geometry = new PlaneGeometry(2, 2);
@@ -88,14 +89,80 @@ export class Renderer {
      * Actualiza dimensiones del renderer
      */
     onWindowResize() {
-        const nextPixelRatio = Math.min(window.devicePixelRatio || 1, 2);
+        this._applyPixelRatioAndSize();
+        // No es necesario actualizar cámara ni geometría ya que usamos NDC
+    }
+
+    _computeIsMobileLike() {
+        // Heurística simple: viewport estrecho o input táctil (pointer coarse).
+        // Mantenerlo barato y estable para evitar oscilaciones.
+        const byWidth = window.innerWidth <= 768;
+        const byPointer = typeof window.matchMedia === 'function'
+            ? window.matchMedia('(pointer: coarse)').matches
+            : false;
+        return byWidth || byPointer;
+    }
+
+    _computeEffectivePixelRatio() {
+        const dpr = window.devicePixelRatio || 1;
+        const maxDpr = this._isMobileLike ? 1.25 : 2;
+        // qualityScale reduce la resolución interna de forma controlada.
+        const scaled = dpr * this._qualityScale;
+        // Mantener un mínimo para no degradar demasiado en móviles.
+        const minDpr = this._isMobileLike ? 0.75 : 1;
+        return Math.min(Math.max(scaled, minDpr), maxDpr);
+    }
+
+    _applyPixelRatioAndSize() {
+        const nextIsMobileLike = this._computeIsMobileLike();
+        if (nextIsMobileLike !== this._isMobileLike) {
+            this._isMobileLike = nextIsMobileLike;
+            // Reset suave al entrar/salir de móvil para evitar saltos fuertes.
+            this._qualityScale = 1;
+            this._frameTimeEwmaMs = 16.7;
+            this._qualitySampleFrames = 0;
+        }
+
+        const nextPixelRatio = this._computeEffectivePixelRatio();
         if (nextPixelRatio !== this._pixelRatio) {
             this._pixelRatio = nextPixelRatio;
             this.renderer.setPixelRatio(this._pixelRatio);
         }
         this.renderer.setSize(window.innerWidth, window.innerHeight);
         this._updateResolutionCache();
-        // No es necesario actualizar cámara ni geometría ya que usamos NDC
+    }
+
+    /**
+     * Ajuste de calidad adaptativo (solo en móviles): baja ligeramente DPR si el frame time empeora.
+     * @param {number} frameDeltaMs
+     */
+    updateQuality(frameDeltaMs) {
+        if (!this._isMobileLike) return;
+        if (!Number.isFinite(frameDeltaMs) || frameDeltaMs <= 0) return;
+
+        // EWMA estable para evitar cambios por picos.
+        const alpha = 0.06;
+        this._frameTimeEwmaMs = (1 - alpha) * this._frameTimeEwmaMs + alpha * frameDeltaMs;
+
+        // Muestrear cada ~20 frames.
+        this._qualitySampleFrames++;
+        if (this._qualitySampleFrames < 20) return;
+        this._qualitySampleFrames = 0;
+
+        const prevScale = this._qualityScale;
+
+        // Si cae por debajo de ~38fps (26ms) bajamos un escalón.
+        if (this._frameTimeEwmaMs > 26 && this._qualityScale > 0.75) {
+            this._qualityScale = Math.max(0.75, this._qualityScale - 0.1);
+        }
+        // Si va cómodo por encima de ~55fps (18ms) subimos un poco.
+        else if (this._frameTimeEwmaMs < 18 && this._qualityScale < 1) {
+            this._qualityScale = Math.min(1, this._qualityScale + 0.05);
+        }
+
+        if (this._qualityScale !== prevScale) {
+            this._applyPixelRatioAndSize();
+        }
     }
 
     _updateResolutionCache() {
