@@ -43,7 +43,7 @@ const EXPORT_MODAL_I18N = {
         mountModule: 'Mount module',
         important: 'Important:',
         astroImportantKeep: 'Keep mountGradient.js, commonUniforms.js and shaderNode.js in the same folder so relative imports work.',
-        astroImportantScript: 'In Astro, use a <script> with no attributes (except src) so Astro can process and resolve imports.',
+        astroImportantScript: 'In Astro, use a &lt;script&gt; with no attributes (except src) so Astro can process and resolve imports.',
         astroComponent: 'Astro component',
         astroUsage: 'Usage in a page',
 
@@ -109,7 +109,7 @@ const EXPORT_MODAL_I18N = {
         mountModule: 'Módulo de montaje',
         important: 'Importante:',
         astroImportantKeep: 'Mantén mountGradient.js, commonUniforms.js y shaderNode.js en la misma carpeta para que los imports relativos funcionen.',
-        astroImportantScript: 'En Astro, usa un <script> sin atributos (salvo src) para que Astro procese y resuelva imports.',
+        astroImportantScript: 'En Astro, usa un &lt;script&gt; sin atributos (salvo src) para que Astro procese y resuelva imports.',
         astroComponent: 'Componente Astro',
         astroUsage: 'Uso en una página',
 
@@ -367,6 +367,10 @@ export class ExportModal extends HTMLElement {
                     font-weight: 600;
                 }
                 .copy-btn {
+                    display: inline-flex;
+                    align-items: center;
+                    justify-content: center;
+                    gap: 0.5rem;
                     padding: 0.5rem 1rem;
                     background: rgba(59, 130, 246, 0.1);
                     border: 1px solid rgba(59, 130, 246, 0.3);
@@ -375,6 +379,12 @@ export class ExportModal extends HTMLElement {
                     cursor: pointer;
                     transition: all 0.2s;
                     font-size: 0.875rem;
+                    line-height: 1;
+                }
+
+                .copy-btn .icon {
+                    display: block;
+                    flex-shrink: 0;
                 }
                 .copy-btn:hover {
                     background: rgba(59, 130, 246, 0.2);
@@ -914,6 +924,7 @@ export class ExportModal extends HTMLElement {
                 const { colors, speed, parameters } = this.config;
                 const normalizedColors = this.normalizeColors(colors);
                 const colorStrings = normalizedColors.map(color => this.formatColorForExport(color));
+                const extraUniforms = Object.keys(parameters || {}).map(k => 'u_' + k);
 
                 return `import * as THREE from 'three';
 import { WebGPURenderer } from 'three/webgpu';
@@ -921,9 +932,9 @@ import { MeshBasicNodeMaterial } from 'three/webgpu';
 import * as culori from 'culori';
 import { main } from './shaderNode.js';
 import {
-    u_time, u_resolution, u_speed,
+    u_time, u_resolution, u_mouse, u_speed,
     u_color1, u_color2, u_color3, u_color4,
-    ${Object.keys(parameters || {}).map(k => 'u_' + k).join(', ')}
+    ${extraUniforms.length ? `${extraUniforms.join(', ')}` : ''}
 } from './commonUniforms.js';
 
 export async function mountGradient(canvas) {
@@ -941,7 +952,12 @@ export async function mountGradient(canvas) {
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 
-    await renderer.init();
+    try {
+        await renderer.init();
+    } catch (error) {
+        console.error('Failed to initialize WebGPURenderer:', error);
+        return () => {};
+    }
 
     const oklchToThree = (oklch) => {
         const rgb = culori.rgb({ mode: 'oklch', ...oklch });
@@ -972,6 +988,16 @@ export async function mountGradient(canvas) {
     window.addEventListener('resize', onResize);
     onResize();
 
+    const onPointerMove = (event) => {
+        const rect = canvas.getBoundingClientRect();
+        const w = Math.max(rect.width, 1);
+        const h = Math.max(rect.height, 1);
+        const x = (event.clientX - rect.left) / w;
+        const y = 1 - (event.clientY - rect.top) / h;
+        u_mouse.value.set(x, y);
+    };
+    window.addEventListener('pointermove', onPointerMove, { passive: true });
+
     const clock = new THREE.Clock();
     let rafId = 0;
 
@@ -985,6 +1011,7 @@ export async function mountGradient(canvas) {
     return () => {
         cancelAnimationFrame(rafId);
         window.removeEventListener('resize', onResize);
+        window.removeEventListener('pointermove', onPointerMove);
         geometry.dispose?.();
         material.dispose?.();
         renderer.dispose?.();
@@ -1632,6 +1659,7 @@ export const u_border_width = uniform(0.1);`;
         const { colors, speed, parameters } = this.config;
         const normalizedColors = this.normalizeColors(colors);
         const colorStrings = normalizedColors.map(color => this.formatColorForExport(color));
+        const extraUniforms = Object.keys(parameters || {}).map(k => 'u_' + k);
 
         return `import * as THREE from 'three';
 import { WebGPURenderer } from 'three/webgpu';
@@ -1639,9 +1667,9 @@ import { MeshBasicNodeMaterial } from 'three/webgpu';
 import * as culori from 'culori';
 import { main } from './shaderNode.js';
 import { 
-    u_time, u_resolution, u_speed, 
+    u_time, u_resolution, u_mouse, u_speed, 
     u_color1, u_color2, u_color3, u_color4,
-    ${Object.keys(parameters || {}).map(k => 'u_' + k).join(', ')} 
+    ${extraUniforms.length ? `${extraUniforms.join(', ')}` : ''}
 } from './commonUniforms.js';
 
 class WebGPUGradient {
@@ -1664,7 +1692,12 @@ class WebGPUGradient {
         });
         this.renderer.setSize(window.innerWidth, window.innerHeight);
         this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-        await this.renderer.init();
+        try {
+            await this.renderer.init();
+        } catch (error) {
+            console.error('Failed to initialize WebGPURenderer:', error);
+            return;
+        }
 
         // Setup Uniforms
         u_speed.value = ${this.formatUniformValue(speed ?? 0.5)};
@@ -1685,6 +1718,17 @@ class WebGPUGradient {
 
         this.clock = new THREE.Clock();
         window.addEventListener('resize', this.onResize.bind(this));
+        this.onResize();
+
+        window.addEventListener('pointermove', (event) => {
+            if (!this.canvas) return;
+            const rect = this.canvas.getBoundingClientRect();
+            const w = Math.max(rect.width, 1);
+            const h = Math.max(rect.height, 1);
+            const x = (event.clientX - rect.left) / w;
+            const y = 1 - (event.clientY - rect.top) / h;
+            u_mouse.value.set(x, y);
+        }, { passive: true });
     }
 
     oklchToThree(oklch) {
@@ -1712,6 +1756,7 @@ new WebGPUGradient('gradient-canvas');`;
         const { colors, speed, parameters } = this.config;
         const normalizedColors = this.normalizeColors(colors);
         const colorStrings = normalizedColors.map(color => this.formatColorForExport(color));
+        const extraUniforms = Object.keys(parameters || {}).map(k => 'u_' + k);
 
         return `import { useEffect, useRef } from 'react';
 import * as THREE from 'three';
@@ -1720,9 +1765,9 @@ import { MeshBasicNodeMaterial } from 'three/webgpu';
 import * as culori from 'culori';
 import { main } from './shaderNode.js';
 import { 
-    u_time, u_resolution, u_speed, 
+    u_time, u_resolution, u_mouse, u_speed, 
     u_color1, u_color2, u_color3, u_color4,
-    ${Object.keys(parameters || {}).map(k => 'u_' + k).join(', ')} 
+    ${extraUniforms.length ? `${extraUniforms.join(', ')}` : ''}
 } from './commonUniforms.js';
 
 export function useGradientBackground() {
@@ -1735,6 +1780,9 @@ export function useGradientBackground() {
         let isMounted = true;
         let animationId;
         let resizeHandler;
+        let pointerHandler;
+        let geometry;
+        let material;
 
         const init = async () => {
             // Scene & Camera
@@ -1781,11 +1829,11 @@ export function useGradientBackground() {
             ${Object.entries(parameters || {}).map(([key, value]) => `u_${key}.value = ${this.formatUniformValue(value)};`).join('\n            ')}
 
             // Material
-            const material = new MeshBasicNodeMaterial();
+            material = new MeshBasicNodeMaterial();
             material.colorNode = main();
 
             // Mesh
-            const geometry = new THREE.PlaneGeometry(2, 2);
+            geometry = new THREE.PlaneGeometry(2, 2);
             const mesh = new THREE.Mesh(geometry, material);
             scene.add(mesh);
 
@@ -1807,6 +1855,19 @@ export function useGradientBackground() {
                 u_resolution.value.set(window.innerWidth * pixelRatio, window.innerHeight * pixelRatio);
             };
             window.addEventListener('resize', resizeHandler);
+            resizeHandler();
+
+            pointerHandler = (event) => {
+                const canvas = canvasRef.current;
+                if (!canvas) return;
+                const rect = canvas.getBoundingClientRect();
+                const w = Math.max(rect.width, 1);
+                const h = Math.max(rect.height, 1);
+                const x = (event.clientX - rect.left) / w;
+                const y = 1 - (event.clientY - rect.top) / h;
+                u_mouse.value.set(x, y);
+            };
+            window.addEventListener('pointermove', pointerHandler, { passive: true });
         };
 
         init();
@@ -1816,10 +1877,13 @@ export function useGradientBackground() {
             isMounted = false;
             if (animationId) cancelAnimationFrame(animationId);
             if (resizeHandler) window.removeEventListener('resize', resizeHandler);
+            if (pointerHandler) window.removeEventListener('pointermove', pointerHandler);
             if (rendererRef.current) {
                 rendererRef.current.dispose();
                 rendererRef.current = null;
             }
+            geometry?.dispose?.();
+            material?.dispose?.();
         };
     }, []);
 
@@ -1858,6 +1922,7 @@ export default App;`;
         const { colors, speed, parameters } = this.config;
         const normalizedColors = this.normalizeColors(colors);
         const colorStrings = normalizedColors.map(color => this.formatColorForExport(color));
+        const extraUniforms = Object.keys(parameters || {}).map(k => 'u_' + k);
 
         return `import { ref, onMounted, onUnmounted } from 'vue';
 import * as THREE from 'three';
@@ -1866,14 +1931,14 @@ import { MeshBasicNodeMaterial } from 'three/webgpu';
 import * as culori from 'culori';
 import { main } from './shaderNode.js';
 import { 
-    u_time, u_resolution, u_speed, 
+    u_time, u_resolution, u_mouse, u_speed, 
     u_color1, u_color2, u_color3, u_color4,
-    ${Object.keys(parameters || {}).map(k => 'u_' + k).join(', ')} 
+    ${extraUniforms.length ? `${extraUniforms.join(', ')}` : ''}
 } from './commonUniforms.js';
 
 export function useGradientBackground() {
     const canvasRef = ref(null);
-    let renderer, scene, camera, material, mesh, clock, animationId;
+    let renderer, scene, camera, material, mesh, geometry, clock, animationId;
 
     const oklchToThree = (oklch) => {
         const rgb = culori.rgb({ mode: 'oklch', ...oklch });
@@ -1898,7 +1963,12 @@ export function useGradientBackground() {
         });
         renderer.setSize(window.innerWidth, window.innerHeight);
         renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-        await renderer.init();
+        try {
+            await renderer.init();
+        } catch (error) {
+            console.error('Failed to initialize WebGPURenderer:', error);
+            return;
+        }
 
         // Setup Uniforms
         u_speed.value = ${this.formatUniformValue(speed ?? 0.5)};
@@ -1914,7 +1984,7 @@ export function useGradientBackground() {
         material.colorNode = main();
 
         // Mesh
-        const geometry = new THREE.PlaneGeometry(2, 2);
+        geometry = new THREE.PlaneGeometry(2, 2);
         mesh = new THREE.Mesh(geometry, material);
         scene.add(mesh);
 
@@ -1923,6 +1993,9 @@ export function useGradientBackground() {
         animate();
 
         window.addEventListener('resize', onResize);
+        onResize();
+
+        window.addEventListener('pointermove', onPointerMove, { passive: true });
     };
 
     const animate = () => {
@@ -1937,10 +2010,24 @@ export function useGradientBackground() {
         u_resolution.value.set(window.innerWidth * pixelRatio, window.innerHeight * pixelRatio);
     };
 
+    const onPointerMove = (event) => {
+        const canvas = canvasRef.value;
+        if (!canvas) return;
+        const rect = canvas.getBoundingClientRect();
+        const w = Math.max(rect.width, 1);
+        const h = Math.max(rect.height, 1);
+        const x = (event.clientX - rect.left) / w;
+        const y = 1 - (event.clientY - rect.top) / h;
+        u_mouse.value.set(x, y);
+    };
+
     const cleanup = () => {
         if (animationId) cancelAnimationFrame(animationId);
         window.removeEventListener('resize', onResize);
+        window.removeEventListener('pointermove', onPointerMove);
         
+        geometry?.dispose?.();
+        material?.dispose?.();
         if (renderer) renderer.dispose();
     };
 
@@ -2021,6 +2108,7 @@ html, body {
         const { colors, speed, parameters } = this.config;
         const normalizedColors = this.normalizeColors(colors);
         const colorStrings = normalizedColors.map(color => this.formatColorForExport(color));
+        const extraUniforms = Object.keys(parameters || {}).map(k => 'u_' + k);
 
         return `import { Injectable, signal, effect } from '@angular/core';
 import * as THREE from 'three';
@@ -2029,9 +2117,9 @@ import { MeshBasicNodeMaterial } from 'three/webgpu';
 import * as culori from 'culori';
 import { main } from './shaderNode';
 import { 
-    u_time, u_resolution, u_speed, 
+    u_time, u_resolution, u_mouse, u_speed, 
     u_color1, u_color2, u_color3, u_color4,
-    ${Object.keys(parameters || {}).map(k => 'u_' + k).join(', ')} 
+    ${extraUniforms.length ? `${extraUniforms.join(', ')}` : ''}
 } from './commonUniforms';
 
 export interface GradientConfig {
@@ -2048,8 +2136,20 @@ export class GradientBackgroundService {
     private camera?: THREE.OrthographicCamera;
     private renderer?: WebGPURenderer;
     private mesh?: THREE.Mesh;
+    private material?: MeshBasicNodeMaterial;
+    private geometry?: THREE.PlaneGeometry;
     private clock = new THREE.Clock();
     private animationId?: number;
+    private pointerHandler = (event: PointerEvent) => {
+        const canvas = this.renderer?.domElement as HTMLCanvasElement | undefined;
+        if (!canvas) return;
+        const rect = canvas.getBoundingClientRect();
+        const w = Math.max(rect.width, 1);
+        const h = Math.max(rect.height, 1);
+        const x = (event.clientX - rect.left) / w;
+        const y = 1 - (event.clientY - rect.top) / h;
+        u_mouse.value.set(x, y);
+    };
     
     // Signal para controlar estado
     isRunning = signal(false);
@@ -2070,7 +2170,12 @@ export class GradientBackgroundService {
         });
         this.renderer.setSize(window.innerWidth, window.innerHeight);
         this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-        await this.renderer.init();
+        try {
+            await this.renderer.init();
+        } catch (error) {
+            console.error('Failed to initialize WebGPURenderer:', error);
+            return;
+        }
         
         // Setup Uniforms
         u_speed.value = ${this.formatUniformValue(speed ?? 0.5)};
@@ -2082,13 +2187,16 @@ export class GradientBackgroundService {
         ${Object.entries(parameters || {}).map(([key, value]) => `u_${key}.value = ${this.formatUniformValue(value)};`).join('\n        ')}
 
         // Material
-        const material = new MeshBasicNodeMaterial();
-        material.colorNode = main();
+        this.material = new MeshBasicNodeMaterial();
+        this.material.colorNode = main();
         
         // Geometry
-        const geometry = new THREE.PlaneGeometry(2, 2);
-        this.mesh = new THREE.Mesh(geometry, material);
+        this.geometry = new THREE.PlaneGeometry(2, 2);
+        this.mesh = new THREE.Mesh(this.geometry, this.material);
         this.scene.add(this.mesh);
+
+        this.onResize();
+        window.addEventListener('pointermove', this.pointerHandler, { passive: true });
         
         this.isRunning.set(true);
         this.animate();
@@ -2126,7 +2234,9 @@ export class GradientBackgroundService {
             cancelAnimationFrame(this.animationId);
         }
         
-        this.mesh?.geometry.dispose();
+        window.removeEventListener('pointermove', this.pointerHandler);
+        this.geometry?.dispose();
+        this.material?.dispose?.();
         this.renderer?.dispose();
     }
 }`;
