@@ -181,6 +181,7 @@
             <div class="logo-text">MMRG</div>
         </div>
         <div class="top-actions">
+            <custom-select id="language-select" compact placeholder="Select…" data-i18n-placeholder="select.placeholder" aria-label="Language" data-i18n-aria="settings.language"></custom-select>
             <a href="https://github.com/Snakeblack/background-tool" target="_blank" rel="noopener noreferrer" class="icon-btn" id="github-btn" title="GitHub" aria-label="View source code on GitHub" data-i18n-aria="github.aria">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path></svg>
             </a>
@@ -202,15 +203,22 @@
         <!-- Settings Panel Content -->
         <div id="content-settings">
             <div class="control-group">
-                <label class="control-label" data-i18n="settings.language">Language</label>
-                <custom-select id="language-select" placeholder="Select…" data-i18n-placeholder="select.placeholder"></custom-select>
-            </div>
-            <div class="control-group">
                 <label class="control-label" data-i18n="settings.shaderType">Shader Type</label>
                 <custom-select id="shader-type" placeholder="Select…" data-i18n-placeholder="select.placeholder"></custom-select>
             </div>
             <div class="control-group">
-                <label class="control-label"><span data-i18n="settings.globalSpeed">Global Speed</span>: <span id="speed-value">50</span></label>
+                <label class="control-label" style="display: flex; align-items: center; justify-content: space-between;">
+                    <span style="display: flex; align-items: center; gap: 6px;">
+                        <span data-i18n="settings.globalSpeed">Global Speed</span>
+                        <span class="info-icon" id="global-speed-info" role="button" tabindex="0" data-i18n-aria="settings.globalSpeed.tooltip">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <line x1="12" y1="16" x2="12" y2="12"></line>
+                                <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                            </svg>
+                        </span>
+                    </span>
+                </label>
                 <input type="range" id="speed" min="0.0" max="1.0" step="0.001" value="0.5">
             </div>
             <div id="shader-controls-content" class="space-y-4">

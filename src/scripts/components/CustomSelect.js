@@ -128,6 +128,13 @@ export class CustomSelect extends HTMLElement {
                     font-family: 'Inter', sans-serif;
                     position: relative;
                     z-index: 50;
+                    -webkit-tap-highlight-color: transparent;
+                }
+
+                :host([compact]) {
+                    display: inline-block;
+                    width: auto;
+                    min-width: 108px;
                 }
 
                 .select-container {
@@ -146,6 +153,33 @@ export class CustomSelect extends HTMLElement {
                     justify-content: space-between;
                     align-items: center;
                     transition: all 0.2s ease;
+                    -webkit-tap-highlight-color: transparent;
+                    user-select: none;
+                    outline: none;
+                    overflow: hidden;
+                }
+
+                .select-header:focus,
+                .select-header:focus-visible {
+                    outline: none;
+                }
+
+                :host([compact]) .select-header {
+                    background: var(--glass-bg, rgba(10, 10, 10, 0.4));
+                    backdrop-filter: blur(var(--glass-blur, 20px));
+                    border: var(--glass-border, 1px solid rgba(255, 255, 255, 0.05));
+                    border-radius: var(--radius-full, 9999px);
+                    box-sizing: border-box;
+                    height: 48px;
+                    padding: 0 0.75rem;
+                }
+
+                :host([compact]) .selected-value {
+                    font-family: var(--font-display, 'Space Grotesk', sans-serif);
+                    font-weight: 500;
+                    font-size: 0.875rem;
+                    letter-spacing: -0.02em;
+                    line-height: 1;
                 }
 
                 .select-header:hover {
@@ -153,9 +187,17 @@ export class CustomSelect extends HTMLElement {
                     border-color: rgba(255, 255, 255, 0.2);
                 }
 
+                :host([compact]) .select-header:hover {
+                    background: var(--color-surface-hover, rgba(30, 30, 30, 0.8));
+                }
+
                 .select-container.open .select-header {
                     border-color: #ccff00;
                     background: rgba(255, 255, 255, 0.1);
+                }
+
+                :host([compact]) .select-container.open .select-header {
+                    border-color: var(--color-accent-primary, #ccff00);
                 }
 
                 .arrow-icon {
@@ -168,6 +210,10 @@ export class CustomSelect extends HTMLElement {
                 .select-container.open .arrow-icon {
                     transform: rotate(180deg);
                     color: #ccff00;
+                }
+
+                :host([compact]) .select-container.open .arrow-icon {
+                    color: var(--color-accent-primary, #ccff00);
                 }
 
                 .options-list {
@@ -185,6 +231,10 @@ export class CustomSelect extends HTMLElement {
                     transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
                     pointer-events: none;
                     z-index: 100;
+                }
+
+                :host([compact]) .options-list {
+                    border-radius: var(--radius-md, 16px);
                 }
 
                 /* Custom Scrollbar */
@@ -213,6 +263,8 @@ export class CustomSelect extends HTMLElement {
                     color: #a0a0a0;
                     cursor: pointer;
                     transition: all 0.2s;
+                    -webkit-tap-highlight-color: transparent;
+                    user-select: none;
                 }
 
                 .option-item:hover {

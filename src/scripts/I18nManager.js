@@ -45,6 +45,11 @@ const DICT = {
         'settings.language': 'Language',
         'settings.shaderType': 'Shader Type',
         'settings.globalSpeed': 'Global Speed',
+        'settings.globalSpeed.tooltip': 'Controls the overall animation speed.',
+
+        'language.auto': 'Auto',
+        'language.en': 'English',
+        'language.es': 'Spanish',
 
         'saved.title': 'Saved backgrounds',
         'saved.subtitle': 'Names are unique. Saving the same name updates it and increments the version.',
@@ -158,6 +163,11 @@ const DICT = {
         'settings.language': 'Idioma',
         'settings.shaderType': 'Tipo de shader',
         'settings.globalSpeed': 'Velocidad global',
+        'settings.globalSpeed.tooltip': 'Controla la velocidad general de la animación.',
+
+        'language.auto': 'Auto',
+        'language.en': 'Inglés',
+        'language.es': 'Español',
 
         'saved.title': 'Fondos guardados',
         'saved.subtitle': 'Los nombres son únicos. Guardar el mismo nombre lo actualiza e incrementa la versión.',

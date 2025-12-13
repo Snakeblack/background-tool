@@ -132,6 +132,7 @@ h1, h2, h3, .font-display {
     pointer-events: auto;
     display: flex;
     gap: var(--spacing-md);
+    align-items: center;
 }
 
 .icon-btn {

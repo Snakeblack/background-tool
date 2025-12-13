@@ -22,6 +22,8 @@ export class UIController {
         this.tooltipElement = null;
 
         this._renderSavedBackgrounds = null;
+        this._globalSpeedTooltipBound = false;
+        this._languageSelectBound = false;
 
         this.init();
     }
@@ -109,30 +111,47 @@ export class UIController {
             this.bottomSheet.setI18nManager(this.i18n);
         }
 
-        const langSelect = document.getElementById('language-select');
-        if (langSelect && typeof langSelect.clearOptions === 'function' && typeof langSelect.addOption === 'function') {
-            langSelect.clearOptions();
-            langSelect.addOption('auto', 'Auto');
-            langSelect.addOption('en', 'English');
-            langSelect.addOption('es', 'Español');
+        this.setupGlobalSpeedTooltip();
+
+        const refreshLanguageSelect = () => {
+            const langSelect = document.getElementById('language-select');
+            if (!langSelect || typeof langSelect.clearOptions !== 'function' || typeof langSelect.addOption !== 'function') return;
 
             const pref = this.i18n.getPreference?.() ?? 'auto';
+
+            langSelect.clearOptions();
+            langSelect.addOption('auto', this.t('language.auto', null, 'Auto'));
+            langSelect.addOption('en', this.t('language.en', null, 'English'));
+            langSelect.addOption('es', this.t('language.es', null, 'Español'));
+
             langSelect.value = pref;
             if (langSelect.updateDisplay) langSelect.updateDisplay();
 
-            langSelect.addEventListener('change', (e) => {
-                const next = e?.detail?.value;
-                this.i18n.setPreference?.(next);
-            });
-        }
+            if (!this._languageSelectBound) {
+                langSelect.addEventListener('change', (e) => {
+                    const next = e?.detail?.value;
+                    this.i18n.setPreference?.(next);
+                });
+                this._languageSelectBound = true;
+            }
+        };
+
+        refreshLanguageSelect();
 
         document.addEventListener('i18n:change', () => {
             this.applyI18nToDocument();
+            refreshLanguageSelect();
             this.refreshShaderSelectorOptions();
+
+            if (this.dock?.applyTranslations) {
+                this.dock.applyTranslations();
+            }
 
             if (this.bottomSheet?.applyTranslations) {
                 this.bottomSheet.applyTranslations();
             }
+
+            this.setupGlobalSpeedTooltip();
 
             if (typeof this._renderSavedBackgrounds === 'function') {
                 this._renderSavedBackgrounds();
@@ -150,6 +169,39 @@ export class UIController {
                 this.updateShaderControls(shaderConfig);
             }
         });
+    }
+
+    setupGlobalSpeedTooltip() {
+        if (this._globalSpeedTooltipBound) return;
+        const infoIcon = document.getElementById('global-speed-info');
+        if (!infoIcon) return;
+
+        const show = () => {
+            if (!this.tooltipElement) return;
+            const rect = infoIcon.getBoundingClientRect();
+            this.tooltipElement.textContent = this.t('settings.globalSpeed.tooltip', null, 'Controls the overall animation speed.');
+            this.tooltipElement.classList.add('visible');
+
+            const tooltipRect = this.tooltipElement.getBoundingClientRect();
+            const left = rect.left + (rect.width / 2) - (tooltipRect.width / 2);
+            const top = rect.top - tooltipRect.height - 8;
+
+            this.tooltipElement.style.left = `${left}px`;
+            this.tooltipElement.style.top = `${top}px`;
+        };
+
+        const hide = () => {
+            if (this.tooltipElement) {
+                this.tooltipElement.classList.remove('visible');
+            }
+        };
+
+        infoIcon.addEventListener('mouseenter', show);
+        infoIcon.addEventListener('mouseleave', hide);
+        infoIcon.addEventListener('focus', show);
+        infoIcon.addEventListener('blur', hide);
+
+        this._globalSpeedTooltipBound = true;
     }
 
     applyI18nToDocument() {

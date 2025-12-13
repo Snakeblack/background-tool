@@ -5,9 +5,29 @@ export class BottomSheet extends HTMLElement {
         this.isOpen = false;
         this.startY = 0;
         this.currentY = 0;
+        this._ignoreTouchGesture = false;
         this.frames = 0;
         this.animationId = null;
         this.i18n = null;
+    }
+
+    shouldIgnoreTouchGesture(e) {
+        try {
+            const path = typeof e.composedPath === 'function' ? e.composedPath() : [];
+            for (const node of path) {
+                if (!node || node.nodeType !== 1) continue; // Element
+                const el = node;
+                const cls = el.classList;
+
+                // Ignore sheet drag when interacting with an OPEN custom-select dropdown.
+                // We detect this via internal shadow DOM nodes that appear in composedPath.
+                if (cls?.contains('options-list')) return true;
+                if (cls?.contains('select-container') && cls?.contains('open')) return true;
+            }
+        } catch {
+            // ignore
+        }
+        return false;
     }
 
     setI18nManager(i18nManager) {
@@ -227,11 +247,14 @@ export class BottomSheet extends HTMLElement {
 
         // Touch gestures
         this.addEventListener('touchstart', (e) => {
+            this._ignoreTouchGesture = this.shouldIgnoreTouchGesture(e);
+            if (this._ignoreTouchGesture) return;
             this.startY = e.touches[0].clientY;
             this.style.transition = 'none';
         }, { passive: true });
 
         this.addEventListener('touchmove', (e) => {
+            if (this._ignoreTouchGesture) return;
             this.currentY = e.touches[0].clientY;
             const delta = this.currentY - this.startY;
             
@@ -243,6 +266,12 @@ export class BottomSheet extends HTMLElement {
         }, { passive: true });
 
         this.addEventListener('touchend', (e) => {
+            if (this._ignoreTouchGesture) {
+                this._ignoreTouchGesture = false;
+                this.startY = 0;
+                this.currentY = 0;
+                return;
+            }
             this.style.transition = 'transform 0.4s cubic-bezier(0.16, 1, 0.3, 1)';
             const delta = this.currentY - this.startY;
             
