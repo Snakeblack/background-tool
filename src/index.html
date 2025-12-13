@@ -1,8 +1,37 @@
 <!DOCTYPE html>
-<html lang="es" prefix="og: https://ogp.me/ns#">
+<html lang="en" prefix="og: https://ogp.me/ns#">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+
+        <!-- Early language hint (reduces flicker + improves accessibility); final language is managed by I18nManager at runtime -->
+        <script>
+            (function () {
+                try {
+                    var params = new URLSearchParams(window.location.search);
+                    var langParam = params.get('lang');
+                    if (langParam === 'en' || langParam === 'es') {
+                        document.documentElement.lang = langParam;
+                        return;
+                    }
+
+                    var raw = localStorage.getItem('background-tool:persist:v1');
+                    if (!raw) return;
+                    var parsed = JSON.parse(raw);
+                    var pref = parsed && parsed.ui && parsed.ui.language;
+                    if (pref === 'en' || pref === 'es') {
+                        document.documentElement.lang = pref;
+                        return;
+                    }
+                    if (pref === 'auto') {
+                        var nav = (navigator.languages && navigator.languages.length ? navigator.languages[0] : navigator.language) || 'en';
+                        document.documentElement.lang = String(nav).toLowerCase().indexOf('es') === 0 ? 'es' : 'en';
+                    }
+                } catch (e) {
+                    // ignore
+                }
+            })();
+        </script>
     
     <!-- Primary Meta Tags -->
     <title>Free Animated Background Generator | WebGPU Shaders & Gradients (React, Vue, CSS)</title>
@@ -147,7 +176,7 @@
             <div class="logo-text">MMRG</div>
         </div>
         <div class="top-actions">
-            <a href="https://github.com/Snakeblack/background-tool" target="_blank" rel="noopener noreferrer" class="icon-btn" id="github-btn" title="GitHub" aria-label="Ver código fuente en GitHub">
+            <a href="https://github.com/Snakeblack/background-tool" target="_blank" rel="noopener noreferrer" class="icon-btn" id="github-btn" title="GitHub" aria-label="View source code on GitHub" data-i18n-aria="github.aria">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path></svg>
             </a>
         </div>
@@ -168,11 +197,15 @@
         <!-- Settings Panel Content -->
         <div id="content-settings">
             <div class="control-group">
-                <label class="control-label">Shader Type</label>
-                <custom-select id="shader-type"></custom-select>
+                <label class="control-label" data-i18n="settings.language">Language</label>
+                <custom-select id="language-select" placeholder="Select…" data-i18n-placeholder="select.placeholder"></custom-select>
             </div>
             <div class="control-group">
-                <label class="control-label">Global Speed: <span id="speed-value">50</span></label>
+                <label class="control-label" data-i18n="settings.shaderType">Shader Type</label>
+                <custom-select id="shader-type" placeholder="Select…" data-i18n-placeholder="select.placeholder"></custom-select>
+            </div>
+            <div class="control-group">
+                <label class="control-label"><span data-i18n="settings.globalSpeed">Global Speed</span>: <span id="speed-value">50</span></label>
                 <input type="range" id="speed" min="0.0" max="1.0" step="0.001" value="0.5">
             </div>
             <div id="shader-controls-content" class="space-y-4">
@@ -194,28 +227,28 @@
         <div id="content-presets">
             <div class="preset-grid">
                 <button data-preset="sunset" class="preset-btn">
-                    <i data-lucide="sunset" class="preset-icon"></i> Sunset
+                    <i data-lucide="sunset" class="preset-icon"></i> <span data-i18n="presets.sunset">Sunset</span>
                 </button>
                 <button data-preset="ocean" class="preset-btn">
-                    <i data-lucide="waves" class="preset-icon"></i> Ocean
+                    <i data-lucide="waves" class="preset-icon"></i> <span data-i18n="presets.ocean">Ocean</span>
                 </button>
                 <button data-preset="forest" class="preset-btn">
-                    <i data-lucide="trees" class="preset-icon"></i> Forest
+                    <i data-lucide="trees" class="preset-icon"></i> <span data-i18n="presets.forest">Forest</span>
                 </button>
                 <button data-preset="purple" class="preset-btn">
-                    <i data-lucide="gem" class="preset-icon"></i> Purple
+                    <i data-lucide="gem" class="preset-icon"></i> <span data-i18n="presets.purple">Purple</span>
                 </button>
                 <button data-preset="neon" class="preset-btn">
-                    <i data-lucide="zap" class="preset-icon"></i> Neon
+                    <i data-lucide="zap" class="preset-icon"></i> <span data-i18n="presets.neon">Neon</span>
                 </button>
                 <button data-preset="fire" class="preset-btn">
-                    <i data-lucide="flame" class="preset-icon"></i> Fire
+                    <i data-lucide="flame" class="preset-icon"></i> <span data-i18n="presets.fire">Fire</span>
                 </button>
                 <button data-preset="ice" class="preset-btn">
-                    <i data-lucide="snowflake" class="preset-icon"></i> Ice
+                    <i data-lucide="snowflake" class="preset-icon"></i> <span data-i18n="presets.ice">Ice</span>
                 </button>
                 <button data-preset="midnight" class="preset-btn">
-                    <i data-lucide="moon" class="preset-icon"></i> Midnight
+                    <i data-lucide="moon" class="preset-icon"></i> <span data-i18n="presets.midnight">Midnight</span>
                 </button>
             </div>
         </div>
@@ -224,17 +257,17 @@
         <div id="content-saved">
             <div class="saved-bg-section">
                 <div class="saved-bg-header">
-                    <label class="control-label">Saved backgrounds</label>
-                    <div class="saved-bg-subtitle">Names are unique. Saving the same name updates it and increments the version.</div>
+                    <label class="control-label" data-i18n="saved.title">Saved backgrounds</label>
+                    <div class="saved-bg-subtitle" data-i18n="saved.subtitle">Names are unique. Saving the same name updates it and increments the version.</div>
                 </div>
 
                 <div class="saved-bg-row saved-bg-row-aux">
-                    <button id="bg-export-btn" class="saved-bg-save-btn saved-bg-primary-btn" type="button">Export current</button>
+                    <button id="bg-export-btn" class="saved-bg-save-btn saved-bg-primary-btn" type="button" data-i18n="saved.exportCurrent">Export current</button>
                 </div>
 
                 <div class="saved-bg-row">
-                    <input id="bg-save-name" class="saved-bg-input" type="text" inputmode="text" autocomplete="off" placeholder="Name (e.g. Landing Hero)" />
-                    <button id="bg-save-btn" class="saved-bg-save-btn" type="button">Save</button>
+                    <input id="bg-save-name" class="saved-bg-input" type="text" inputmode="text" autocomplete="off" placeholder="Name (e.g. Landing Hero)" data-i18n-placeholder="saved.namePlaceholder" />
+                    <button id="bg-save-btn" class="saved-bg-save-btn" type="button" data-i18n="saved.save">Save</button>
                 </div>
 
                 <div id="bg-saved-list" class="saved-bg-list"></div>
