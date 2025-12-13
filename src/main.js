@@ -41,6 +41,8 @@ class GradientApp {
         this.colorManager = null;
         this.uiController = null;
 
+        this._lastFrameTime = 0;
+
         this._tick = this._tick.bind(this);
         
         this.init();
@@ -86,6 +88,8 @@ class GradientApp {
 
         // Ensure uniforms are correct before the first frame
         this.shaderManager.updateResolution();
+
+        this._lastFrameTime = performance.now();
         this._tick();
     }
 
@@ -95,6 +99,12 @@ class GradientApp {
      */
     _tick() {
         requestAnimationFrame(this._tick);
+
+        const now = performance.now();
+        const deltaMs = this._lastFrameTime ? (now - this._lastFrameTime) : 16.7;
+        this._lastFrameTime = now;
+
+        this.renderer.updateQuality(deltaMs);
 
         this.shaderManager.updateTime();
         if (this.renderer.consumeResolutionChanged()) {
