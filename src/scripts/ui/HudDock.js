@@ -6,12 +6,49 @@ export class HudDock extends HTMLElement {
         this.attachShadow({ mode: 'open' });
         this.frames = 0;
         this.animationId = null;
+        this.i18n = null;
     }
 
     connectedCallback() {
         this.render();
         this.setupEvents();
         this.startAnimation();
+    }
+
+    setI18nManager(i18nManager) {
+        this.i18n = i18nManager;
+        this.applyTranslations();
+    }
+
+    t(key, fallback) {
+        return this.i18n?.t ? this.i18n.t(key) : fallback;
+    }
+
+    applyTranslations() {
+        if (!this.shadowRoot) return;
+        const buttons = this.shadowRoot.querySelectorAll('.dock-item');
+        buttons.forEach(btn => {
+            const panel = btn.dataset.panel;
+            const action = btn.dataset.action;
+            const labelEl = btn.querySelector('span');
+
+            if (panel === 'settings') {
+                btn.setAttribute('aria-label', this.t('aria.settings', 'Settings'));
+                if (labelEl) labelEl.textContent = this.t('dock.settings', 'Settings');
+            } else if (panel === 'colors') {
+                btn.setAttribute('aria-label', this.t('aria.colors', 'Colors'));
+                if (labelEl) labelEl.textContent = this.t('dock.colors', 'Colors');
+            } else if (panel === 'presets') {
+                btn.setAttribute('aria-label', this.t('aria.presets', 'Presets'));
+                if (labelEl) labelEl.textContent = this.t('dock.presets', 'Presets');
+            } else if (panel === 'saved') {
+                btn.setAttribute('aria-label', this.t('aria.saved', 'Saved backgrounds'));
+                if (labelEl) labelEl.textContent = this.t('dock.saved', 'Saved');
+            } else if (action === 'random') {
+                btn.setAttribute('aria-label', this.t('aria.random', 'Generate random'));
+                if (labelEl) labelEl.textContent = this.t('dock.random', 'Random');
+            }
+        });
     }
 
     disconnectedCallback() {
@@ -202,30 +239,32 @@ export class HudDock extends HTMLElement {
                     
                     <!-- 4. CONTENIDO -->
                     <div class="dock-content">
-                        <button class="dock-item" data-panel="settings" aria-label="Configuración">
+                        <button class="dock-item" data-panel="settings" aria-label="${this.t('aria.settings', 'Settings')}">
                             ${createElement(Settings, { class: "icon" }).outerHTML}
-                            <span>Config</span>
+                            <span>${this.t('dock.settings', 'Settings')}</span>
                         </button>
-                        <button class="dock-item" data-panel="colors" aria-label="Colores">
+                        <button class="dock-item" data-panel="colors" aria-label="${this.t('aria.colors', 'Colors')}">
                             ${createElement(Palette, { class: "icon" }).outerHTML}
-                            <span>Colors</span>
+                            <span>${this.t('dock.colors', 'Colors')}</span>
                         </button>
-                        <button class="dock-item" data-panel="presets" aria-label="Presets">
+                        <button class="dock-item" data-panel="presets" aria-label="${this.t('aria.presets', 'Presets')}">
                             ${createElement(Sparkles, { class: "icon" }).outerHTML}
-                            <span>Presets</span>
+                            <span>${this.t('dock.presets', 'Presets')}</span>
                         </button>
-                        <button class="dock-item" data-action="random" aria-label="Generar Aleatorio">
+                        <button class="dock-item" data-action="random" aria-label="${this.t('aria.random', 'Generate random')}">
                             ${createElement(Shuffle, { class: "icon" }).outerHTML}
-                            <span>Random</span>
+                            <span>${this.t('dock.random', 'Random')}</span>
                         </button>
-                        <button class="dock-item" data-panel="saved" aria-label="Guardados">
+                        <button class="dock-item" data-panel="saved" aria-label="${this.t('aria.saved', 'Saved backgrounds')}">
                             ${createElement(Package, { class: "icon" }).outerHTML}
-                            <span>Saved</span>
+                            <span>${this.t('dock.saved', 'Saved')}</span>
                         </button>
                     </div>
                 </div>
             </div>
         `;
+
+        this.applyTranslations();
     }
 
     setupEvents() {

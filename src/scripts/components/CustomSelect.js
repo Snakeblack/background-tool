@@ -5,12 +5,26 @@ import { ChevronDown, createElement } from 'lucide';
  */
 
 export class CustomSelect extends HTMLElement {
+    static get observedAttributes() {
+        return ['placeholder'];
+    }
+
     constructor() {
         super();
         this.attachShadow({ mode: 'open' });
         this.options = [];
         this._value = null;
         this.isOpen = false;
+    }
+
+    attributeChangedCallback(name, oldValue, newValue) {
+        if (name === 'placeholder' && oldValue !== newValue) {
+            this.updateDisplay();
+        }
+    }
+
+    getPlaceholder() {
+        return this.getAttribute('placeholder') || 'Select...';
     }
 
     get value() {
@@ -71,9 +85,12 @@ export class CustomSelect extends HTMLElement {
     updateDisplay() {
         const display = this.shadowRoot.querySelector('.selected-value');
         const option = this.options.find(o => o.value === this.value);
-        if (display && option) {
+        if (!display) return;
+        if (option) {
             display.textContent = option.label;
+            return;
         }
+        display.textContent = this.getPlaceholder();
     }
 
     renderOptions() {
@@ -211,7 +228,7 @@ export class CustomSelect extends HTMLElement {
 
             <div class="select-container">
                 <div class="select-header">
-                    <span class="selected-value">Select...</span>
+                    <span class="selected-value">${this.getPlaceholder()}</span>
                     <span class="arrow-icon">${createElement(ChevronDown, {width: 16, height: 16}).outerHTML}</span>
                 </div>
                 <div class="options-list"></div>

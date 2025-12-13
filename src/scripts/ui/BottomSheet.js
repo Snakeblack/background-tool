@@ -7,12 +7,30 @@ export class BottomSheet extends HTMLElement {
         this.currentY = 0;
         this.frames = 0;
         this.animationId = null;
+        this.i18n = null;
+    }
+
+    setI18nManager(i18nManager) {
+        this.i18n = i18nManager;
+        this.applyTranslations();
+    }
+
+    t(key, fallback) {
+        if (this.i18n?.t) return this.i18n.t(key) ?? fallback;
+        return fallback;
+    }
+
+    applyTranslations() {
+        const handle = this.shadowRoot?.querySelector('.handle-area');
+        if (!handle) return;
+        handle.setAttribute('aria-label', this.t('bottomSheet.toggleAria', 'Toggle panel'));
     }
 
     connectedCallback() {
         this.render();
         this.setupEvents();
         this.startAnimation();
+        this.applyTranslations();
     }
 
     disconnectedCallback() {
@@ -191,7 +209,7 @@ export class BottomSheet extends HTMLElement {
                 <div class="glass-highlight"></div>
 
                 <div class="content-wrapper">
-                    <div class="handle-area" role="button" aria-label="Alternar panel" tabindex="0">
+                    <div class="handle-area" role="button" aria-label="${this.t('bottomSheet.toggleAria', 'Toggle panel')}" tabindex="0">
                         <div class="handle-bar"></div>
                     </div>
                     <div class="content">
