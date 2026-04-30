@@ -25,6 +25,7 @@ lerna-debug.log*
 # IDE
 .vscode/
 .idea/
+.windsurf/
 *.swp
 *.swo
 *~
@@ -35,3 +36,6 @@ Thumbs.db
 
 # Vite
 .vite/
+
+# Local AI tooling
+.atl/

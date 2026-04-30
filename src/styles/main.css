@@ -75,6 +75,15 @@ body {
     width: 100%;
     height: 100%;
     z-index: 0;
+    /*
+     * Splash color shown during async GPU detection + renderer init.
+     * Matches ColorManager's default palette first stop (oklch(0.7 0.25 330)).
+     * Once WebGL/WebGPU acquires the canvas context, the rendered shader
+     * fully covers this background. Avoids the white flash on slow boots
+     * without polluting the canvas with a 2D context (which would block
+     * subsequent WebGL/WebGPU acquisition — Canvas spec).
+     */
+    background-color: oklch(0.7 0.25 330);
 }
 
 /* ============================================

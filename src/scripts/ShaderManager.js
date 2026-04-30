@@ -94,9 +94,9 @@ export class ShaderManager {
                 if (this.uniforms[uniformName]) {
                     // Handle Color objects specifically if needed, or assume value is correct type
                     if (this.uniforms[uniformName].value.isColor && value.isColor) {
-                         this.uniforms[uniformName].value.copy(value);
+                        this.uniforms[uniformName].value.copy(value);
                     } else {
-                         this.uniforms[uniformName].value = value;
+                        this.uniforms[uniformName].value = value;
                     }
                 }
             });
@@ -184,7 +184,7 @@ export class ShaderManager {
      * Actualiza el uniform de tiempo con el tiempo transcurrido
      */
     updateTime() {
-        const time = this.renderer.getElapsedTime();
+        const time = this.renderer.getRenderedTime();
         this.uniforms.u_time.value = time;
         if (this.renderer.isWebGPUSupported) {
             TSLUniforms.u_time.value = time;
