@@ -1,0 +1,68 @@
+schema: spec-driven
+
+context: |
+  Tech stack: Vanilla JS + Three.js (WebGL/WebGPU via TSL) + LiteRT.js + Vite 6 + pnpm
+  Architecture: Class-per-concern (PascalCase managers: Renderer, ColorManager, ShaderManager, UIController, etc.)
+  Module: ES modules ("type": "module"), path aliases (@/*, @scripts/*, @shaders/*, @styles/*)
+  Style: Single quotes, 4-space indent, semicolons required, trailing commas, printWidth 100
+  Testing: No test runner installed — strict TDD unavailable
+
+strict_tdd: false
+
+rules:
+  proposal:
+    - Include rollback plan for risky changes
+    - Identify affected managers/modules
+  specs:
+    - Use Given/When/Then format for scenarios
+    - Use RFC 2119 keywords (MUST, SHALL, SHOULD, MAY)
+  design:
+    - Include sequence diagrams for complex WebGL/shader flows
+    - Document architecture decisions with rationale
+    - Note WebGL vs WebGPU renderer path where relevant
+  tasks:
+    - Group tasks by phase (infrastructure, implementation, testing)
+    - Use hierarchical numbering (1.1, 1.2, etc.)
+    - Keep tasks small enough to complete in one session
+  apply:
+    - Follow PascalCase class naming for manager modules
+    - Load relevant coding skills for the stack (webgpu-litert, modern-frontend-optimization-and-standards)
+    - Files live in src/scripts/ for JS modules, src/shaders/ for GLSL/TSL, src/styles/ for CSS
+    tdd: false
+    test_command: ""
+  verify:
+    test_command: ""
+    build_command: "pnpm build"
+    coverage_threshold: 0
+  archive:
+    - Warn before merging destructive deltas (large removals)
+
+testing:
+  strict_tdd: false
+  detected: "2026-05-01"
+  runner:
+    framework: none
+    command: ""
+  layers:
+    unit:
+      available: false
+      tool: ""
+    integration:
+      available: false
+      tool: ""
+    e2e:
+      available: false
+      tool: ""
+  coverage:
+    available: false
+    command: ""
+  quality:
+    linter:
+      available: true
+      command: "pnpm lint"
+    type_checker:
+      available: true
+      command: "pnpm typecheck"
+    formatter:
+      available: true
+      command: "pnpm format"
