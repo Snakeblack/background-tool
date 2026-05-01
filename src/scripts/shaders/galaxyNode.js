@@ -1,6 +1,6 @@
 import { 
     float, vec2, vec3, vec4,
-    sin, cos, dot, fract, floor, mix, smoothstep, length, atan2, exp, pow,
+    sin, cos, dot, fract, floor, mix, smoothstep, length, atan, exp, pow,
     uv, Fn, Loop, If
 } from 'three/tsl';
 import {
@@ -90,7 +90,7 @@ export const galaxyTSL = Fn(() => {
     const rotate = rot(t.mul(0.5));
     const gv = rotate(p).toVar();
     const r = length(gv);
-    const a = atan2(gv.y, gv.x);
+    const a = atan(gv.y, gv.x);
     const angleOffset = r.mul(u_spiral_density);
     const spiral = sin(a.mul(2.0).add(angleOffset).sub(t.mul(2.0))).toVar();
     

@@ -41,9 +41,6 @@ export class Renderer {
         /** @type {import('./GpuDetector.js').TierProfile} */
         this._tierProfile = MID_TIER_PROFILE;
 
-        /** @type {boolean} */
-        this._renderInFlight = false;
-
         /** @type {number} */
         this._renderedTime = 0;
 
@@ -106,6 +103,9 @@ export class Renderer {
                 alpha: false,
                 precision: 'highp',
             });
+            // three 0.184+: WebGPURenderer requires explicit init() before first render().
+            // Internally awaits adapter/device acquisition; render() becomes safe to call sync.
+            await this.renderer.init();
         } else {
             console.debug('[Renderer] WebGPU not supported. Fallback to WebGLRenderer.');
             this.renderer = new WebGLRenderer({
@@ -271,22 +271,18 @@ export class Renderer {
     }
 
     /**
+     * @returns {number} FPS observado (EWMA), 0 si no hay datos.
+     */
+    getObservedFps() {
+        if (!this._frameTimeEwmaMs || this._frameTimeEwmaMs <= 0) return 0;
+        return Math.round(1000 / this._frameTimeEwmaMs);
+    }
+
+    /**
      * Renderiza la escena.
-     * @returns {boolean} true if a render was initiated, false if skipped (in-flight WebGPU).
+     * @returns {boolean} true (always — three handles WebGPU async pipeline internally since 0.184).
      */
     render() {
-        if (this.isWebGPUSupported) {
-            if (this._renderInFlight) return false;
-            this._renderInFlight = true;
-            this.renderer
-                .renderAsync(this.scene, this.camera)
-                .catch(() => {})
-                .finally(() => {
-                    this._renderInFlight = false;
-                });
-            return true;
-        }
-
         this.renderer.render(this.scene, this.camera);
         return true;
     }

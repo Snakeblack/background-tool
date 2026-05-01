@@ -23,7 +23,6 @@ import { ColorManager } from './scripts/ColorManager.js';
 import { UIController } from './scripts/UIController.js';
 import { PersistenceManager } from './scripts/PersistenceManager.js';
 import { BackgroundLibraryManager } from './scripts/BackgroundLibraryManager.js';
-import { LiteRTManager } from './scripts/LiteRTManager.js';
 import { I18nManager } from './scripts/I18nManager.js';
 import { GpuDetector } from './scripts/GpuDetector.js';
 import { createIcons, Sunset, Waves, Trees, Zap, Flame, Snowflake, Moon, Gem } from 'lucide';
@@ -35,7 +34,6 @@ class GradientApp {
      */
     constructor() {
         this.renderer = new Renderer('bg-canvas');
-        this.liteRTManager = new LiteRTManager();
         this.gpuDetector = new GpuDetector();
 
         // Defer initialization of dependent managers until renderer is ready
@@ -59,9 +57,6 @@ class GradientApp {
         // permanently bind the canvas to '2d' and prevent later WebGL/WebGPU acquisition
         // (HTML Canvas spec: a canvas's context type is final once acquired).
 
-        // Initialize LiteRT first to avoid WASM memory issues
-        await this.liteRTManager.init();
-
         // Detect GPU tier before initializing renderer (antialias + powerPreference
         // must be baked in at construction time)
         const tierResult = await this.gpuDetector.detect();
@@ -82,6 +77,12 @@ class GradientApp {
             this.backgroundLibraryManager,
             this.i18n,
         );
+
+        const GPU_TIER_MAP = { low: 0, mid: 1, high: 2, ultra: 3 };
+        this.uiController.setRuntimeContext({
+            gpuTier: GPU_TIER_MAP[tierResult.tier] ?? null,
+            getObservedFps: () => this.renderer.getObservedFps(),
+        });
 
         createIcons({
             icons: {
@@ -134,11 +135,6 @@ class GradientApp {
 
         // Step 3: Update quality EWMA
         this.renderer.updateQuality(deltaMs);
-
-        // Step 4: If WebGPU render is still in flight, skip this tick (no time advance)
-        if (this.renderer.isWebGPUSupported && this.renderer._renderInFlight) {
-            return;
-        }
 
         // Step 5: Advance rendered time — only when a frame will actually be drawn
         this.renderer.tickTime(deltaMs);
