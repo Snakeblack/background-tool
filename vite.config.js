@@ -1,29 +1,6 @@
 import { defineConfig } from 'vite';
 import { VitePWA } from 'vite-plugin-pwa';
-import compress from 'vite-plugin-compression';
-import fs from 'fs';
-import path from 'path';
-
-const copyWasmPlugin = () => {
-  return {
-    name: 'copy-wasm-files',
-    buildStart() {
-      const src = path.resolve(process.cwd(), 'node_modules/@litertjs/core/wasm');
-      const dest = path.resolve(process.cwd(), 'public/wasm');
-      
-      if (!fs.existsSync(dest)) {
-        fs.mkdirSync(dest, { recursive: true });
-      }
-      
-      if (fs.existsSync(src)) {
-        fs.cpSync(src, dest, { recursive: true });
-        console.log('Copied LiteRT WASM files to public/wasm');
-      } else {
-        console.warn('LiteRT WASM source not found at ' + src);
-      }
-    }
-  }
-}
+import { compression } from 'vite-plugin-compression2';
 
 export default defineConfig(({ mode }) => ({
   root: 'src',
@@ -136,16 +113,8 @@ export default defineConfig(({ mode }) => ({
   },
   
   plugins: [
-    compress({
-      algorithm: 'gzip',
-      ext: '.gz',
-      threshold: 1024,
-      deleteOriginFile: false,
-    }),
-    
-    compress({
-      algorithm: 'brotliCompress',
-      ext: '.br',
+    compression({
+      algorithms: ['gzip', 'brotliCompress'],
       threshold: 1024,
       deleteOriginFile: false,
     }),
@@ -159,6 +128,5 @@ export default defineConfig(({ mode }) => ({
         globPatterns: ['**/*.{js,css,html,glsl,jpg,svg,woff2}'],
       },
     }),
-    copyWasmPlugin(),
   ],
 }));
