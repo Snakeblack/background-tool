@@ -27,10 +27,10 @@ The system MUST enforce absolute maximum device pixel ratio (DPR) caps based on 
 The system MUST scale rendering quality dynamically based on an Exponentially Weighted Moving Average (EWMA) of frame times, but this scaling MUST operate strictly within a tier-specific boundary `[floor, 1.0]` relative to the tier's static DPR ceiling. 
 
 *Constraints:*
-- `ultra`: Floor = 0.85
-- `high`: Floor = 0.75
-- `mid`: Floor = 0.60
-- `low`: Floor = 0.50
+- `ultra`: Floor = 0.90
+- `high`: Floor = 0.85
+- `mid`: Floor = 0.75
+- `low`: Floor = 0.60
 
 #### Scenario: Mid-Tier Mobile Performance Recovery
 - **GIVEN** a mid-tier mobile sustaining 16ms EWMA
@@ -43,7 +43,7 @@ The adaptive pipeline MUST prioritize a 60fps frame rate over visual resolution.
 #### Scenario: Heavy Shader Load
 - **GIVEN** a complex shader executing on a `low` tier device
 - **WHEN** frame time consistently exceeds 16.6ms
-- **THEN** the system reduces `_qualityScale` down to 0.5 to maintain 60fps, without ever falling back to a 30fps scheduling target.
+- **THEN** the system reduces `_qualityScale` down to the tier floor (0.60 for `low`) to maintain 60fps, without ever falling back to a 30fps scheduling target.
 
 ### Requirement: Synchronous Time Accumulation (u_time)
 The `u_time` uniform MUST NOT advance based on wall-clock time if a frame was dropped. Time accumulation MUST be strictly bound to successfully rendered frames.

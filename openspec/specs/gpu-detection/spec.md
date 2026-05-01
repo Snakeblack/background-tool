@@ -32,7 +32,7 @@ If explicit GPU strings are unavailable or masked, the system MUST compute a heu
 #### Scenario: Masked GPU with High Concurrency
 - **GIVEN** Safari returns a generic "Apple GPU" without model specifics
 - **WHEN** the fallback logic evaluates
-- **THEN** it uses `navigator.hardwareConcurrency >= 8` to elevate the classification to `high`.
+- **THEN** it uses `navigator.hardwareConcurrency >= 8 && deviceMemory >= 8` to classify as `mid`. Signal-only classification MUST cap at `mid` because masked GPU strings cannot be safely distinguished between hardware generations (e.g., M1/M2/M3) without explicit GPU evidence.
 
 ### Requirement: Non-Blocking Execution
 The detector MUST be idempotent, caching its results to avoid redundant work, and return a frozen tier configuration object. It MUST NOT block the critical render path after its initial resolution.
