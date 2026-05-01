@@ -3,9 +3,9 @@
 [![Live Demo](https://img.shields.io/badge/demo-online-brightgreen.svg)](https://background.mretamozo.com)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Made with WebGPU](https://img.shields.io/badge/Made%20with-WebGPU-black.svg)](https://www.w3.org/TR/webgpu/)
-[![LiteRT.js](https://img.shields.io/badge/Powered%20by-LiteRT.js-orange.svg)](https://github.com/Snakeblack/LiteRT.js)
+[![Three.js TSL](https://img.shields.io/badge/Powered%20by-Three.js%20TSL-orange.svg)](https://threejs.org/)
 
-Generador profesional de fondos animados de alto rendimiento utilizando **WebGPU** y **LiteRT.js**. Crea fondos únicos con shaders personalizables, espacio de color **OKLCH** y exporta el código listo para React, Vue, Angular o Vanilla JS.
+Generador profesional de fondos animados de alto rendimiento utilizando **WebGPU** y **Three.js TSL**. Crea fondos únicos con shaders personalizables, espacio de color **OKLCH** y exporta el código listo para React, Vue, Angular o Vanilla JS.
 
 🌐 **[Ver Demo en Vivo](https://background.mretamozo.com)** | 📖 **[Documentación](docs/)** | 🚀 **[Guía de Uso](docs/GUIA_USO.md)**
 
@@ -13,16 +13,16 @@ Generador profesional de fondos animados de alto rendimiento utilizando **WebGPU
 
 ## 🌟 ¿Por qué usar MMRG Background Generator?
 
-✅ **Rendimiento Extremo** - WebGPU + LiteRT.js para animaciones a 60fps estables  
+✅ **Rendimiento Extremo** - WebGPU + Three.js TSL para animaciones a 60fps estables  
 ✅ **Sin suscripciones ni límites** - 100% gratuito y open source  
 ✅ **Exportación inteligente** - Código optimizado para tu framework favorito  
 ✅ **Colores vibrantes** - Espacio OKLCH para colores perceptualmente uniformes  
 ✅ **8 efectos únicos** - Aurora, Waves, Liquid, Mesh, Stripes, Geometric, Particles  
 ✅ **Responsive por defecto** - Optimizado para desktop, tablet y móvil  
 
-## 🚀 Migración a WebGPU y LiteRT.js
+## 🚀 WebGPU + Three.js TSL
 
-Este proyecto ha evolucionado de WebGL a **WebGPU**, la próxima generación de gráficos web. Gracias a la integración con **LiteRT.js**, hemos logrado:
+Este proyecto evolucionó de WebGL a **WebGPU**, la próxima generación de gráficos web. Aprovechando el sistema **TSL (Three.js Shading Language)** logramos:
 
 *   **Mayor Rendimiento:** Acceso de bajo nivel a la GPU para cálculos más complejos sin bloquear el hilo principal.
 *   **Menor Consumo:** Shaders optimizados que consumen menos batería en dispositivos móviles.
@@ -70,7 +70,7 @@ background-tool/
 │   ├── index.html              # HTML principal
 │   ├── main.js                 # Punto de entrada
 │   ├── scripts/
-│   │   ├── LiteRTManager.js    # Gestión de WebGPU con LiteRT
+│   │   ├── Renderer.js         # WebGPU/WebGL renderer (Three.js)
 │   │   ├── ShaderManager.js    # Gestión de shaders
 │   │   ├── ColorManager.js     # Control de colores OKLCH
 │   │   ├── UIController.js     # Lógica de interfaz
@@ -92,7 +92,7 @@ background-tool/
 | Stack | Componentes |
 |-------|------------|
 | **Frontend** | Vanilla JS, Web Components, CSS3 |
-| **Graphics** | **WebGPU**, **LiteRT.js** |
+| **Graphics** | **WebGPU**, **Three.js TSL** |
 | **Colors** | OKLCH Color Space |
 | **Build** | Vite |
 | **Tooling** | ESLint, Prettier |
@@ -130,8 +130,9 @@ pnpm preview          # Preview de la build compilada
 
 | Clase | Descripción |
 |---------|-------------|
-| `LiteRTManager` | Gestiona el contexto WebGPU y el pipeline de renderizado |
-| `ShaderManager` | Carga y compila los shaders WGSL/GLSL |
+| `Renderer` | Gestiona el contexto WebGPU/WebGL (Three.js) y el pipeline de renderizado |
+| `GpuDetector` | Detecta el tier de GPU y aplica perfiles de calidad adaptativa |
+| `ShaderManager` | Carga y compila los shaders TSL/GLSL |
 | `ColorManager` | Gestiona la conversión y estado de colores OKLCH |
 | `UIController` | Maneja la interacción con el usuario y Web Components |
 
@@ -177,6 +178,6 @@ pnpm preview          # Preview de la build compilada
 ## 🔗 Referencias Externas
 
 - [WebGPU API](https://developer.mozilla.org/en-US/docs/Web/API/WebGPU_API)
-- [LiteRT.js](https://github.com/Snakeblack/LiteRT.js)
+- [Three.js TSL](https://threejs.org/docs/#api/en/renderers/webgpu/WebGPURenderer)
 - [OKLCH Color Format](https://oklch.com/)
 

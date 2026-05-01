@@ -1,7 +1,7 @@
 schema: spec-driven
 
 context: |
-  Tech stack: Vanilla JS + Three.js (WebGL/WebGPU via TSL) + LiteRT.js + Vite 6 + pnpm
+  Tech stack: Vanilla JS + Three.js (WebGL/WebGPU via TSL) + Vite 6 + pnpm
   Architecture: Class-per-concern (PascalCase managers: Renderer, ColorManager, ShaderManager, UIController, etc.)
   Module: ES modules ("type": "module"), path aliases (@/*, @scripts/*, @shaders/*, @styles/*)
   Style: Single quotes, 4-space indent, semicolons required, trailing commas, printWidth 100
@@ -26,7 +26,7 @@ rules:
     - Keep tasks small enough to complete in one session
   apply:
     - Follow PascalCase class naming for manager modules
-    - Load relevant coding skills for the stack (webgpu-litert, modern-frontend-optimization-and-standards)
+    - Load relevant coding skills for the stack (modern-frontend-optimization-and-standards)
     - Files live in src/scripts/ for JS modules, src/shaders/ for GLSL/TSL, src/styles/ for CSS
     tdd: false
     test_command: ""

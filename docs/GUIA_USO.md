@@ -1,6 +1,6 @@
 # 📖 Guía de Uso - MMRG Background Generator
 
-Bienvenido a la guía oficial de **MMRG Background Generator**. Esta herramienta te permite crear fondos animados de alto rendimiento utilizando la potencia de **WebGPU** y **LiteRT.js**.
+Bienvenido a la guía oficial de **MMRG Background Generator**. Esta herramienta te permite crear fondos animados de alto rendimiento utilizando la potencia de **WebGPU** y **Three.js TSL**.
 
 ## 🚀 Primeros Pasos
 
