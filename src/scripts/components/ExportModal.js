@@ -1,7 +1,8 @@
 /**
  * Export Modal Component - Genera código para implementar en proyectos
  */
-import { Package, Rocket, Atom, Layers, Hexagon, Zap, Lightbulb, AlertTriangle, Clipboard, Check, AlertCircle, BarChart, X, createElement } from 'lucide';
+import { Package, Rocket, Atom, Layers, Hexagon, Zap, Lightbulb, AlertTriangle, Clipboard, Check, AlertCircle, BarChart, X, Info, AlertOctagon, createElement } from 'lucide';
+import { evaluateTips } from '../export/evaluateTips.js';
 
 const EXPORT_MODAL_I18N = {
     en: {
@@ -68,7 +69,24 @@ const EXPORT_MODAL_I18N = {
         metrics: 'Performance metrics:',
         fpsTarget: '• FPS target: 60fps',
         gpuUsage: '• GPU usage: ~5-10% (depends on shader complexity)',
-        memory: '• Memory: ~10-20MB'
+        memory: '• Memory: ~10-20MB',
+
+        // Export tips
+        'export.tips.lowTierComplex.title': 'Low-end GPU + Complex Shader',
+        'export.tips.lowTierComplex.description': 'Your GPU tier is low and the selected shader is complex, which may cause poor performance or crashes on some devices.',
+        'export.tips.lowTierComplex.suggestion': 'Consider setting a DPR cap of 1.0 or switching to a simpler shader before exporting.',
+        'export.tips.lowFps.title': 'Low Frame Rate Detected',
+        'export.tips.lowFps.description': 'The current session is running below 45 fps, which indicates your hardware is under stress.',
+        'export.tips.lowFps.suggestion': 'Try reducing the canvas resolution, lowering the pixel ratio, or simplifying the shader.',
+        'export.tips.mobile.title': 'Mobile Device Detected',
+        'export.tips.mobile.description': 'You are running on a mobile device. Full-screen WebGPU backgrounds may impact battery life.',
+        'export.tips.mobile.suggestion': 'Add pointer-events: none to the canvas and consider limiting the pixel ratio to 1.0 for best mobile performance.',
+        'export.tips.reducedMotion.title': 'Prefers Reduced Motion',
+        'export.tips.reducedMotion.description': 'The user has enabled the "Reduce Motion" accessibility setting.',
+        'export.tips.reducedMotion.suggestion': 'A static fallback gradient has been auto-injected into the exported code. Review it to ensure it matches your design.',
+        'export.tips.ultraStable.title': 'Optimal Performance',
+        'export.tips.ultraStable.description': 'Your GPU is high-end and the frame rate is stable. The animation should run smoothly on most devices.',
+        'export.tips.ultraStable.suggestion': 'You can safely use higher pixel ratios or more complex shaders if needed.'
     },
     es: {
         modalTitle: 'Exportar a tu Proyecto',
@@ -134,7 +152,24 @@ const EXPORT_MODAL_I18N = {
         metrics: 'Métricas de Rendimiento:',
         fpsTarget: '• FPS Target: 60fps',
         gpuUsage: '• GPU Usage: ~5-10% (según complejidad del shader)',
-        memory: '• Memory: ~10-20MB'
+        memory: '• Memory: ~10-20MB',
+
+        // Export tips
+        'export.tips.lowTierComplex.title': 'GPU de baja gama + Shader complejo',
+        'export.tips.lowTierComplex.description': 'Tu GPU es de baja gama y el shader seleccionado es complejo, lo que puede causar bajo rendimiento o crashes en algunos dispositivos.',
+        'export.tips.lowTierComplex.suggestion': 'Considerá limitar el DPR a 1.0 o elegir un shader más simple antes de exportar.',
+        'export.tips.lowFps.title': 'FPS bajo detectado',
+        'export.tips.lowFps.description': 'La sesión actual corre por debajo de 45 fps, lo que indica que el hardware está bajo estrés.',
+        'export.tips.lowFps.suggestion': 'Probá reducir la resolución del canvas, bajar el pixel ratio o simplificar el shader.',
+        'export.tips.mobile.title': 'Dispositivo móvil detectado',
+        'export.tips.mobile.description': 'Estás usando un dispositivo móvil. Los fondos WebGPU a pantalla completa pueden afectar la batería.',
+        'export.tips.mobile.suggestion': 'Agregá pointer-events: none al canvas y considerá limitar el pixel ratio a 1.0 para mejor rendimiento en móviles.',
+        'export.tips.reducedMotion.title': 'Preferencia de movimiento reducido',
+        'export.tips.reducedMotion.description': 'El usuario tiene activada la configuración de accesibilidad "Reducir Movimiento".',
+        'export.tips.reducedMotion.suggestion': 'Se inyectó automáticamente un gradiente estático de fallback en el código exportado. Revisalo para asegurarte de que coincide con tu diseño.',
+        'export.tips.ultraStable.title': 'Rendimiento óptimo',
+        'export.tips.ultraStable.description': 'Tu GPU es de alta gama y la tasa de cuadros es estable. La animación debería correr sin problemas en la mayoría de los dispositivos.',
+        'export.tips.ultraStable.suggestion': 'Podés usar pixel ratios más altos o shaders más complejos si lo necesitás.'
     }
 };
 
@@ -668,6 +703,39 @@ export class ExportModal extends HTMLElement {
                     align-items: center;
                     gap: 0.75rem;
                 }
+
+                /* ── Export tips ──────────────────────────────── */
+                .export-tips {
+                    padding: 1rem 1.5rem;
+                    display: flex;
+                    flex-direction: column;
+                    gap: 0.5rem;
+                    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+                }
+                .export-tips-all-ok {
+                    display: flex;
+                    align-items: center;
+                    gap: 0.5rem;
+                    color: rgba(134, 239, 172, 0.9);
+                    font-size: 0.875rem;
+                }
+                .tip-item {
+                    display: flex;
+                    gap: 0.75rem;
+                    padding: 0.625rem 0.875rem;
+                    border-radius: 8px;
+                    font-size: 0.8rem;
+                    line-height: 1.4;
+                }
+                .tip-item.tip-info    { background: rgba(96, 165, 250, 0.08); border: 1px solid rgba(96, 165, 250, 0.25); }
+                .tip-item.tip-warning { background: rgba(251, 191, 36, 0.08); border: 1px solid rgba(251, 191, 36, 0.3); }
+                .tip-item.tip-critical{ background: rgba(248, 113, 113, 0.08); border: 1px solid rgba(248, 113, 113, 0.35); }
+                .tip-icon { flex-shrink: 0; margin-top: 0.1rem; }
+                .tip-icon.tip-info    { color: rgba(96, 165, 250, 0.9); }
+                .tip-icon.tip-warning { color: rgba(251, 191, 36, 0.9); }
+                .tip-icon.tip-critical{ color: rgba(248, 113, 113, 0.9); }
+                .tip-body strong { display: block; margin-bottom: 0.2rem; }
+                .tip-suggestion { margin-top: 0.25rem; opacity: 0.75; }
             </style>
             
             <div class="modal-container">
@@ -682,6 +750,7 @@ export class ExportModal extends HTMLElement {
                     </div>
                 </div>
                 <div class="modal-body">
+                    <div id="export-tips-section"></div>
                     <div class="tabs">
                         <button class="tab active" data-tab="vanilla">${this.t('tabVanilla')}</button>
                         <button class="tab" data-tab="react">${this.t('tabReact')}</button>
@@ -763,9 +832,11 @@ export class ExportModal extends HTMLElement {
     /**
      * Abre el modal con la configuración proporcionada
      * @param {Object} config - Configuración del gradiente a exportar
+     * @param {{ gpuTier: number|null, observedFps: number, isMobile: boolean, prefersReducedMotion: boolean, currentResolution?: { width: number, height: number } }} [runtimeContext]
      */
-    open(config) {
+    open(config, runtimeContext) {
         this.config = config;
+        this.runtimeContext = runtimeContext ?? null;
         this.codeBlocks = new Map();
 
         const persisted = this.persistence?.getLanguage?.();
@@ -788,12 +859,64 @@ export class ExportModal extends HTMLElement {
      * Genera el contenido de todas las pestañas del modal
      */
     generateContent() {
+        this.generateTipsSection();
         this.generateVanillaContent();
         this.generateReactContent();
         this.generateVueContent();
         this.generateAngularContent();
         this.generateAstroContent();
         this.generateOptimizationsContent();
+    }
+
+    /**
+     * Renderiza la sección de tips de rendimiento antes del bloque de código exportable.
+     */
+    generateTipsSection() {
+        const container = this.shadowRoot.getElementById('export-tips-section');
+        if (!container) return;
+
+        const ctx = this.runtimeContext;
+        if (!ctx) {
+            container.innerHTML = '';
+            return;
+        }
+
+        const tips = evaluateTips(ctx);
+
+        const severityIcon = (severity) => {
+            if (severity === 'critical') return createElement(AlertOctagon, { class: 'icon' }).outerHTML;
+            if (severity === 'warning')  return createElement(AlertTriangle, { class: 'icon' }).outerHTML;
+            return createElement(Info, { class: 'icon' }).outerHTML;
+        };
+
+        const tipHtml = (tip) => `
+            <div class="tip-item tip-${tip.severity}">
+                <span class="tip-icon tip-${tip.severity}">${severityIcon(tip.severity)}</span>
+                <div class="tip-body">
+                    <strong>${this.t(tip.titleKey)}</strong>
+                    <span>${this.t(tip.descriptionKey)}</span>
+                    <div class="tip-suggestion">${this.t(tip.suggestionKey)}</div>
+                </div>
+            </div>
+        `;
+
+        if (tips.length === 0) {
+            container.innerHTML = `
+                <div class="export-tips">
+                    <div class="export-tips-all-ok">
+                        ${createElement(Info, { class: 'icon' }).outerHTML}
+                        <span>All good — no performance issues detected.</span>
+                    </div>
+                </div>
+            `;
+            return;
+        }
+
+        container.innerHTML = `
+            <div class="export-tips">
+                ${tips.map(tipHtml).join('')}
+            </div>
+        `;
     }
 
     /**
@@ -1020,6 +1143,9 @@ export async function mountGradient(canvas) {
         }
 
         generateAstroComponent() {
+                const reducedMotion = this.runtimeContext?.prefersReducedMotion
+                    ? this.generateReducedMotionBlock('.gradient-canvas')
+                    : '';
                 return `---
 // Componente 100% Astro (SSR) + montaje WebGPU en cliente
 // Nota: el <script> NO debe tener atributos (salvo src) para que Astro procese y resuelva imports.
@@ -1034,7 +1160,7 @@ export async function mountGradient(canvas) {
         width: 100%;
         height: 100%;
         z-index: -1;
-    }
+    }${reducedMotion}
 </style>
 
 <script>
@@ -1592,6 +1718,25 @@ export const u_border_width = uniform(0.1);`;
     }
 
     /**
+     * Genera el bloque @media (prefers-reduced-motion: reduce) con gradiente estático fallback.
+     * Usa los colores actuales del config para construir el linear-gradient.
+     * @param {string} selector - CSS selector a aplicar (ej. '#gradient-canvas', '.gradient-canvas')
+     * @returns {string} Bloque CSS listo para inyectar
+     */
+    generateReducedMotionBlock(selector = 'canvas') {
+        const { colors } = this.config ?? {};
+        const normalized = this.normalizeColors(colors ?? []);
+        // Build CSS oklch() stops from the first 2-3 colors
+        const toOklch = (c) => `oklch(${c.l.toFixed(3)} ${c.c.toFixed(3)} ${c.h.toFixed(1)})`;
+        const stops = normalized.slice(0, 3).map((c, i) => {
+            const pct = normalized.length >= 3 ? [0, 50, 100][i] : (i === 0 ? 0 : 100);
+            return `${toOklch(c)} ${pct}%`;
+        });
+        const gradient = `linear-gradient(135deg, ${stops.join(', ')})`;
+        return `\n@media (prefers-reduced-motion: reduce) {\n  ${selector} {\n    animation: none;\n    background: ${gradient};\n  }\n}`;
+    }
+
+    /**
      * Formatea un valor de uniform para exportar como código
      * @param {*} value - Valor a formatear
      * @returns {string|number} Valor formateado
@@ -1620,6 +1765,9 @@ export const u_border_width = uniform(0.1);`;
     // Code generators
     generateHTMLCode() {
         const lang = this.getLanguage() === 'es' ? 'es' : 'en';
+        const reducedMotion = this.runtimeContext?.prefersReducedMotion
+            ? this.generateReducedMotionBlock('#gradient-canvas')
+            : '';
         return `<!DOCTYPE html>
 <html lang="${lang}">
 <head>
@@ -1641,7 +1789,7 @@ export const u_border_width = uniform(0.1);`;
             width: 100%;
             height: 100%;
             z-index: -1;
-        }
+        }${reducedMotion}
     </style>
 </head>
 <body>
@@ -2044,6 +2192,9 @@ export function useGradientBackground() {
     }
 
     generateVueUsage() {
+        const reducedMotion = this.runtimeContext?.prefersReducedMotion
+            ? this.generateReducedMotionBlock('.gradient-bg')
+            : '';
         return `<template>
     <div class="app">
         <canvas ref="canvasRef" class="gradient-bg" />
@@ -2100,7 +2251,7 @@ html, body {
     height: 100%;
     color: white;
     font-family: Arial, sans-serif;
-}
+}${reducedMotion}
 </style>`;
     }
 

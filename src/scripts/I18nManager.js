@@ -145,7 +145,24 @@ const DICT = {
         'control.cell-density.label': 'Cell Density',
         'control.cell-density.tooltip': 'Controls the number of cells in the pattern.',
         'control.border-width.label': 'Border Width',
-        'control.border-width.tooltip': 'Adjusts the thickness of cell borders.'
+        'control.border-width.tooltip': 'Adjusts the thickness of cell borders.',
+
+        // Export tips
+        'export.tips.lowTierComplex.title': 'Low-end GPU + Complex Shader',
+        'export.tips.lowTierComplex.description': 'Your GPU tier is low and the selected shader is complex, which may cause poor performance or crashes on some devices.',
+        'export.tips.lowTierComplex.suggestion': 'Consider setting a DPR cap of 1.0 or switching to a simpler shader before exporting.',
+        'export.tips.lowFps.title': 'Low Frame Rate Detected',
+        'export.tips.lowFps.description': 'The current session is running below 45 fps, which indicates your hardware is under stress.',
+        'export.tips.lowFps.suggestion': 'Try reducing the canvas resolution, lowering the pixel ratio, or simplifying the shader.',
+        'export.tips.mobile.title': 'Mobile Device Detected',
+        'export.tips.mobile.description': 'You are running on a mobile device. Full-screen WebGPU backgrounds may impact battery life.',
+        'export.tips.mobile.suggestion': 'Add pointer-events: none to the canvas and consider limiting the pixel ratio to 1.0 for best mobile performance.',
+        'export.tips.reducedMotion.title': 'Prefers Reduced Motion',
+        'export.tips.reducedMotion.description': 'The user has enabled the "Reduce Motion" accessibility setting.',
+        'export.tips.reducedMotion.suggestion': 'A static fallback gradient has been auto-injected into the exported code. Review it to ensure it matches your design.',
+        'export.tips.ultraStable.title': 'Optimal Performance',
+        'export.tips.ultraStable.description': 'Your GPU is high-end and the frame rate is stable. The animation should run smoothly on most devices.',
+        'export.tips.ultraStable.suggestion': 'You can safely use higher pixel ratios or more complex shaders if needed.'
     },
     es: {
         'dock.settings': 'Config',
@@ -263,7 +280,24 @@ const DICT = {
         'control.cell-density.label': 'Densidad de celdas',
         'control.cell-density.tooltip': 'Controla la cantidad de celdas del patrón.',
         'control.border-width.label': 'Grosor del borde',
-        'control.border-width.tooltip': 'Ajusta el grosor de los bordes de las celdas.'
+        'control.border-width.tooltip': 'Ajusta el grosor de los bordes de las celdas.',
+
+        // Export tips
+        'export.tips.lowTierComplex.title': 'GPU de baja gama + Shader complejo',
+        'export.tips.lowTierComplex.description': 'Tu GPU es de baja gama y el shader seleccionado es complejo, lo que puede causar bajo rendimiento o crashes en algunos dispositivos.',
+        'export.tips.lowTierComplex.suggestion': 'Considerá limitar el DPR a 1.0 o elegir un shader más simple antes de exportar.',
+        'export.tips.lowFps.title': 'FPS bajo detectado',
+        'export.tips.lowFps.description': 'La sesión actual corre por debajo de 45 fps, lo que indica que el hardware está bajo estrés.',
+        'export.tips.lowFps.suggestion': 'Probá reducir la resolución del canvas, bajar el pixel ratio o simplificar el shader.',
+        'export.tips.mobile.title': 'Dispositivo móvil detectado',
+        'export.tips.mobile.description': 'Estás usando un dispositivo móvil. Los fondos WebGPU a pantalla completa pueden afectar la batería.',
+        'export.tips.mobile.suggestion': 'Agregá pointer-events: none al canvas y considerá limitar el pixel ratio a 1.0 para mejor rendimiento en móviles.',
+        'export.tips.reducedMotion.title': 'Preferencia de movimiento reducido',
+        'export.tips.reducedMotion.description': 'El usuario tiene activada la configuración de accesibilidad "Reducir Movimiento".',
+        'export.tips.reducedMotion.suggestion': 'Se inyectó automáticamente un gradiente estático de fallback en el código exportado. Revisalo para asegurarte de que coincide con tu diseño.',
+        'export.tips.ultraStable.title': 'Rendimiento óptimo',
+        'export.tips.ultraStable.description': 'Tu GPU es de alta gama y la tasa de cuadros es estable. La animación debería correr sin problemas en la mayoría de los dispositivos.',
+        'export.tips.ultraStable.suggestion': 'Podés usar pixel ratios más altos o shaders más complejos si lo necesitás.'
     }
 };
 

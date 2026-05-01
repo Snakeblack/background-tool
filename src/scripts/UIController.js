@@ -25,7 +25,42 @@ export class UIController {
         this._globalSpeedTooltipBound = false;
         this._languageSelectBound = false;
 
+        /** @type {Array<{target: EventTarget, event: string, handler: EventListenerOrEventListenerObject, options?: AddEventListenerOptions | boolean}>} */
+        this._listeners = [];
+        this._runtimeContext = { gpuTier: null, getObservedFps: () => 0 };
+
         this.init();
+    }
+
+    /**
+     * Registers an event listener and tracks it for later cleanup via dispose().
+     * @param {EventTarget} target
+     * @param {string} event
+     * @param {EventListenerOrEventListenerObject} handler
+     * @param {AddEventListenerOptions | boolean} [options]
+     */
+    _addListener(target, event, handler, options) {
+        target.addEventListener(event, handler, options);
+        this._listeners.push({ target, event, handler, options });
+    }
+
+    /**
+     * Removes all registered event listeners and clears the registry.
+     */
+    dispose() {
+        for (const { target, event, handler, options } of this._listeners) {
+            target.removeEventListener(event, handler, options);
+        }
+        this._listeners.length = 0;
+    }
+
+    /**
+     * Provides runtime context (GPU tier, observed FPS getter) used when opening the Export Modal.
+     * @param {{ gpuTier?: number | null, getObservedFps?: () => number }} ctx
+     */
+    setRuntimeContext({ gpuTier, getObservedFps } = {}) {
+        if (gpuTier !== undefined) this._runtimeContext.gpuTier = gpuTier;
+        if (typeof getObservedFps === 'function') this._runtimeContext.getObservedFps = getObservedFps;
     }
 
     t(key, params = null, fallback = null) {
@@ -128,7 +163,7 @@ export class UIController {
             if (langSelect.updateDisplay) langSelect.updateDisplay();
 
             if (!this._languageSelectBound) {
-                langSelect.addEventListener('change', (e) => {
+                this._addListener(langSelect, 'change', (e) => {
                     const next = e?.detail?.value;
                     this.i18n.setPreference?.(next);
                 });
@@ -138,7 +173,7 @@ export class UIController {
 
         refreshLanguageSelect();
 
-        document.addEventListener('i18n:change', () => {
+        this._addListener(document, 'i18n:change', () => {
             this.applyI18nToDocument();
             refreshLanguageSelect();
             this.refreshShaderSelectorOptions();
@@ -196,10 +231,10 @@ export class UIController {
             }
         };
 
-        infoIcon.addEventListener('mouseenter', show);
-        infoIcon.addEventListener('mouseleave', hide);
-        infoIcon.addEventListener('focus', show);
-        infoIcon.addEventListener('blur', hide);
+        this._addListener(infoIcon, 'mouseenter', show);
+        this._addListener(infoIcon, 'mouseleave', hide);
+        this._addListener(infoIcon, 'focus', show);
+        this._addListener(infoIcon, 'blur', hide);
 
         this._globalSpeedTooltipBound = true;
     }
@@ -434,7 +469,7 @@ export class UIController {
 
         this._renderSavedBackgrounds = render;
 
-        saveBtn.addEventListener('click', () => {
+        this._addListener(saveBtn, 'click', () => {
             const name = (nameInput.value || '').trim();
             if (!name) return;
             const snapshot = this.getBackgroundSnapshot();
@@ -444,7 +479,7 @@ export class UIController {
         });
 
         if (exportBtn) {
-            exportBtn.addEventListener('click', () => {
+            this._addListener(exportBtn, 'click', () => {
                 const exportModal = document.getElementById('export-modal');
                 if (!exportModal) return;
 
@@ -459,11 +494,17 @@ export class UIController {
                 }
 
                 const config = this.getCurrentConfiguration();
-                exportModal.open(config);
+                const runtimeContext = {
+                    gpuTier: this._runtimeContext.gpuTier,
+                    observedFps: this._runtimeContext.getObservedFps(),
+                    prefersReducedMotion: window.matchMedia('(prefers-reduced-motion: reduce)').matches,
+                    isMobile: this.isMobile,
+                };
+                exportModal.open(config, runtimeContext);
             });
         }
 
-        listEl.addEventListener('click', (e) => {
+        this._addListener(listEl, 'click', (e) => {
             const btn = e.target.closest('[data-bg-action]');
             if (!btn) return;
 
@@ -501,7 +542,7 @@ export class UIController {
     }
 
     setupResizeListener() {
-        window.addEventListener('resize', () => {
+        this._addListener(window, 'resize', () => {
             const newIsMobile = window.innerWidth <= 768;
             if (this.isMobile !== newIsMobile) {
                 this.isMobile = newIsMobile;
@@ -531,21 +572,21 @@ export class UIController {
         }
 
         // Listen for events from hud-dock
-        this.dock.addEventListener('panel-open', (e) => {
+        this._addListener(this.dock, 'panel-open', (e) => {
             this.openPanel(e.detail.panel);
         });
 
-        this.dock.addEventListener('panel-close', () => {
+        this._addListener(this.dock, 'panel-close', () => {
             this.closePanel();
         });
 
-        this.dock.addEventListener('action', (e) => {
+        this._addListener(this.dock, 'action', (e) => {
             this.handleAction(e.detail.action);
         });
 
         // Listen for bottom sheet events
         if (this.bottomSheet) {
-            this.bottomSheet.addEventListener('close', () => {
+            this._addListener(this.bottomSheet, 'close', () => {
                 if (this.activePanelId) {
                     this.closePanel();
                     // Reset dock state
@@ -557,7 +598,7 @@ export class UIController {
         }
 
         // Close panel when clicking outside (Desktop)
-        document.addEventListener('click', (e) => {
+        this._addListener(document, 'click', (e) => {
             if (!this.isMobile && this.activePanelId) {
                 const isClickInsidePanel = this.desktopPanel.contains(e.target);
                 const isClickInsideDock = this.dock.contains(e.target);
@@ -671,7 +712,7 @@ export class UIController {
 
         this.refreshShaderSelectorOptions();
 
-        selector.addEventListener('change', (e) => {
+        this._addListener(selector, 'change', (e) => {
             const nextShader = e.detail.value;
             if (this.persistence) this.persistence.setLastShader(nextShader);
 
@@ -792,7 +833,7 @@ export class UIController {
                 `;
                 
                 // Event listeners for global tooltip
-                infoIcon.addEventListener('mouseenter', (e) => {
+                this._addListener(infoIcon, 'mouseenter', (e) => {
                     if (!this.tooltipElement) return;
                     
                     const rect = infoIcon.getBoundingClientRect();
@@ -808,7 +849,7 @@ export class UIController {
                     this.tooltipElement.style.top = `${top}px`;
                 });
 
-                infoIcon.addEventListener('mouseleave', () => {
+                this._addListener(infoIcon, 'mouseleave', () => {
                     if (this.tooltipElement) {
                         this.tooltipElement.classList.remove('visible');
                     }
@@ -835,7 +876,7 @@ export class UIController {
             input.step = '0.001';
             input.value = control.value;
 
-            input.addEventListener('input', (e) => {
+            this._addListener(input, 'input', (e) => {
                 const value = parseFloat(e.target.value);
                 const valueSpan = document.getElementById(`${control.id}-value`);
                 if (valueSpan) {
@@ -869,19 +910,19 @@ export class UIController {
     }
 
     setupColorControls() {
-        document.addEventListener('color-change', (e) => {
+        this._addListener(document, 'color-change', (e) => {
             const { colorIndex, channel, value } = e.detail;
             this.handleColorChange(colorIndex, channel, value);
         });
 
-        document.addEventListener('request-preview-update', (e) => {
+        this._addListener(document, 'request-preview-update', (e) => {
             const { colorIndex } = e.detail;
             this.initializeColorComponent(colorIndex);
         });
 
         const speedInput = document.getElementById('speed');
         if (speedInput) {
-            speedInput.addEventListener('input', (e) => {
+            this._addListener(speedInput, 'input', (e) => {
                 const value = parseFloat(e.target.value);
                 this.shaderManager.updateUniform('u_speed', value);
                 const speedVal = document.getElementById('speed-value');
@@ -933,7 +974,7 @@ export class UIController {
 
     setupPresets() {
         // Use event delegation for presets since they might be moved around
-        document.body.addEventListener('click', (e) => {
+        this._addListener(document.body, 'click', (e) => {
             const btn = e.target.closest('[data-preset]');
             if (!btn) return;
 
@@ -974,14 +1015,20 @@ export class UIController {
             exportModal.persistence = this.persistence;
         }
 
-        exportBtn.addEventListener('click', () => {
+        this._addListener(exportBtn, 'click', () => {
             const config = this.getCurrentConfiguration();
 
             if (this.i18n?.getLanguage && typeof exportModal.setLanguage === 'function') {
                 exportModal.setLanguage(this.i18n.getLanguage(), { persist: false });
             }
 
-            exportModal.open(config);
+            const runtimeContext = {
+                gpuTier: this._runtimeContext.gpuTier,
+                observedFps: this._runtimeContext.getObservedFps(),
+                prefersReducedMotion: window.matchMedia('(prefers-reduced-motion: reduce)').matches,
+                isMobile: this.isMobile,
+            };
+            exportModal.open(config, runtimeContext);
         });
     }
 
