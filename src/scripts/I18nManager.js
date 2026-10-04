@@ -1,5 +1,8 @@
 /**
  * I18n Manager - language preference + auto-detection + simple key-based translations.
+ *
+ * Background/control texts live next to each background in shaders/registry.js;
+ * this file only holds the app chrome strings.
  */
 
 function normalizePreference(pref) {
@@ -30,326 +33,123 @@ function getUrlLanguageOverride() {
 
 const DICT = {
     en: {
-        'dock.settings': 'Settings',
+        'dock.backgrounds': 'Backgrounds',
+        'dock.settings': 'Tweak',
         'dock.colors': 'Colors',
-        'dock.presets': 'Presets',
-        'dock.random': 'Random',
+        'dock.presets': 'Palettes',
+        'dock.random': 'Shuffle',
         'dock.saved': 'Saved',
 
-        'aria.settings': 'Settings',
-        'aria.colors': 'Colors',
-        'aria.presets': 'Presets',
-        'aria.random': 'Generate random',
+        'aria.backgrounds': 'Browse backgrounds',
+        'aria.settings': 'Adjust the background',
+        'aria.colors': 'Edit colors',
+        'aria.presets': 'Color palettes',
+        'aria.random': 'Shuffle the palette',
         'aria.saved': 'Saved backgrounds',
 
-        'settings.language': 'Language',
-        'settings.shaderType': 'Shader Type',
-        'settings.globalSpeed': 'Global Speed',
-        'settings.globalSpeed.tooltip': 'Controls the overall animation speed.',
+        'export.cta': 'Export',
+        'export.cta.title': 'Get the code for your website (E)',
 
+        'language.label': 'Language',
         'language.auto': 'Auto',
         'language.en': 'English',
         'language.es': 'Spanish',
 
+        'gallery.all': 'All',
+        'gallery.title': 'Backgrounds',
+        'gallery.hint': 'Use ← → to browse quickly.',
+
+        'cost.title': 'Relative GPU cost',
+        'cost.light': 'Light on the GPU',
+        'cost.medium': 'Medium GPU cost',
+        'cost.heavy': 'Heavy on the GPU',
+
+        'settings.background': 'Background',
+        'settings.change': 'Change',
+        'settings.globalSpeed': 'Speed',
+        'settings.globalSpeed.tooltip': 'Controls the overall animation speed. At 0 the background is frozen and uses no GPU.',
+
+        'color.lightness': 'Lightness',
+        'color.chroma': 'Chroma',
+        'color.hue': 'Hue',
+
+        'presets.title': 'Color palettes',
+        'presets.hint': 'Apply a ready-made palette to the current background.',
+
         'saved.title': 'Saved backgrounds',
         'saved.subtitle': 'Names are unique. Saving the same name updates it and increments the version.',
-        'saved.exportCurrent': 'Export current',
         'saved.namePlaceholder': 'Name (e.g. Landing Hero)',
         'saved.save': 'Save',
-        'saved.empty': 'No saved backgrounds yet.',
+        'saved.saved': 'Saved ✓',
+        'saved.empty': 'No saved backgrounds yet. Save the current one to reuse it later.',
+        'saved.unavailable': 'background no longer available',
         'saved.deleteAria': 'Delete',
         'saved.deleteTitle': 'Delete',
         'saved.deleteConfirm': 'Delete saved background "{name}"?',
 
-        'presets.sunset': 'Sunset',
-        'presets.ocean': 'Ocean',
-        'presets.forest': 'Forest',
-        'presets.purple': 'Purple',
-        'presets.neon': 'Neon',
-        'presets.fire': 'Fire',
-        'presets.ice': 'Ice',
-        'presets.midnight': 'Midnight',
-
         'github.aria': 'View source code on GitHub',
-
         'select.placeholder': 'Select…',
         'bottomSheet.toggleAria': 'Toggle panel',
-
-        // Control labels/tooltips
-        'control.brightness.label': 'Brightness',
-        'control.brightness.tooltip': 'Adjusts the overall lightness of the scene.',
-        'control.contrast.label': 'Contrast',
-        'control.contrast.tooltip': 'Controls the difference between light and dark areas.',
-        'control.noise.label': 'Noise',
-        'control.noise.tooltip': 'Adds grain texture for a more organic look.',
-
-        'control.wave-amplitude.label': 'Amplitude',
-        'control.wave-amplitude.tooltip': 'Controls the height of the waves.',
-        'control.wave-frequency.label': 'Frequency',
-        'control.wave-frequency.tooltip': 'Adjusts the number of waves visible.',
-
-        'control.stripe-width.label': 'Density',
-        'control.stripe-width.tooltip': 'Controls the number of stripes.',
-        'control.stripe-speed.label': 'Relative Speed',
-        'control.stripe-speed.tooltip': 'Adjusts how fast stripes move relative to each other.',
-
-        'control.zoom.label': 'Complexity',
-        'control.zoom.tooltip': 'Controls the detail level of the fluid distortion.',
-
-        'control.mesh-scale.label': 'Density',
-        'control.mesh-scale.tooltip': 'Adjusts the grid tightness of the mesh.',
-        'control.mesh-distortion.label': 'Distortion',
-        'control.mesh-distortion.tooltip': 'Controls the amount of warping applied to the mesh.',
-
-        'control.particle-intensity.label': 'Intensity',
-        'control.particle-intensity.tooltip': 'Controls the brightness and visibility of particles.',
-
-        'control.aurora-scale.label': 'Scale',
-        'control.aurora-scale.tooltip': 'Adjusts the size of the aurora curtains.',
-        'control.aurora-intensity.label': 'Intensity',
-        'control.aurora-intensity.tooltip': 'Controls the brightness of the aurora effect.',
-
-        'control.cloud-scale.label': 'Scale',
-        'control.cloud-scale.tooltip': 'Adjusts the size and fluffiness of clouds.',
-        'control.cloud-intensity.label': 'Coverage',
-        'control.cloud-intensity.tooltip': 'Controls the amount of sky covered by clouds.',
-
-        'control.flow-scale.label': 'Scale',
-        'control.flow-scale.tooltip': 'Adjusts the size of the flow patterns.',
-        'control.flow-intensity.label': 'Density',
-        'control.flow-intensity.tooltip': 'Controls the compactness of the flow lines.',
-
-        'control.geo-scale.label': 'Scale',
-        'control.geo-scale.tooltip': 'Adjusts the size of the geometric shapes.',
-        'control.geo-rotation.label': 'Base Rotation',
-        'control.geo-rotation.tooltip': 'Controls the initial rotation angle of shapes.',
-
-        'control.grid-size.label': 'Grid Scale',
-        'control.grid-size.tooltip': 'Adjusts the size of the grid squares.',
-        'control.grid-glow.label': 'Glow Intensity',
-        'control.grid-glow.tooltip': 'Controls the brightness of the neon glow.',
-        'control.grid-offset-x.label': 'Offset X',
-        'control.grid-offset-x.tooltip': 'Shifts the grid horizontally.',
-        'control.grid-offset-y.label': 'Offset Y',
-        'control.grid-offset-y.tooltip': 'Shifts the grid vertically.',
-        'control.sun-size.label': 'Sun Size',
-        'control.sun-size.tooltip': 'Controls the size of the sun on the horizon.',
-
-        'control.spiral-density.label': 'Spiral Density',
-        'control.spiral-density.tooltip': 'Controls the tightness of the spiral arms.',
-        'control.star-density.label': 'Star Density',
-        'control.star-density.tooltip': 'Adjusts the number of stars in the background.',
-        'control.core-size.label': 'Core Size',
-        'control.core-size.tooltip': 'Controls the size of the galactic core.',
-
-        'control.cell-density.label': 'Cell Density',
-        'control.cell-density.tooltip': 'Controls the number of cells in the pattern.',
-        'control.border-width.label': 'Border Width',
-        'control.border-width.tooltip': 'Adjusts the thickness of cell borders.',
-
-        // Export tips
-        'export.tips.lowTierComplex.title': 'Low-end GPU + Complex Shader',
-        'export.tips.lowTierComplex.description': 'Your GPU tier is low and the selected shader is complex, which may cause poor performance or crashes on some devices.',
-        'export.tips.lowTierComplex.suggestion': 'Consider setting a DPR cap of 1.0 or switching to a simpler shader before exporting.',
-        'export.tips.lowFps.title': 'Low Frame Rate Detected',
-        'export.tips.lowFps.description': 'The current session is running below 45 fps, which indicates your hardware is under stress.',
-        'export.tips.lowFps.suggestion': 'Try reducing the canvas resolution, lowering the pixel ratio, or simplifying the shader.',
-        'export.tips.mobile.title': 'Mobile Device Detected',
-        'export.tips.mobile.description': 'You are running on a mobile device. Full-screen WebGPU backgrounds may impact battery life.',
-        'export.tips.mobile.suggestion': 'Add pointer-events: none to the canvas and consider limiting the pixel ratio to 1.0 for best mobile performance.',
-        'export.tips.reducedMotion.title': 'Prefers Reduced Motion',
-        'export.tips.reducedMotion.description': 'The user has enabled the "Reduce Motion" accessibility setting.',
-        'export.tips.reducedMotion.suggestion': 'A static fallback gradient has been auto-injected into the exported code. Review it to ensure it matches your design.',
-        'export.tips.ultraStable.title': 'Optimal Performance',
-        'export.tips.ultraStable.description': 'Your GPU is high-end and the frame rate is stable. The animation should run smoothly on most devices.',
-        'export.tips.ultraStable.suggestion': 'You can safely use higher pixel ratios or more complex shaders if needed.'
     },
     es: {
-        'dock.settings': 'Config',
+        'dock.backgrounds': 'Fondos',
+        'dock.settings': 'Ajustes',
         'dock.colors': 'Colores',
-        'dock.presets': 'Presets',
-        'dock.random': 'Random',
+        'dock.presets': 'Paletas',
+        'dock.random': 'Aleatorio',
         'dock.saved': 'Guardados',
 
-        'aria.settings': 'Configuración',
-        'aria.colors': 'Colores',
-        'aria.presets': 'Presets',
-        'aria.random': 'Generar aleatorio',
+        'aria.backgrounds': 'Explorar fondos',
+        'aria.settings': 'Ajustar el fondo',
+        'aria.colors': 'Editar colores',
+        'aria.presets': 'Paletas de color',
+        'aria.random': 'Mezclar la paleta',
         'aria.saved': 'Fondos guardados',
 
-        'settings.language': 'Idioma',
-        'settings.shaderType': 'Tipo de shader',
-        'settings.globalSpeed': 'Velocidad global',
-        'settings.globalSpeed.tooltip': 'Controla la velocidad general de la animación.',
+        'export.cta': 'Exportar',
+        'export.cta.title': 'Obtén el código para tu web (E)',
 
+        'language.label': 'Idioma',
         'language.auto': 'Auto',
         'language.en': 'Inglés',
         'language.es': 'Español',
 
+        'gallery.all': 'Todos',
+        'gallery.title': 'Fondos',
+        'gallery.hint': 'Usa ← → para explorar rápido.',
+
+        'cost.title': 'Coste relativo de GPU',
+        'cost.light': 'Ligero para la GPU',
+        'cost.medium': 'Coste medio de GPU',
+        'cost.heavy': 'Pesado para la GPU',
+
+        'settings.background': 'Fondo',
+        'settings.change': 'Cambiar',
+        'settings.globalSpeed': 'Velocidad',
+        'settings.globalSpeed.tooltip': 'Controla la velocidad general de la animación. En 0 el fondo se congela y no usa GPU.',
+
+        'color.lightness': 'Luminosidad',
+        'color.chroma': 'Croma',
+        'color.hue': 'Tono',
+
+        'presets.title': 'Paletas de color',
+        'presets.hint': 'Aplica una paleta lista para usar al fondo actual.',
+
         'saved.title': 'Fondos guardados',
         'saved.subtitle': 'Los nombres son únicos. Guardar el mismo nombre lo actualiza e incrementa la versión.',
-        'saved.exportCurrent': 'Exportar actual',
         'saved.namePlaceholder': 'Nombre (ej. Hero Landing)',
         'saved.save': 'Guardar',
-        'saved.empty': 'Todavía no hay fondos guardados.',
+        'saved.saved': 'Guardado ✓',
+        'saved.empty': 'Aún no hay fondos guardados. Guarda el actual para reutilizarlo después.',
+        'saved.unavailable': 'fondo ya no disponible',
         'saved.deleteAria': 'Eliminar',
         'saved.deleteTitle': 'Eliminar',
         'saved.deleteConfirm': '¿Eliminar el fondo guardado "{name}"?',
 
-        'presets.sunset': 'Atardecer',
-        'presets.ocean': 'Océano',
-        'presets.forest': 'Bosque',
-        'presets.purple': 'Púrpura',
-        'presets.neon': 'Neón',
-        'presets.fire': 'Fuego',
-        'presets.ice': 'Hielo',
-        'presets.midnight': 'Medianoche',
-
         'github.aria': 'Ver código fuente en GitHub',
-
         'select.placeholder': 'Seleccionar…',
         'bottomSheet.toggleAria': 'Alternar panel',
-
-        // Control labels/tooltips
-        'control.brightness.label': 'Brillo',
-        'control.brightness.tooltip': 'Ajusta la luminosidad general de la escena.',
-        'control.contrast.label': 'Contraste',
-        'control.contrast.tooltip': 'Controla la diferencia entre zonas claras y oscuras.',
-        'control.noise.label': 'Ruido',
-        'control.noise.tooltip': 'Agrega grano para un look más orgánico.',
-
-        'control.wave-amplitude.label': 'Amplitud',
-        'control.wave-amplitude.tooltip': 'Controla la altura de las olas.',
-        'control.wave-frequency.label': 'Frecuencia',
-        'control.wave-frequency.tooltip': 'Ajusta la cantidad de olas visibles.',
-
-        'control.stripe-width.label': 'Densidad',
-        'control.stripe-width.tooltip': 'Controla la cantidad de rayas.',
-        'control.stripe-speed.label': 'Velocidad relativa',
-        'control.stripe-speed.tooltip': 'Ajusta qué tan rápido se mueven entre sí.',
-
-        'control.zoom.label': 'Complejidad',
-        'control.zoom.tooltip': 'Controla el nivel de detalle de la distorsión.',
-
-        'control.mesh-scale.label': 'Densidad',
-        'control.mesh-scale.tooltip': 'Ajusta qué tan cerrada es la malla.',
-        'control.mesh-distortion.label': 'Distorsión',
-        'control.mesh-distortion.tooltip': 'Controla la cantidad de deformación aplicada.',
-
-        'control.particle-intensity.label': 'Intensidad',
-        'control.particle-intensity.tooltip': 'Controla el brillo y visibilidad de las partículas.',
-
-        'control.aurora-scale.label': 'Escala',
-        'control.aurora-scale.tooltip': 'Ajusta el tamaño de las cortinas de aurora.',
-        'control.aurora-intensity.label': 'Intensidad',
-        'control.aurora-intensity.tooltip': 'Controla el brillo del efecto de aurora.',
-
-        'control.cloud-scale.label': 'Escala',
-        'control.cloud-scale.tooltip': 'Ajusta el tamaño y la suavidad de las nubes.',
-        'control.cloud-intensity.label': 'Cobertura',
-        'control.cloud-intensity.tooltip': 'Controla la cantidad de cielo cubierto por nubes.',
-
-        'control.flow-scale.label': 'Escala',
-        'control.flow-scale.tooltip': 'Ajusta el tamaño de los patrones de flujo.',
-        'control.flow-intensity.label': 'Densidad',
-        'control.flow-intensity.tooltip': 'Controla la compactación de las líneas de flujo.',
-
-        'control.geo-scale.label': 'Escala',
-        'control.geo-scale.tooltip': 'Ajusta el tamaño de las formas geométricas.',
-        'control.geo-rotation.label': 'Rotación base',
-        'control.geo-rotation.tooltip': 'Controla el ángulo de rotación inicial de las formas.',
-
-        'control.grid-size.label': 'Escala de grilla',
-        'control.grid-size.tooltip': 'Ajusta el tamaño de los cuadros de la grilla.',
-        'control.grid-glow.label': 'Intensidad de brillo',
-        'control.grid-glow.tooltip': 'Controla el brillo del resplandor neón.',
-        'control.grid-offset-x.label': 'Offset X',
-        'control.grid-offset-x.tooltip': 'Desplaza la grilla horizontalmente.',
-        'control.grid-offset-y.label': 'Offset Y',
-        'control.grid-offset-y.tooltip': 'Desplaza la grilla verticalmente.',
-        'control.sun-size.label': 'Tamaño del sol',
-        'control.sun-size.tooltip': 'Controla el tamaño del sol en el horizonte.',
-
-        'control.spiral-density.label': 'Densidad de espiral',
-        'control.spiral-density.tooltip': 'Controla qué tan apretados están los brazos.',
-        'control.star-density.label': 'Densidad de estrellas',
-        'control.star-density.tooltip': 'Ajusta la cantidad de estrellas del fondo.',
-        'control.core-size.label': 'Tamaño del núcleo',
-        'control.core-size.tooltip': 'Controla el tamaño del núcleo galáctico.',
-
-        'control.cell-density.label': 'Densidad de celdas',
-        'control.cell-density.tooltip': 'Controla la cantidad de celdas del patrón.',
-        'control.border-width.label': 'Grosor del borde',
-        'control.border-width.tooltip': 'Ajusta el grosor de los bordes de las celdas.',
-
-        // Export tips
-        'export.tips.lowTierComplex.title': 'GPU de baja gama + Shader complejo',
-        'export.tips.lowTierComplex.description': 'Tu GPU es de baja gama y el shader seleccionado es complejo, lo que puede causar bajo rendimiento o crashes en algunos dispositivos.',
-        'export.tips.lowTierComplex.suggestion': 'Considerá limitar el DPR a 1.0 o elegir un shader más simple antes de exportar.',
-        'export.tips.lowFps.title': 'FPS bajo detectado',
-        'export.tips.lowFps.description': 'La sesión actual corre por debajo de 45 fps, lo que indica que el hardware está bajo estrés.',
-        'export.tips.lowFps.suggestion': 'Probá reducir la resolución del canvas, bajar el pixel ratio o simplificar el shader.',
-        'export.tips.mobile.title': 'Dispositivo móvil detectado',
-        'export.tips.mobile.description': 'Estás usando un dispositivo móvil. Los fondos WebGPU a pantalla completa pueden afectar la batería.',
-        'export.tips.mobile.suggestion': 'Agregá pointer-events: none al canvas y considerá limitar el pixel ratio a 1.0 para mejor rendimiento en móviles.',
-        'export.tips.reducedMotion.title': 'Preferencia de movimiento reducido',
-        'export.tips.reducedMotion.description': 'El usuario tiene activada la configuración de accesibilidad "Reducir Movimiento".',
-        'export.tips.reducedMotion.suggestion': 'Se inyectó automáticamente un gradiente estático de fallback en el código exportado. Revisalo para asegurarte de que coincide con tu diseño.',
-        'export.tips.ultraStable.title': 'Rendimiento óptimo',
-        'export.tips.ultraStable.description': 'Tu GPU es de alta gama y la tasa de cuadros es estable. La animación debería correr sin problemas en la mayoría de los dispositivos.',
-        'export.tips.ultraStable.suggestion': 'Podés usar pixel ratios más altos o shaders más complejos si lo necesitás.'
-    }
-};
-
-const SHADER_I18N = {
-    waves: {
-        en: { name: 'Waves', description: 'Layered sinusoidal waves with smooth motion', colorLabels: ['Wave 1', 'Wave 2', 'Wave 3', 'Background'] },
-        es: { name: 'Ondas', description: 'Ondas sinusoidales superpuestas con movimiento fluido', colorLabels: ['Ola 1', 'Ola 2', 'Ola 3', 'Fondo'] }
     },
-    stripes: {
-        en: { name: 'Stripes', description: 'Stripe patterns using sine and cosine functions', colorLabels: ['Color 1', 'Color 2', 'Color 3', 'Color 4'] },
-        es: { name: 'Rayas', description: 'Patrones de rayas usando funciones seno y coseno', colorLabels: ['Color 1', 'Color 2', 'Color 3', 'Color 4'] }
-    },
-    liquid: {
-        en: { name: 'Liquid', description: 'Liquid effect with FBM (Fractional Brownian Motion) noise', colorLabels: ['Color A', 'Color B', 'Color C', 'Background'] },
-        es: { name: 'Líquido', description: 'Efecto líquido con ruido FBM (Fractional Brownian Motion)', colorLabels: ['Color A', 'Color B', 'Color C', 'Fondo'] }
-    },
-    mesh: {
-        en: { name: 'Mesh Gradient', description: 'Mesh gradient with procedural distortion', colorLabels: ['Color 1', 'Color 2', 'Color 3', 'Color 4'] },
-        es: { name: 'Mesh Gradient', description: 'Gradiente tipo malla con distorsión procedural', colorLabels: ['Color 1', 'Color 2', 'Color 3', 'Color 4'] }
-    },
-    particles: {
-        en: { name: 'Particles', description: 'Animated particle system with wave-like motion', colorLabels: ['Background', 'Particles 1', 'Particles 2', 'Glow'] },
-        es: { name: 'Partículas', description: 'Sistema de partículas animadas con movimiento ondulatorio', colorLabels: ['Fondo', 'Partículas 1', 'Partículas 2', 'Brillo'] }
-    },
-    aurora: {
-        en: { name: 'Aurora', description: 'Northern lights effect with layered noise', colorLabels: ['Sky', 'Horizon', 'Aurora 1', 'Aurora 2'] },
-        es: { name: 'Aurora', description: 'Efecto de aurora boreal con capas de ruido', colorLabels: ['Cielo', 'Horizonte', 'Aurora 1', 'Aurora 2'] }
-    },
-    clouds: {
-        en: { name: 'Clouds', description: 'Sky with fluffy, realistic clouds', colorLabels: ['Sky', 'Clouds 1', 'Clouds 2', 'Sun'] },
-        es: { name: 'Nubes', description: 'Cielo con nubes esponjosas y realistas', colorLabels: ['Cielo', 'Nubes 1', 'Nubes 2', 'Sol'] }
-    },
-    flow: {
-        en: { name: 'Ethereal Flow', description: 'Dreamy fluid effect inspired by Vanta.js', colorLabels: ['Color 1', 'Color 2', 'Color 3', 'Background'] },
-        es: { name: 'Flujo Etéreo', description: 'Efecto fluido y onírico estilo Vanta.js', colorLabels: ['Color 1', 'Color 2', 'Color 3', 'Fondo'] }
-    },
-    geometric: {
-        en: { name: 'Geometric', description: 'Geometric patterns (hexagons, squares, triangles)', colorLabels: ['Shapes 1', 'Shapes 2', 'Background 1', 'Background 2'] },
-        es: { name: 'Geométrico', description: 'Patrones geométricos (hexágonos, cuadrados, triángulos)', colorLabels: ['Formas 1', 'Formas 2', 'Fondo 1', 'Fondo 2'] }
-    },
-    neon_grid: {
-        en: { name: 'Synth Horizon', description: 'Synthwave/Cyberpunk grid with 3D perspective', colorLabels: ['Sky', 'Grid', 'Sun', 'Glow'] },
-        es: { name: 'Synth Horizon', description: 'Rejilla estilo Synthwave/Cyberpunk con perspectiva 3D', colorLabels: ['Cielo', 'Grilla', 'Sol', 'Brillo'] }
-    },
-    galaxy: {
-        en: { name: 'Galaxy', description: 'Galactic spiral with stars and nebulae', colorLabels: ['Core', 'Arms', 'Nebula', 'Stars'] },
-        es: { name: 'Galaxia', description: 'Espiral galáctica con estrellas y nebulosas', colorLabels: ['Núcleo', 'Brazos', 'Nebulosa', 'Estrellas'] }
-    },
-    voronoi: {
-        en: { name: 'Cells', description: 'Organic/tech Voronoi cellular pattern', colorLabels: ['Cells 1', 'Cells 2', 'Borders', 'Background'] },
-        es: { name: 'Células', description: 'Patrón celular Voronoi orgánico/tecnológico', colorLabels: ['Celdas 1', 'Celdas 2', 'Bordes', 'Fondo'] }
-    }
 };
 
 export class I18nManager {
@@ -402,39 +202,30 @@ export class I18nManager {
         return String(raw).replace(/\{(\w+)\}/g, (_, k) => (params[k] ?? `{${k}}`));
     }
 
+    /** Resolves a control's label/tooltip for the active language. */
     localizeControl(control) {
-        if (!control || typeof control !== 'object') return control;
-        const id = control.id;
-        if (!id) return control;
-
-        const labelKey = `control.${id}.label`;
-        const tooltipKey = `control.${id}.tooltip`;
-
-        const label = this.t(labelKey);
-        const tooltip = this.t(tooltipKey);
+        const lang = this.getLanguage();
+        const texts = control?.i18n;
+        if (!texts) return control;
         return {
             ...control,
-            label: label !== labelKey ? label : control.label,
-            tooltip: control.tooltip ? (tooltip !== tooltipKey ? tooltip : control.tooltip) : control.tooltip
+            label: texts.label?.[lang] ?? texts.label?.en ?? control.label,
+            tooltip: texts.tooltip?.[lang] ?? texts.tooltip?.en ?? control.tooltip,
         };
     }
 
-    localizeShader(shaderKey, shaderConfig) {
+    /** Resolves a registry entry (name, description, color labels, controls) for the active language. */
+    localizeShader(_shaderKey, shaderConfig) {
+        if (!shaderConfig) return shaderConfig;
         const lang = this.getLanguage();
-        const shaderMeta = SHADER_I18N?.[shaderKey]?.[lang];
-        const fallbackMeta = SHADER_I18N?.[shaderKey]?.en;
-
-        if (!shaderMeta && !fallbackMeta) return shaderConfig;
-
-        const meta = shaderMeta || fallbackMeta;
         return {
             ...shaderConfig,
-            name: meta?.name ?? shaderConfig?.name,
-            description: meta?.description ?? shaderConfig?.description,
-            colorLabels: meta?.colorLabels ?? shaderConfig?.colorLabels,
-            controls: Array.isArray(shaderConfig?.controls)
-                ? shaderConfig.controls.map(c => this.localizeControl(c))
-                : shaderConfig?.controls
+            name: shaderConfig.name?.[lang] ?? shaderConfig.name?.en ?? shaderConfig.name,
+            description: shaderConfig.description?.[lang] ?? shaderConfig.description?.en ?? shaderConfig.description,
+            colorLabels: shaderConfig.colorLabels?.[lang] ?? shaderConfig.colorLabels?.en ?? shaderConfig.colorLabels,
+            controls: Array.isArray(shaderConfig.controls)
+                ? shaderConfig.controls.map((c) => this.localizeControl(c))
+                : shaderConfig.controls,
         };
     }
 
@@ -452,9 +243,9 @@ export class I18nManager {
                 new CustomEvent('i18n:change', {
                     detail: {
                         language: this.getLanguage(),
-                        preference: this.getPreference()
-                    }
-                })
+                        preference: this.getPreference(),
+                    },
+                }),
             );
         } catch {
             // ignore

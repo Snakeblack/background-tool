@@ -1,318 +1,275 @@
 /**
  * Color Control Component - Web Component para controles de color OKLCH
+ *
+ * Rendered once; attribute/API changes update the DOM in place so the
+ * collapsed state and an in-progress drag are never lost.
  */
 
-import * as culori from 'culori';
 import { ChevronDown, createElement } from 'lucide';
 
+const CHROMA_MAX = 0.4;
+
 export class ColorControl extends HTMLElement {
-    /**
-     * Constructor del componente ColorControl
-     */
     constructor() {
         super();
         this.attachShadow({ mode: 'open' });
+        this._rendered = false;
     }
 
-    /**
-     * Atributos observados del componente
-     * @returns {string[]} Lista de atributos a observar
-     */
     static get observedAttributes() {
-        return ['color-index', 'label', 'l-value', 'c-value', 'h-value'];
+        return ['label', 'l-label', 'c-label', 'h-label'];
     }
 
-    /**
-     * Callback ejecutado cuando el componente se conecta al DOM
-     */
     connectedCallback() {
-        this.render();
-        this.updateInitialPreview();
+        if (!this._rendered) this.render();
+        this.setColor(this.getColorOKLCH());
     }
 
-    /**
-     * Callback ejecutado cuando cambia un atributo observado
-     * @param {string} name - Nombre del atributo
-     * @param {string} oldValue - Valor anterior
-     * @param {string} newValue - Nuevo valor
-     */
     attributeChangedCallback(name, oldValue, newValue) {
-        if (oldValue !== newValue) {
-            this.render();
-            if (['l-value', 'c-value', 'h-value'].includes(name)) {
-                this.updateInitialPreview();
-            }
-        }
+        if (oldValue === newValue || !this._rendered) return;
+        this.applyLabels();
     }
 
-    /**
-     * Renderiza el componente con su estructura HTML y estilos
-     */
+    get colorIndex() {
+        return this.getAttribute('color-index') || '1';
+    }
+
     render() {
-        const colorIndex = this.getAttribute('color-index') || '1';
-        const label = this.getAttribute('label') || `Color ${colorIndex}`;
-        const lValue = this.getAttribute('l-value') || '0.7';
-        const cValue = this.getAttribute('c-value') || '0.25';
-        const hValue = this.getAttribute('h-value') || '330';
+        const index = this.colorIndex;
+        const open = this.hasAttribute('open');
 
         this.shadowRoot.innerHTML = `
             <style>
-                :host {
-                    display: block;
-                    font-family: 'Inter', sans-serif;
-                }
-                .control-section {
-                    margin-bottom: 0.75rem;
-                }
-                .collapsible-header {
+                :host { display: block; font-family: var(--font-body, 'Inter', sans-serif); }
+
+                .control-section { margin-bottom: 0.5rem; }
+
+                .header {
                     width: 100%;
-                    padding: 0.75rem 1rem;
-                    background: rgba(255, 255, 255, 0.03);
-                    border: 1px solid rgba(255, 255, 255, 0.08);
-                    border-radius: 16px;
-                    color: #e0e0e0;
+                    padding: 0.7rem 0.9rem;
+                    background: rgba(255, 255, 255, 0.04);
+                    border: 1px solid rgba(255, 255, 255, 0.09);
+                    border-radius: 14px;
+                    color: #eee;
                     cursor: pointer;
                     display: flex;
                     align-items: center;
-                    gap: 0.75rem;
-                    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+                    gap: 0.65rem;
                     text-align: left;
-                    font-family: 'Space Grotesk', sans-serif;
+                    font-family: var(--font-display, 'Space Grotesk', sans-serif);
                     font-weight: 500;
-                    font-size: 0.9375rem;
+                    font-size: 0.9rem;
+                    transition: background-color 0.2s ease, border-color 0.2s ease;
+                    -webkit-tap-highlight-color: transparent;
                 }
-                .collapsible-header:hover {
-                    background: rgba(255, 255, 255, 0.08);
-                    border-color: rgba(255, 255, 255, 0.2);
-                    color: white;
-                    transform: translateY(-1px);
-                }
-                .collapsible-header.active {
-                    border-color: rgba(204, 255, 0, 0.3);
-                    background: rgba(204, 255, 0, 0.05);
-                }
-                .collapse-icon {
-                    transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-                    font-size: 0.75rem;
-                    color: #a0a0a0;
-                    display: flex;
-                    align-items: center;
-                }
-                .collapsible-header.collapsed .collapse-icon {
-                    transform: rotate(-90deg);
-                }
-                .color-preview-inline {
-                    width: 20px;
-                    height: 20px;
+                .header:hover { background: rgba(255, 255, 255, 0.08); border-color: rgba(255, 255, 255, 0.2); }
+                .header:focus-visible { outline: 2px solid var(--accent, #ccff00); outline-offset: 2px; }
+                .header[aria-expanded="true"] { border-color: rgba(204, 255, 0, 0.35); }
+
+                .chevron { display: flex; color: #a0a0a0; transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1); }
+                .header[aria-expanded="false"] .chevron { transform: rotate(-90deg); }
+                .chevron svg { width: 1rem; height: 1rem; }
+
+                .swatch {
+                    width: 22px;
+                    height: 22px;
                     border-radius: 50%;
-                    border: 1px solid rgba(255, 255, 255, 0.2);
+                    border: 1px solid rgba(255, 255, 255, 0.3);
                     margin-left: auto;
-                    box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+                    flex: none;
                 }
-                .collapsible-content {
-                    max-height: 500px;
-                    overflow: hidden;
-                    transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-                    opacity: 1;
-                    padding: 1rem;
-                    background: rgba(0, 0, 0, 0.2);
-                    border: 1px solid rgba(255, 255, 255, 0.05);
-                    border-top: none;
-                    border-radius: 0 0 16px 16px;
-                    margin-top: -8px;
-                    padding-top: 1.5rem;
+
+                .body {
+                    display: grid;
+                    grid-template-rows: 1fr;
+                    transition: grid-template-rows 0.3s cubic-bezier(0.16, 1, 0.3, 1);
                 }
-                .collapsible-content.collapsed {
-                    max-height: 0;
-                    opacity: 0;
-                    padding: 0 1rem;
-                    border-color: transparent;
-                }
-                .control-item {
-                    margin-bottom: 1rem;
-                }
-                .control-item:last-child {
-                    margin-bottom: 0;
-                }
-                label {
+                .body.collapsed { grid-template-rows: 0fr; }
+                .body-inner { overflow: hidden; min-height: 0; }
+                .fields { padding: 0.9rem 0.25rem 0.25rem; }
+
+                .field { margin-bottom: 0.9rem; }
+                .field:last-child { margin-bottom: 0; }
+
+                .field-head {
                     display: flex;
                     justify-content: space-between;
-                    font-size: 0.75rem;
-                    color: #a0a0a0;
-                    margin-bottom: 0.5rem;
+                    align-items: baseline;
+                    margin-bottom: 0.4rem;
+                }
+                label {
+                    font-size: 0.72rem;
+                    color: #b4b4b4;
                     text-transform: uppercase;
-                    letter-spacing: 0.05em;
+                    letter-spacing: 0.06em;
                     font-weight: 500;
                 }
-                label span {
-                    color: #ffffff;
-                    font-family: 'Space Mono', monospace;
+                output {
+                    font-size: 0.78rem;
+                    color: #fff;
+                    font-variant-numeric: tabular-nums;
+                    opacity: 0.85;
                 }
+
                 input[type="range"] {
+                    --fill: 50%;
                     width: 100%;
-                    height: 4px;
-                    border-radius: 2px;
-                    background: rgba(255, 255, 255, 0.1);
-                    outline: none;
+                    height: 20px;
+                    margin: 0;
+                    background: transparent;
                     -webkit-appearance: none;
                     appearance: none;
+                    cursor: pointer;
+                    touch-action: pan-y;
+                }
+                input[type="range"]::-webkit-slider-runnable-track {
+                    height: 4px;
+                    border-radius: 2px;
+                    background: linear-gradient(to right, var(--accent, #ccff00) var(--fill), rgba(255, 255, 255, 0.14) var(--fill));
+                }
+                input[type="range"]::-moz-range-track {
+                    height: 4px;
+                    border-radius: 2px;
+                    background: linear-gradient(to right, var(--accent, #ccff00) var(--fill), rgba(255, 255, 255, 0.14) var(--fill));
                 }
                 input[type="range"]::-webkit-slider-thumb {
                     -webkit-appearance: none;
                     appearance: none;
                     width: 16px;
                     height: 16px;
+                    margin-top: -6px;
                     border-radius: 50%;
-                    background: #ccff00;
-                    cursor: pointer;
-                    box-shadow: 0 0 10px rgba(204, 255, 0, 0.5);
-                    transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-                    margin-top: -6px; /* Center on track */
-                }
-                input[type="range"]::-webkit-slider-runnable-track {
-                    height: 4px;
-                    border-radius: 2px;
-                    background: rgba(255, 255, 255, 0.1);
-                }
-                input[type="range"]::-webkit-slider-thumb:hover {
-                    transform: scale(1.2);
-                    box-shadow: 0 0 15px rgba(204, 255, 0, 0.8);
+                    background: #fff;
+                    box-shadow: 0 0 0 3px rgba(204, 255, 0, 0.35), 0 2px 6px rgba(0, 0, 0, 0.4);
+                    transition: transform 0.15s ease;
                 }
                 input[type="range"]::-moz-range-thumb {
                     width: 16px;
                     height: 16px;
-                    border-radius: 50%;
-                    background: #ccff00;
-                    cursor: pointer;
-                    box-shadow: 0 0 10px rgba(204, 255, 0, 0.5);
                     border: none;
-                    transition: transform 0.2s;
+                    border-radius: 50%;
+                    background: #fff;
+                    box-shadow: 0 0 0 3px rgba(204, 255, 0, 0.35), 0 2px 6px rgba(0, 0, 0, 0.4);
                 }
-                input[type="range"]::-moz-range-thumb:hover {
-                    transform: scale(1.2);
-                }
+                input[type="range"]:hover::-webkit-slider-thumb,
+                input[type="range"]:active::-webkit-slider-thumb { transform: scale(1.15); }
+                input[type="range"]:focus-visible { outline: 2px solid var(--accent, #ccff00); outline-offset: 4px; border-radius: 4px; }
 
-                @media (max-width: 640px) {
-                    .collapsible-header {
-                        padding: 0.625rem 0.875rem;
-                        font-size: 0.875rem;
-                    }
-                    .color-preview-inline {
-                        width: 18px;
-                        height: 18px;
-                    }
-                    .collapsible-content {
-                        padding: 0.875rem;
-                        padding-top: 1.25rem;
-                    }
-                    label {
-                        font-size: 0.6875rem;
-                    }
-                }
-                
-                .icon-sm {
-                    width: 1rem;
-                    height: 1rem;
-                    stroke-width: 2;
+                @media (prefers-reduced-motion: reduce) {
+                    .body, .chevron { transition: none; }
                 }
             </style>
-            
+
             <div class="control-section">
-                <button class="collapsible-header" id="header">
-                    <span class="collapse-icon">${createElement(ChevronDown, {class: "icon-sm"}).outerHTML}</span>
-                    <span>${label}</span>
-                    <div class="color-preview-inline" id="preview"></div>
+                <button type="button" class="header" id="header" aria-expanded="${open}" aria-controls="body">
+                    <span class="chevron">${createElement(ChevronDown, { 'aria-hidden': 'true' }).outerHTML}</span>
+                    <span id="title"></span>
+                    <span class="swatch" id="preview"></span>
                 </button>
-                <div class="collapsible-content" id="content">
-                    <div class="control-item">
-                        <label for="l-slider">Lightness <span>${Math.round(lValue * 100)}</span></label>
-                        <input type="range" id="l-slider" min="0.0" max="1.0" step="0.001" value="${lValue}" 
-                               data-color="${colorIndex}" data-channel="l" class="oklch-slider">
-                    </div>
-                    <div class="control-item">
-                        <label for="c-slider">Chroma <span>${Math.round((cValue / 0.4) * 100)}</span></label>
-                        <input type="range" id="c-slider" min="0.0" max="0.4" step="0.001" value="${cValue}"
-                               data-color="${colorIndex}" data-channel="c" class="oklch-slider">
-                    </div>
-                    <div class="control-item">
-                        <label for="h-slider">Hue <span>${Math.round(hValue)}</span></label>
-                        <input type="range" id="h-slider" min="0" max="360" step="0.1" value="${hValue}"
-                               data-color="${colorIndex}" data-channel="h" class="oklch-slider">
+                <div class="body${open ? '' : ' collapsed'}" id="body" role="region" aria-labelledby="header">
+                    <div class="body-inner">
+                        <div class="fields">
+                            <div class="field">
+                                <div class="field-head"><label for="l-slider" id="l-label"></label><output id="l-out" for="l-slider"></output></div>
+                                <input type="range" id="l-slider" min="0" max="1" step="0.001" data-channel="l">
+                            </div>
+                            <div class="field">
+                                <div class="field-head"><label for="c-slider" id="c-label"></label><output id="c-out" for="c-slider"></output></div>
+                                <input type="range" id="c-slider" min="0" max="${CHROMA_MAX}" step="0.001" data-channel="c">
+                            </div>
+                            <div class="field">
+                                <div class="field-head"><label for="h-slider" id="h-label"></label><output id="h-out" for="h-slider"></output></div>
+                                <input type="range" id="h-slider" min="0" max="360" step="0.1" data-channel="h">
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
         `;
 
-        const header = this.shadowRoot.getElementById('header');
-        const content = this.shadowRoot.getElementById('content');
-        
-        header.addEventListener('click', () => {
-            header.classList.toggle('collapsed');
-            header.classList.toggle('active'); // Add active state for border color
-            content.classList.toggle('collapsed');
-        });
+        this._rendered = true;
 
-        const sliders = this.shadowRoot.querySelectorAll('.oklch-slider');
-        sliders.forEach(slider => {
-            slider.addEventListener('input', (e) => {
-                const channel = e.target.dataset.channel;
-                const value = parseFloat(e.target.value);
-                
-                // Update label span directly
-                const labelSpan = slider.previousElementSibling.querySelector('span');
-                if (labelSpan) {
-                    if (channel === 'l') {
-                        labelSpan.textContent = Math.round(value * 100);
-                    } else if (channel === 'c') {
-                        labelSpan.textContent = Math.round((value / 0.4) * 100);
-                    } else if (channel === 'h') {
-                        labelSpan.textContent = Math.round(value);
-                    }
-                }
-                
+        const $ = (id) => this.shadowRoot.getElementById(id);
+        this.header = $('header');
+        this.body = $('body');
+        this.preview = $('preview');
+        this.sliders = {
+            l: $('l-slider'),
+            c: $('c-slider'),
+            h: $('h-slider'),
+        };
+        this.outputs = { l: $('l-out'), c: $('c-out'), h: $('h-out') };
+
+        this.header.addEventListener('click', () => this.setOpen(this.header.getAttribute('aria-expanded') !== 'true'));
+
+        Object.entries(this.sliders).forEach(([channel, slider]) => {
+            slider.addEventListener('input', () => {
+                const value = parseFloat(slider.value);
+                this.updateChannelUI(channel, value);
                 this.dispatchEvent(new CustomEvent('color-change', {
-                    detail: {
-                        colorIndex: parseInt(colorIndex),
-                        channel,
-                        value
-                    },
+                    detail: { colorIndex: parseInt(index, 10), channel, value },
                     bubbles: true,
-                    composed: true
+                    composed: true,
                 }));
             });
         });
+
+        this.applyLabels();
+    }
+
+    applyLabels() {
+        const $ = (id) => this.shadowRoot.getElementById(id);
+        $('title').textContent = this.getAttribute('label') || `Color ${this.colorIndex}`;
+        $('l-label').textContent = this.getAttribute('l-label') || 'Lightness';
+        $('c-label').textContent = this.getAttribute('c-label') || 'Chroma';
+        $('h-label').textContent = this.getAttribute('h-label') || 'Hue';
+    }
+
+    /** Expands or collapses the section and notifies siblings (accordion). */
+    setOpen(open) {
+        if (!this._rendered) return;
+        this.header.setAttribute('aria-expanded', String(open));
+        this.body.classList.toggle('collapsed', !open);
+        this.toggleAttribute('open', open);
+        this.dispatchEvent(new CustomEvent('color-toggle', { detail: { open }, bubbles: true, composed: true }));
+    }
+
+    updateChannelUI(channel, value) {
+        const slider = this.sliders[channel];
+        const max = parseFloat(slider.max);
+        const fraction = (value / max) * 100;
+        slider.style.setProperty('--fill', `${fraction}%`);
+        this.outputs[channel].textContent = channel === 'c' ? Math.round((value / CHROMA_MAX) * 100) : channel === 'h' ? Math.round(value) : Math.round(value * 100);
     }
 
     /**
-     * Actualiza el preview del color con un valor hexadecimal
-     * @param {string} hexColor - Color en formato hexadecimal
+     * Sets the OKLCH values (and optional hex swatch) without re-rendering.
+     * @param {{ l: number, c: number, h: number }} color
+     * @param {string} [hex]
      */
+    setColor({ l, c, h }, hex) {
+        if (!this._rendered) return;
+        this.sliders.l.value = String(l);
+        this.sliders.c.value = String(c);
+        this.sliders.h.value = String(h);
+        this.updateChannelUI('l', l);
+        this.updateChannelUI('c', c);
+        this.updateChannelUI('h', h);
+        if (hex) this.updatePreview(hex);
+    }
+
+    /** @param {string} hexColor */
     updatePreview(hexColor) {
-        const preview = this.shadowRoot.getElementById('preview');
-        if (preview) {
-            preview.style.backgroundColor = hexColor;
-        }
+        if (this.preview) this.preview.style.backgroundColor = hexColor;
     }
 
-    /**
-     * Obtiene los valores actuales OKLCH del componente
-     * @returns {{ l: number, c: number, h: number }}
-     */
+    /** @returns {{ l: number, c: number, h: number }} */
     getColorOKLCH() {
         return {
-            l: parseFloat(this.getAttribute('l-value') || '0.7'),
-            c: parseFloat(this.getAttribute('c-value') || '0.25'),
-            h: parseFloat(this.getAttribute('h-value') || '330')
+            l: parseFloat(this.sliders?.l.value ?? '0.7'),
+            c: parseFloat(this.sliders?.c.value ?? '0.2'),
+            h: parseFloat(this.sliders?.h.value ?? '0'),
         };
-    }
-
-    /**
-     * Actualiza el preview inicial del color al montar el componente
-     */
-    updateInitialPreview() {
-        const oklch = this.getColorOKLCH();
-        const hex = culori.formatHex({ mode: 'oklch', ...oklch });
-        this.updatePreview(hex);
     }
 }
 

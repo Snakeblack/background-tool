@@ -59,6 +59,18 @@ export function evaluateTips(context) {
         });
     }
 
+    // info: heavy background, whatever this machine can do (visitors have slower GPUs)
+    if (shaderComplexity === 'complex' && !tips.some((tip) => tip.id === 'low-tier-complex-shader')) {
+        tips.push({
+            id: 'heavy-background',
+            severity: 'info',
+            titleKey: 'export.tips.heavyBackground.title',
+            descriptionKey: 'export.tips.heavyBackground.description',
+            suggestionKey: 'export.tips.heavyBackground.suggestion',
+            evidence: [{ metric: 'shader', value: shaderComplexity }],
+        });
+    }
+
     // warning: low observed FPS
     if (observedFps > 0 && observedFps < FPS_WARNING_THRESHOLD) {
         tips.push({

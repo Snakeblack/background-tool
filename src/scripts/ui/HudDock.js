@@ -1,18 +1,28 @@
-import { Settings, Palette, Sparkles, Shuffle, Package, createElement } from 'lucide';
+import { LayoutGrid, SlidersHorizontal, Palette, SwatchBook, Shuffle, Bookmark, createElement } from 'lucide';
+
+/**
+ * Bottom dock. Panel buttons toggle a panel; action buttons fire an event.
+ * Each item: [panel|action, kind, icon, i18n key suffix, fallback label]
+ */
+const ITEMS = [
+    { kind: 'panel', id: 'gallery', icon: LayoutGrid, key: 'backgrounds', label: 'Backgrounds' },
+    { kind: 'panel', id: 'settings', icon: SlidersHorizontal, key: 'settings', label: 'Tweak' },
+    { kind: 'panel', id: 'colors', icon: Palette, key: 'colors', label: 'Colors' },
+    { kind: 'panel', id: 'presets', icon: SwatchBook, key: 'presets', label: 'Palettes' },
+    { kind: 'action', id: 'random', icon: Shuffle, key: 'random', label: 'Shuffle' },
+    { kind: 'panel', id: 'saved', icon: Bookmark, key: 'saved', label: 'Saved' },
+];
 
 export class HudDock extends HTMLElement {
     constructor() {
         super();
         this.attachShadow({ mode: 'open' });
-        this.frames = 0;
-        this.animationId = null;
         this.i18n = null;
     }
 
     connectedCallback() {
         this.render();
         this.setupEvents();
-        this.startAnimation();
     }
 
     setI18nManager(i18nManager) {
@@ -26,58 +36,18 @@ export class HudDock extends HTMLElement {
 
     applyTranslations() {
         if (!this.shadowRoot) return;
-        const buttons = this.shadowRoot.querySelectorAll('.dock-item');
-        buttons.forEach(btn => {
-            const panel = btn.dataset.panel;
-            const action = btn.dataset.action;
-            const labelEl = btn.querySelector('span');
-
-            if (panel === 'settings') {
-                btn.setAttribute('aria-label', this.t('aria.settings', 'Settings'));
-                if (labelEl) labelEl.textContent = this.t('dock.settings', 'Settings');
-            } else if (panel === 'colors') {
-                btn.setAttribute('aria-label', this.t('aria.colors', 'Colors'));
-                if (labelEl) labelEl.textContent = this.t('dock.colors', 'Colors');
-            } else if (panel === 'presets') {
-                btn.setAttribute('aria-label', this.t('aria.presets', 'Presets'));
-                if (labelEl) labelEl.textContent = this.t('dock.presets', 'Presets');
-            } else if (panel === 'saved') {
-                btn.setAttribute('aria-label', this.t('aria.saved', 'Saved backgrounds'));
-                if (labelEl) labelEl.textContent = this.t('dock.saved', 'Saved');
-            } else if (action === 'random') {
-                btn.setAttribute('aria-label', this.t('aria.random', 'Generate random'));
-                if (labelEl) labelEl.textContent = this.t('dock.random', 'Random');
-            }
+        this.shadowRoot.querySelectorAll('.dock-item').forEach((btn) => {
+            const item = ITEMS.find((i) => i.id === (btn.dataset.panel || btn.dataset.action));
+            if (!item) return;
+            btn.setAttribute('aria-label', this.t(`aria.${item.key}`, item.label));
+            const labelEl = btn.querySelector('.dock-label');
+            if (labelEl) labelEl.textContent = this.t(`dock.${item.key}`, item.label);
         });
-    }
-
-    disconnectedCallback() {
-        if (this.animationId) {
-            cancelAnimationFrame(this.animationId);
-        }
-    }
-
-    startAnimation() {
-        const animate = () => {
-            this.frames += 0.05;
-            // Oscilación sutil de la frecuencia
-            const freq = 0.008 + Math.sin(this.frames * 0.05) * 0.002;
-            
-            const turb = this.shadowRoot.getElementById('turb-control');
-            if (turb) {
-                turb.setAttribute('baseFrequency', `${freq} ${freq}`);
-            }
-            
-            this.animationId = requestAnimationFrame(animate);
-        };
-        animate();
     }
 
     render() {
         const style = `
-            * {
-                box-sizing: border-box;
-            }
+            * { box-sizing: border-box; }
 
             :host {
                 position: fixed;
@@ -87,37 +57,27 @@ export class HudDock extends HTMLElement {
                 z-index: 100;
             }
 
-            .dock-wrapper {
-                transform: translateZ(0); /* GPU Optimization */
-                transition: transform 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
-            }
-
-            .dock-wrapper:hover {
-                transform: translateZ(0) scale(1.01);
-            }
-
             .glass-container {
                 position: relative;
                 overflow: hidden;
                 border-radius: 9999px;
                 box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
-                /* Variables del ejemplo original */
-                --bg-color: rgba(0, 0, 0, 0.25);
-                --highlight: rgba(255, 255, 255, 0.15);
+                --bg-color: rgba(0, 0, 0, 0.4);
+                --highlight: rgba(255, 255, 255, 0.16);
             }
 
-            /* 2. CAPA DE EFECTO (Aplica el filtro) */
+            /* Frosted layer. (A decorative SVG displacement filter used to live here; it never
+               affected the backdrop and its animation cost a requestAnimationFrame loop.) */
             .glass-effect {
                 position: absolute;
                 inset: 0;
                 z-index: 10;
-                backdrop-filter: blur(12px); /* backdrop-blur-md */
-                filter: url(#glass-distortion) saturate(120%) brightness(1.15);
+                backdrop-filter: blur(14px) saturate(120%);
+                -webkit-backdrop-filter: blur(14px) saturate(120%);
                 border-radius: inherit;
                 pointer-events: none;
             }
 
-            /* 3. CAPAS DE ACABADO (Tinte y especular) */
             .glass-tint {
                 position: absolute;
                 inset: 0;
@@ -132,184 +92,170 @@ export class HudDock extends HTMLElement {
                 inset: 0;
                 z-index: 30;
                 box-shadow: inset 1px 1px 1px var(--highlight);
+                border: 1px solid rgba(255, 255, 255, 0.06);
                 border-radius: inherit;
-                background: none;
                 pointer-events: none;
-                border: 1px solid rgba(255, 255, 255, 0.05); /* Borde sutil extra para definición */
             }
 
-            /* 4. CONTENIDO */
             .dock-content {
                 position: relative;
                 z-index: 40;
                 display: flex;
-                gap: 1rem;
+                gap: 0.25rem;
                 padding: 0.5rem;
             }
 
             .dock-item {
                 position: relative;
-                padding: 0.5rem 1rem;
-                border-radius: 16px;
+                padding: 0.5rem 0.9rem;
+                min-height: 44px;
+                border-radius: 9999px;
                 cursor: pointer;
                 display: flex;
                 align-items: center;
                 gap: 0.5rem;
-                color: #a0a0a0;
-                transition: all 0.2s ease;
+                color: rgba(255, 255, 255, 0.72);
+                transition: background-color 0.2s ease, color 0.2s ease;
                 background: transparent;
                 border: none;
                 font-family: 'Space Grotesk', sans-serif;
                 font-size: 0.875rem;
                 font-weight: 500;
-                text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+                text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+                -webkit-tap-highlight-color: transparent;
             }
 
-            .dock-item:hover, .dock-item.active {
+            .dock-item:hover {
                 background: rgba(255, 255, 255, 0.1);
-                color: #ffffff;
+                color: #fff;
+            }
+
+            .dock-item:focus-visible {
+                outline: 2px solid var(--accent, #ccff00);
+                outline-offset: -2px;
             }
 
             .dock-item.active {
-                color: #ccff00; /* Neon Lime */
+                background: rgba(255, 255, 255, 0.12);
+                color: var(--accent, #ccff00);
             }
 
             .icon {
                 width: 1.25rem;
                 height: 1.25rem;
                 stroke-width: 2;
-                filter: drop-shadow(0 1px 2px rgba(0,0,0,0.5));
+                flex: none;
+                filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.5));
+            }
+
+            @media (max-width: 1100px) and (min-width: 769px) {
+                .dock-label { display: none; }
+                .dock-item { padding: 0.5rem 0.75rem; }
             }
 
             @media (max-width: 768px) {
                 :host {
-                    bottom: 1.5rem;
-                    width: 90%;
-                    max-width: 400px;
+                    bottom: max(1rem, env(safe-area-inset-bottom));
+                    width: calc(100% - 1.5rem);
+                    max-width: 420px;
+                    z-index: 210; /* above the bottom sheet: the dock doubles as its tab bar */
                 }
 
-                .dock-wrapper, .glass-container {
-                    width: 100%;
-                }
+                .glass-container { width: 100%; }
 
                 .dock-content {
-                    gap: 0.25rem;
+                    gap: 0;
                     justify-content: space-between;
                     width: 100%;
+                    padding: 0.375rem;
                 }
 
                 .dock-item {
-                    padding: 0.75rem;
+                    padding: 0.5rem;
                     flex: 1;
                     justify-content: center;
+                    min-width: 44px;
                 }
 
-                .dock-item span:last-child {
-                    display: none;
-                }
-                
-                .icon {
-                    width: 1.5rem;
-                    height: 1.5rem;
-                    margin: 0;
-                }
+                .dock-label { display: none; }
+
+                .icon { width: 1.5rem; height: 1.5rem; }
+            }
+
+            @media (prefers-reduced-motion: reduce) {
+                .dock-item { transition: none; }
             }
         `;
 
+        const items = ITEMS.map((item) => {
+            const attr = item.kind === 'panel' ? `data-panel="${item.id}" aria-haspopup="dialog" aria-expanded="false"` : `data-action="${item.id}"`;
+            return `
+                <button type="button" class="dock-item" ${attr} aria-label="${this.t(`aria.${item.key}`, item.label)}">
+                    ${createElement(item.icon, { class: 'icon', 'aria-hidden': 'true' }).outerHTML}
+                    <span class="dock-label">${this.t(`dock.${item.key}`, item.label)}</span>
+                </button>`;
+        }).join('');
+
         this.shadowRoot.innerHTML = `
             <style>${style}</style>
-            
-            <div class="dock-wrapper">
-                <div class="glass-container">
-                    <!-- 1. DEFINICIÓN DEL FILTRO -->
-                    <svg aria-hidden="true" style="position: absolute; width: 0; height: 0; overflow: hidden;">
-                        <filter id="glass-distortion">
-                            <feTurbulence id="turb-control" type="turbulence" baseFrequency="0.008" numOctaves="2" result="noise"></feTurbulence>
-                            <feGaussianBlur in="noise" stdDeviation="1.5" result="smoothNoise"/>
-                            <feDisplacementMap in="SourceGraphic" in2="smoothNoise" scale="77"></feDisplacementMap>
-                        </filter>
-                    </svg>
-
-                    <!-- 2. CAPA DE EFECTO -->
-                    <div class="glass-effect"></div>
-                    
-                    <!-- 3. CAPAS DE ACABADO -->
-                    <div class="glass-tint"></div>
-                    <div class="glass-highlight"></div>
-                    
-                    <!-- 4. CONTENIDO -->
-                    <div class="dock-content">
-                        <button class="dock-item" data-panel="settings" aria-label="${this.t('aria.settings', 'Settings')}">
-                            ${createElement(Settings, { class: "icon" }).outerHTML}
-                            <span>${this.t('dock.settings', 'Settings')}</span>
-                        </button>
-                        <button class="dock-item" data-panel="colors" aria-label="${this.t('aria.colors', 'Colors')}">
-                            ${createElement(Palette, { class: "icon" }).outerHTML}
-                            <span>${this.t('dock.colors', 'Colors')}</span>
-                        </button>
-                        <button class="dock-item" data-panel="presets" aria-label="${this.t('aria.presets', 'Presets')}">
-                            ${createElement(Sparkles, { class: "icon" }).outerHTML}
-                            <span>${this.t('dock.presets', 'Presets')}</span>
-                        </button>
-                        <button class="dock-item" data-action="random" aria-label="${this.t('aria.random', 'Generate random')}">
-                            ${createElement(Shuffle, { class: "icon" }).outerHTML}
-                            <span>${this.t('dock.random', 'Random')}</span>
-                        </button>
-                        <button class="dock-item" data-panel="saved" aria-label="${this.t('aria.saved', 'Saved backgrounds')}">
-                            ${createElement(Package, { class: "icon" }).outerHTML}
-                            <span>${this.t('dock.saved', 'Saved')}</span>
-                        </button>
-                    </div>
-                </div>
-            </div>
+            <nav class="glass-container" aria-label="Background tools">
+                <div class="glass-effect"></div>
+                <div class="glass-tint"></div>
+                <div class="glass-highlight"></div>
+                <div class="dock-content">${items}</div>
+            </nav>
         `;
 
         this.applyTranslations();
     }
 
     setupEvents() {
-        this.shadowRoot.querySelectorAll('.dock-item').forEach(item => {
-            item.addEventListener('click', (e) => {
-                const panel = item.dataset.panel;
-                const action = item.dataset.action;
-
+        this.shadowRoot.querySelectorAll('.dock-item').forEach((item) => {
+            item.addEventListener('click', () => {
+                const { panel, action } = item.dataset;
                 if (panel) {
                     this.togglePanel(panel, item);
                 } else if (action) {
-                    this.dispatchEvent(new CustomEvent('action', { 
+                    this.dispatchEvent(new CustomEvent('action', {
                         detail: { action },
                         bubbles: true,
-                        composed: true
+                        composed: true,
                     }));
                 }
             });
         });
     }
 
+    /** Deactivates every dock item. */
     reset() {
-        this.shadowRoot.querySelectorAll('.dock-item').forEach(i => i.classList.remove('active'));
+        this.shadowRoot.querySelectorAll('.dock-item').forEach((i) => {
+            i.classList.remove('active');
+            if (i.dataset.panel) i.setAttribute('aria-expanded', 'false');
+        });
+    }
+
+    /** Opens a panel programmatically, keeping the active state in sync. */
+    openPanel(panelId) {
+        const item = this.shadowRoot.querySelector(`[data-panel="${panelId}"]`);
+        if (item && !item.classList.contains('active')) this.togglePanel(panelId, item);
     }
 
     togglePanel(panelId, clickedItem) {
-        // Toggle active state locally
-        const isActive = clickedItem.classList.contains('active');
-        
-        // Reset all
-        this.shadowRoot.querySelectorAll('.dock-item').forEach(i => i.classList.remove('active'));
+        const wasActive = clickedItem.classList.contains('active');
+        this.reset();
 
-        if (!isActive) {
-            clickedItem.classList.add('active');
-            this.dispatchEvent(new CustomEvent('panel-open', { 
-                detail: { panel: panelId },
-                bubbles: true,
-                composed: true
-            }));
-        } else {
-            this.dispatchEvent(new CustomEvent('panel-close', { 
-                bubbles: true,
-                composed: true
-            }));
+        if (wasActive) {
+            this.dispatchEvent(new CustomEvent('panel-close', { bubbles: true, composed: true }));
+            return;
         }
+
+        clickedItem.classList.add('active');
+        clickedItem.setAttribute('aria-expanded', 'true');
+        this.dispatchEvent(new CustomEvent('panel-open', {
+            detail: { panel: panelId },
+            bubbles: true,
+            composed: true,
+        }));
     }
 }
 

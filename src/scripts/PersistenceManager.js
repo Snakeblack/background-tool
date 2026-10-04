@@ -3,7 +3,9 @@
  */
 
 const STORAGE_KEY = 'background-tool:persist:v1';
-const STORAGE_VERSION = 1;
+// v2: backgrounds were rewritten (new palettes + parameter meanings); v1 per-shader state is dropped,
+// the language preference is kept.
+const STORAGE_VERSION = 2;
 
 function isFiniteNumber(value) {
     return typeof value === 'number' && Number.isFinite(value);
@@ -66,15 +68,20 @@ export class PersistenceManager {
             if (!raw) return;
 
             const parsed = safeJsonParse(raw);
-            if (!parsed || parsed.version !== STORAGE_VERSION) return;
-
-            if (typeof parsed !== 'object' || !parsed) return;
-            if (!parsed.shaders || typeof parsed.shaders !== 'object') return;
+            if (!parsed || typeof parsed !== 'object') return;
 
             const persistedLanguage = parsed?.ui?.language;
             const language = persistedLanguage === 'es' || persistedLanguage === 'en' || persistedLanguage === 'auto'
                 ? persistedLanguage
                 : 'auto';
+
+            // Older versions only contribute the language preference.
+            if (parsed.version !== STORAGE_VERSION) {
+                this._state.ui.language = language;
+                return;
+            }
+
+            if (!parsed.shaders || typeof parsed.shaders !== 'object') return;
 
             this._state = {
                 version: STORAGE_VERSION,

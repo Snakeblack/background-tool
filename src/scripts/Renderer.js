@@ -1,13 +1,18 @@
 /**
- * Core Renderer - Gestiona Three.js y la escena WebGL
+ * Core Renderer — owns the three.js WebGPURenderer and the fullscreen quad.
+ *
+ * Always uses WebGPURenderer: three picks the WebGPU backend when available
+ * and transparently falls back to its WebGL2 backend otherwise, so the
+ * preview runs the exact same TSL code that gets exported.
  */
 
-import { Scene, OrthographicCamera, WebGLRenderer, PlaneGeometry, Mesh, Vector2 } from 'three';
-import { WebGPURenderer } from 'three/webgpu';
+import {
+    Scene, OrthographicCamera, PlaneGeometry, Mesh, Vector2,
+    WebGPURenderer, LinearSRGBColorSpace,
+} from 'three/webgpu';
 
 /**
- * Synthetic mid-tier profile used as default when no tier is provided.
- * Matches the mid entry in GpuDetector's profile table.
+ * Synthetic mid-tier profile used when no tier is provided.
  * @type {import('./GpuDetector.js').TierProfile}
  */
 const MID_TIER_PROFILE = Object.freeze({
@@ -16,11 +21,14 @@ const MID_TIER_PROFILE = Object.freeze({
     qualityScaleFloor: 0.75,
     powerPreference: 'default',
     antialias: false,
+    maxFps: 60,
 });
+
+/** Lowest resolution multiplier we ever render at. */
+const MIN_PIXEL_RATIO = 0.35;
 
 export class Renderer {
     /**
-     * Constructor del renderizador
      * @param {string} canvasId - ID del elemento canvas en el DOM
      */
     constructor(canvasId) {
@@ -29,268 +37,185 @@ export class Renderer {
         this.camera = null;
         this.renderer = null;
         this.mesh = null;
-        this.isWebGPUSupported = false;
+
+        /** @type {'webgpu' | 'webgl2' | null} */
+        this.backend = null;
 
         this._pixelRatio = 1;
         this._qualityScale = 1;
+        this._renderScale = 1;
         this._frameTimeEwmaMs = 16.7;
         this._qualitySampleFrames = 0;
+        this._slowSamples = 0;
+        this._fpsCap = 60;
         this._resolution = new Vector2(1, 1);
         this._resolutionDirty = true;
 
         /** @type {import('./GpuDetector.js').TierProfile} */
         this._tierProfile = MID_TIER_PROFILE;
 
-        /** @type {number} */
-        this._renderedTime = 0;
-
-        /** @type {number} */
-        this._lastFrameDeltaMs = 0;
-
-        /** @type {boolean} */
         this._isPageVisible = !document.hidden;
-
-        /** @type {() => void} */
-        this.#onVisibilityChange = () => {
+        this._onVisibilityChange = () => {
             this._isPageVisible = !document.hidden;
         };
+        this._onResize = () => this._applyPixelRatioAndSize();
     }
 
-    /** @type {() => void} */
-    #onVisibilityChange;
-
     /**
-     * Inicializa la escena, cámara, renderer y geometría
+     * Inicializa la escena, cámara, renderer y geometría.
      * @param {import('./GpuDetector.js').TierProfile} [tierProfile]
-     *   Optional tier profile from GpuDetector. Falls back to synthetic mid-tier
-     *   when omitted, preserving backward compatibility.
      */
     async init(tierProfile) {
         this._tierProfile = tierProfile ?? MID_TIER_PROFILE;
+        this._fpsCap = this._tierProfile.maxFps ?? 60;
 
         this.scene = new Scene();
 
-        // Cámara ortográfica fija que cubre el espacio NDC (-1 a 1)
-        // Aumentamos el far plane a 10 para evitar clipping (z-fighting) en móviles
+        // Fixed orthographic camera covering NDC space.
         this.camera = new OrthographicCamera(-1, 1, 1, -1, 0, 10);
         this.camera.position.z = 1;
 
-        // Check WebGPU support
-        if (navigator.gpu) {
-            try {
-                // WebGPU spec: GPUPowerPreference enum only accepts 'low-power' |
-                // 'high-performance'. Omit the property entirely when our profile
-                // says 'default' to let the UA pick (equivalent semantics).
-                /** @type {GPURequestAdapterOptions} */
-                const adapterOptions = {};
-                if (this._tierProfile.powerPreference !== 'default') {
-                    adapterOptions.powerPreference = this._tierProfile.powerPreference;
-                }
-                const adapter = await navigator.gpu.requestAdapter(adapterOptions);
-                if (adapter) {
-                    this.isWebGPUSupported = true;
-                    console.debug('[Renderer] WebGPU is supported. Initializing WebGPURenderer...');
-                }
-            } catch (e) {
-                console.debug('[Renderer] WebGPU check failed:', e);
-            }
+        // ?renderer=webgl forces the WebGL2 backend (debugging / support).
+        let forceWebGL = false;
+        try {
+            forceWebGL = new URLSearchParams(location.search).get('renderer') === 'webgl';
+        } catch {
+            // ignore
         }
 
-        if (this.isWebGPUSupported) {
-            this.renderer = new WebGPURenderer({
-                canvas: this.canvas,
-                antialias: this._tierProfile.antialias,
-                alpha: false,
-                precision: 'highp',
-            });
-            // three 0.184+: WebGPURenderer requires explicit init() before first render().
-            // Internally awaits adapter/device acquisition; render() becomes safe to call sync.
-            await this.renderer.init();
-        } else {
-            console.debug('[Renderer] WebGPU not supported. Fallback to WebGLRenderer.');
-            this.renderer = new WebGLRenderer({
-                canvas: this.canvas,
-                antialias: this._tierProfile.antialias,
-                alpha: false,
-                precision: 'highp',
-                powerPreference: this._tierProfile.powerPreference,
-            });
-        }
+        this.renderer = new WebGPURenderer({
+            canvas: this.canvas,
+            // A single fullscreen quad has no edges to smooth: MSAA would only burn memory/bandwidth.
+            antialias: false,
+            alpha: false,
+            forceWebGL,
+        });
+        // Shaders output display-ready sRGB (see tslLib.finish), so no extra encoding.
+        this.renderer.outputColorSpace = LinearSRGBColorSpace;
+
+        // Resolves the adapter/device (or the WebGL2 fallback) before the first render.
+        await this.renderer.init();
+        this.backend = this.renderer.backend?.isWebGPUBackend ? 'webgpu' : 'webgl2';
+        console.debug(`[Renderer] backend: ${this.backend}`);
 
         this._applyPixelRatioAndSize();
 
-        // Geometría fija de 2x2 para cubrir todo el viewport
-        const geometry = new PlaneGeometry(2, 2);
-        this.mesh = new Mesh(geometry);
+        this.mesh = new Mesh(new PlaneGeometry(2, 2));
         this.mesh.frustumCulled = false;
         this.scene.add(this.mesh);
 
-        window.addEventListener('resize', () => this.onWindowResize(), { passive: true });
-        document.addEventListener('visibilitychange', this.#onVisibilityChange);
+        window.addEventListener('resize', this._onResize, { passive: true });
+        document.addEventListener('visibilitychange', this._onVisibilityChange);
     }
 
-    /**
-     * Limpia los event listeners del renderer.
-     * Llamar al desmontar para evitar memory leaks en HMR.
-     */
     dispose() {
-        document.removeEventListener('visibilitychange', this.#onVisibilityChange);
+        window.removeEventListener('resize', this._onResize);
+        document.removeEventListener('visibilitychange', this._onVisibilityChange);
+        this.renderer?.dispose();
     }
 
     /**
-     * Maneja el evento de resize de la ventana
-     * Actualiza dimensiones del renderer
+     * Soft backgrounds (gradients, fog…) don't need native resolution: rendering
+     * them at a fraction of it cuts GPU work by 1/scale² and the browser's
+     * bilinear upscale is invisible on smooth content.
+     * @param {number} scale 0.35..1
      */
-    onWindowResize() {
+    setRenderScale(scale) {
+        const next = Math.min(1, Math.max(MIN_PIXEL_RATIO, scale || 1));
+        if (next === this._renderScale) return;
+        this._renderScale = next;
         this._applyPixelRatioAndSize();
-        // No es necesario actualizar cámara ni geometría ya que usamos NDC
     }
 
-    /**
-     * Computes the effective pixel ratio clamped to the tier profile bounds.
-     * effective = clamp(devicePixelRatio * qualityScale, dprFloor, dprCeiling)
-     * @returns {number}
-     */
+    /** Effective pixel ratio: device DPR capped by tier, scaled by adaptive quality + background scale. */
     _computeEffectivePixelRatio() {
-        const raw = window.devicePixelRatio * this._qualityScale;
-        return Math.min(
-            Math.max(raw, this._tierProfile.dprFloor),
-            this._tierProfile.dprCeiling,
-        );
+        const base = Math.min(window.devicePixelRatio || 1, this._tierProfile.dprCeiling);
+        const target = base * this._qualityScale * this._renderScale;
+        const lower = Math.min(base, this._tierProfile.dprFloor) * this._renderScale;
+        return Math.max(target, lower, MIN_PIXEL_RATIO);
     }
 
     _applyPixelRatioAndSize() {
-        const nextPixelRatio = this._computeEffectivePixelRatio();
-        if (nextPixelRatio !== this._pixelRatio) {
-            this._pixelRatio = nextPixelRatio;
-            this.renderer.setPixelRatio(this._pixelRatio);
+        const next = this._computeEffectivePixelRatio();
+        if (next !== this._pixelRatio) {
+            this._pixelRatio = next;
+            this.renderer.setPixelRatio(next);
         }
-        this.renderer.setSize(window.innerWidth, window.innerHeight);
-        this._updateResolutionCache();
+        this.renderer.setSize(window.innerWidth, window.innerHeight, false);
+        this._resolution.set(
+            Math.round(window.innerWidth * this._pixelRatio),
+            Math.round(window.innerHeight * this._pixelRatio),
+        );
+        this._resolutionDirty = true;
     }
 
     /**
-     * Ajuste de calidad adaptativo (EWMA): baja ligeramente DPR si el frame time empeora.
-     * Runs on every tier. Quality scale is bounded by [tierProfile.qualityScaleFloor, 1.0].
+     * Adaptive quality (EWMA over *rendered* frame intervals). The thresholds
+     * are relative to the active fps cap so a 30 fps cap isn't mistaken for lag.
      * @param {number} frameDeltaMs
      */
     updateQuality(frameDeltaMs) {
         if (!Number.isFinite(frameDeltaMs) || frameDeltaMs <= 0) return;
 
-        // EWMA estable para evitar cambios por picos.
         const alpha = 0.06;
         this._frameTimeEwmaMs = (1 - alpha) * this._frameTimeEwmaMs + alpha * frameDeltaMs;
 
-        // Muestrear cada ~20 frames.
         this._qualitySampleFrames++;
         if (this._qualitySampleFrames < 20) return;
         this._qualitySampleFrames = 0;
 
-        const prevScale = this._qualityScale;
+        const budget = 1000 / this._fpsCap;
         const floor = this._tierProfile.qualityScaleFloor;
+        const prev = this._qualityScale;
 
-        // Si cae por debajo de ~38fps (26ms) bajamos un escalón.
-        if (this._frameTimeEwmaMs > 26 && this._qualityScale > floor) {
-            this._qualityScale = Math.max(floor, this._qualityScale - 0.1);
-        }
-        // Si va cómodo por encima de ~55fps (18ms) subimos un poco.
-        else if (this._frameTimeEwmaMs < 18 && this._qualityScale < 1) {
+        if (this._frameTimeEwmaMs > budget * 1.5) {
+            if (this._qualityScale > floor) {
+                this._qualityScale = Math.max(floor, this._qualityScale - 0.1);
+                this._slowSamples = 0;
+            } else if (++this._slowSamples >= 3 && this._fpsCap > 30) {
+                // Resolution is already at its floor and we still can't keep up: drop to 30 fps.
+                this._fpsCap = 30;
+                this._slowSamples = 0;
+                this._frameTimeEwmaMs = 33;
+            }
+        } else if (this._frameTimeEwmaMs < budget * 1.08 && this._qualityScale < 1) {
             this._qualityScale = Math.min(1, this._qualityScale + 0.05);
+            this._slowSamples = 0;
         }
 
-        if (this._qualityScale !== prevScale) {
-            this._applyPixelRatioAndSize();
-        }
+        if (this._qualityScale !== prev) this._applyPixelRatioAndSize();
     }
 
-    _updateResolutionCache() {
-        this._resolution.set(window.innerWidth * this._pixelRatio, window.innerHeight * this._pixelRatio);
-        this._resolutionDirty = true;
+    /** Minimum ms between rendered frames for the current fps cap. */
+    get minFrameIntervalMs() {
+        return 1000 / this._fpsCap;
     }
 
-    /**
-     * Devuelve true una sola vez cuando cambió el tamaño/pixelRatio.
-     * @returns {boolean}
-     */
     consumeResolutionChanged() {
         if (!this._resolutionDirty) return false;
         this._resolutionDirty = false;
         return true;
     }
 
-    /**
-     * Asigna un material al mesh principal
-     * @param {import('three').ShaderMaterial} material - Material de Three.js
-     */
     setMaterial(material) {
         this.mesh.material = material;
     }
 
-    /**
-     * Returns the accumulated rendered time in seconds.
-     * Advanced only by tickTime() — never by wall clock.
-     * @returns {number}
-     */
-    getRenderedTime() {
-        return this._renderedTime;
-    }
-
-    /**
-     * Advances the rendered time counter by deltaMs.
-     * Must be called from the tick loop only when a frame is about to be rendered.
-     * @param {number} deltaMs
-     */
-    tickTime(deltaMs) {
-        this._renderedTime += deltaMs / 1000;
-        this._lastFrameDeltaMs = deltaMs;
-    }
-
-    /**
-     * @deprecated Use getRenderedTime() instead.
-     * Kept as alias for backward compatibility.
-     * @returns {number}
-     */
-    getElapsedTime() {
-        return this._renderedTime;
-    }
-
-    /**
-     * Last frame delta in milliseconds. Read-only, for diagnostics.
-     * @returns {number}
-     */
-    get lastFrameDeltaMs() {
-        return this._lastFrameDeltaMs;
-    }
-
-    /**
-     * Whether the page is currently visible.
-     * @returns {boolean}
-     */
     get isPageVisible() {
         return this._isPageVisible;
     }
 
-    /**
-     * @returns {number} FPS observado (EWMA), 0 si no hay datos.
-     */
+    /** @returns {number} Observed FPS (EWMA), 0 when there is no data. */
     getObservedFps() {
         if (!this._frameTimeEwmaMs || this._frameTimeEwmaMs <= 0) return 0;
         return Math.round(1000 / this._frameTimeEwmaMs);
     }
 
-    /**
-     * Renderiza la escena.
-     * @returns {boolean} true (always — three handles WebGPU async pipeline internally since 0.184).
-     */
     render() {
         this.renderer.render(this.scene, this.camera);
-        return true;
     }
 
-    /**
-     * Obtiene la resolución actual de la ventana en píxeles físicos
-     * @returns {Vector2} Resolución en píxeles (ancho * pixelRatio, alto * pixelRatio)
-     */
+    /** @returns {Vector2} Drawing buffer size in physical pixels. */
     getResolution() {
         return this._resolution;
     }

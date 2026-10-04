@@ -1,285 +1,193 @@
 /**
- * Shader Manager - Gestiona los shaders y materiales
+ * Shader Manager — loads backgrounds, owns the uniform state and the clock.
+ *
+ * Everything is TSL: uniforms live in commonUniforms.js (the very same
+ * module that gets exported), so there is no parallel GLSL/WebGL copy.
  */
 
-import { ShaderMaterial, Color, Vector2 } from 'three';
 import { MeshBasicNodeMaterial } from 'three/webgpu';
-import { SHADERS } from './shaders/index.js';
-import { auroraTSL } from './shaders/auroraNode.js';
-import { wavesTSL } from './shaders/wavesNode.js';
-import { cloudsTSL } from './shaders/cloudsNode.js';
-import { flowTSL } from './shaders/flowNode.js';
-import { galaxyTSL } from './shaders/galaxyNode.js';
-import { geometricTSL } from './shaders/geometricNode.js';
-import { liquidTSL } from './shaders/liquidNode.js';
-import { meshTSL } from './shaders/meshNode.js';
-import { neonGridTSL } from './shaders/neonGridNode.js';
-import { particlesTSL } from './shaders/particlesNode.js';
-import { stripesTSL } from './shaders/stripesNode.js';
-import { voronoiTSL } from './shaders/voronoiNode.js';
-import * as TSLUniforms from './shaders/commonUniforms.js';
+import { BACKGROUNDS, SHADERS } from './shaders/registry.js';
+import * as U from './shaders/commonUniforms.js';
+
+/** Runtime/palette uniforms that are not "parameters". */
+const RESERVED = new Set(['u_time', 'u_resolution', 'u_mouse', 'u_color1', 'u_color2', 'u_color3', 'u_color4']);
+
+/** Animation phase advance per second at speed = 1 (speed 0.5 → 1 unit/s). */
+const PHASE_RATE = 2;
+
+/** Numeric uniforms that parameterize a background, with their initial values. */
+const PARAM_DEFAULTS = Object.fromEntries(
+    Object.entries(U)
+        .filter(([name, node]) => !RESERVED.has(name) && typeof node?.value === 'number')
+        .map(([name, node]) => [name, node.value]),
+);
 
 export class ShaderManager {
     /**
-     * Constructor del gestor de shaders
-     * @param {Renderer} renderer - Instancia del renderizador
+     * @param {import('./Renderer.js').Renderer} renderer
      */
     constructor(renderer) {
         this.renderer = renderer;
         this.currentShader = null;
-        this.material = null;
-        this.uniforms = this.createUniforms();
+
+        /** @type {Map<string, MeshBasicNodeMaterial>} */
+        this._materials = new Map();
+        this._speed = 0.5;
+        this._phase = 0;
+        this._frozen = false;
+        this._dirty = true;
+        this._mouse = { x: 0.5, y: 0.5, tx: 0.5, ty: 0.5, active: false };
     }
 
     /**
-     * Crea el objeto de uniforms con valores por defecto
-     * @returns {Object} Objeto con todos los uniforms del shader
+     * Loads a background: resets every parameter to its default, binds the
+     * (cached) material and applies the background's render scale.
+     * @param {string} id
+     * @returns {import('./shaders/registry.js').Background | null}
      */
-    createUniforms() {
-        return {
-            u_time: { value: 0.0 },
-            u_resolution: { value: this.renderer.getResolution() },
-            u_mouse: { value: new Vector2(0.5, 0.5) },
-            u_color1: { value: new Color(1, 0.7, 0.8) },
-            u_color2: { value: new Color(0.5, 0.3, 0.8) },
-            u_color3: { value: new Color(0.2, 0.8, 0.7) },
-            u_color4: { value: new Color(1, 0.9, 0.3) },
-            u_speed: { value: 0.5 },
-            u_scale: { value: 6.0 },
-            u_intensity: { value: 1.0 },
-            u_zoom: { value: 3.0 },
-            u_stripe_width: { value: 8.0 },
-            u_stripe_speed: { value: 0.8 },
-            u_wave_amplitude: { value: 0.4 },
-            u_wave_frequency: { value: 2.5 },
-            u_noise_scale: { value: 2.0 },
-            u_octaves: { value: 4.0 },
-            u_persistence: { value: 0.5 },
-            u_lacunarity: { value: 2.0 },
-            u_rotation: { value: 0.0 },
-            u_distortion: { value: 0.6 },
-            u_grid_size: { value: 3.0 },
-            u_glow: { value: 1.0 },
-            u_offset_x: { value: 0.0 },
-            u_offset_y: { value: 0.0 },
-            u_sun_size: { value: 0.25 },
-            u_core_size: { value: 1.0 },
-            u_spiral_density: { value: 3.0 },
-            u_star_density: { value: 50.0 },
-            u_cell_density: { value: 8.0 },
-            u_border_width: { value: 0.1 },
-            u_brightness: { value: 0.0 },
-            u_contrast: { value: 1.0 },
-            u_noise: { value: 0.0 },
-        };
+    loadShader(id) {
+        const def = SHADERS[id];
+        if (!def) {
+            console.error(`Background "${id}" not found`);
+            return null;
+        }
+
+        this.currentShader = id;
+
+        Object.entries(PARAM_DEFAULTS).forEach(([name, value]) => {
+            U[name].value = value;
+        });
+        def.controls.forEach((control) => this.setParam(control.uniform, control.value));
+        this._speed = def.speed ?? 0.5;
+
+        let material = this._materials.get(id);
+        if (!material) {
+            material = new MeshBasicNodeMaterial();
+            material.colorNode = def.main();
+            material.depthTest = false;
+            material.depthWrite = false;
+            material.fog = false;
+            material.toneMapped = false;
+            this._materials.set(id, material);
+        }
+        this.renderer.setMaterial(material);
+        this.renderer.setRenderScale(def.renderScale ?? 1);
+
+        this._mouse.active = Boolean(def.mouse);
+        this._dirty = true;
+        return def;
     }
 
     /**
-     * Carga y aplica un shader específico
-     * @param {string} shaderName - Nombre del shader a cargar
-     * @returns {Object|undefined} Configuración del shader cargado
+     * @param {string} name Uniform name (`u_scale`…) or `u_speed`
+     * @param {number} value
      */
-    loadShader(shaderName) {
-        if (!SHADERS[shaderName]) {
-            console.error(`Shader "${shaderName}" no encontrado`);
+    setParam(name, value) {
+        if (name === 'u_speed') {
+            this._speed = value;
+        } else if (U[name] && typeof U[name].value === 'number') {
+            U[name].value = value;
+        } else {
             return;
         }
+        this._dirty = true;
+    }
 
-        this.currentShader = shaderName;
-        const shaderConfig = SHADERS[shaderName];
-
-        // Apply specific default values if defined
-        if (shaderConfig.defaults) {
-            Object.entries(shaderConfig.defaults).forEach(([uniformName, value]) => {
-                if (this.uniforms[uniformName]) {
-                    // Handle Color objects specifically if needed, or assume value is correct type
-                    if (this.uniforms[uniformName].value.isColor && value.isColor) {
-                        this.uniforms[uniformName].value.copy(value);
-                    } else {
-                        this.uniforms[uniformName].value = value;
-                    }
-                }
-            });
-        }
-
-        // Update uniforms with control values
-        if (shaderConfig.controls) {
-            shaderConfig.controls.forEach(control => {
-                const uniformName = control.uniform;
-                if (this.uniforms[uniformName] && control.value !== undefined) {
-                    this.uniforms[uniformName].value = control.value;
-                }
-            });
-        }
-
-        if (this.renderer.isWebGPUSupported) {
-            let tslShader = null;
-            if (shaderName === 'aurora') tslShader = auroraTSL();
-            else if (shaderName === 'waves') tslShader = wavesTSL();
-            else if (shaderName === 'clouds') tslShader = cloudsTSL();
-            else if (shaderName === 'flow') tslShader = flowTSL();
-            else if (shaderName === 'galaxy') tslShader = galaxyTSL();
-            else if (shaderName === 'geometric') tslShader = geometricTSL();
-            else if (shaderName === 'liquid') tslShader = liquidTSL();
-            else if (shaderName === 'mesh') tslShader = meshTSL();
-            else if (shaderName === 'neon_grid') tslShader = neonGridTSL();
-            else if (shaderName === 'particles') tslShader = particlesTSL();
-            else if (shaderName === 'stripes') tslShader = stripesTSL();
-            else if (shaderName === 'voronoi') tslShader = voronoiTSL();
-            
-            if (tslShader) {
-                console.log(`Using WebGPU TSL material for ${shaderName}`);
-                
-                // Sync TSL uniforms with current values
-                Object.keys(this.uniforms).forEach(key => {
-                    if (TSLUniforms[key]) {
-                        if (this.uniforms[key].value && (this.uniforms[key].value.isColor || this.uniforms[key].value.isVector2)) {
-                            TSLUniforms[key].value.copy(this.uniforms[key].value);
-                        } else {
-                            TSLUniforms[key].value = this.uniforms[key].value;
-                        }
-                    }
-                });
-
-                this.material = new MeshBasicNodeMaterial();
-                this.material.colorNode = tslShader;
-                this.renderer.setMaterial(this.material);
-                return shaderConfig;
-            }
-        }
-        
-        // Fallback to WebGL ShaderMaterial
-        this.material = new ShaderMaterial({
-            uniforms: this.uniforms,
-            vertexShader: shaderConfig.vertex,
-            fragmentShader: shaderConfig.fragment,
-        });
-
-        this.renderer.setMaterial(this.material);
-        
-        return shaderConfig;
+    /** @param {string} name @returns {number | undefined} */
+    getParam(name) {
+        if (name === 'u_speed') return this._speed;
+        const node = U[name];
+        return typeof node?.value === 'number' ? node.value : undefined;
     }
 
     /**
-     * Actualiza el valor de un uniform específico
-     * @param {string} name - Nombre del uniform
-     * @param {*} value - Nuevo valor del uniform
+     * @param {number} index 1..4
+     * @param {[number, number, number]} lab OKLab triple
      */
-    updateUniform(name, value) {
-        if (this.uniforms[name]) {
-            this.uniforms[name].value = value;
-            
-            // Update TSL uniforms if active
-            if (this.renderer.isWebGPUSupported && TSLUniforms[name]) {
-                if (TSLUniforms[name].value && (TSLUniforms[name].value.isColor || TSLUniforms[name].value.isVector2)) {
-                    TSLUniforms[name].value.copy(value);
-                } else {
-                    TSLUniforms[name].value = value;
-                }
-            }
+    setColorOklab(index, [L, a, b]) {
+        U[`u_color${index}`]?.value.set(L, a, b);
+        this._dirty = true;
+    }
+
+    /** Advances the animation phase (speed-scaled) and eases the pointer. */
+    advance(dtSec) {
+        if (!this._frozen) {
+            this._phase += Math.min(dtSec, 0.1) * this._speed * PHASE_RATE;
+            U.u_time.value = this._phase;
+        }
+
+        const m = this._mouse;
+        if (m.active) {
+            const k = 1 - Math.exp(-dtSec * 6);
+            m.x += (m.tx - m.x) * k;
+            m.y += (m.ty - m.y) * k;
+            U.u_mouse.value.set(m.x, m.y);
         }
     }
 
-    /**
-     * Actualiza el uniform de tiempo con el tiempo transcurrido
-     */
-    updateTime() {
-        const time = this.renderer.getRenderedTime();
-        this.uniforms.u_time.value = time;
-        if (this.renderer.isWebGPUSupported) {
-            TSLUniforms.u_time.value = time;
-        }
+    /** Pointer in 0..1, origin bottom-left. */
+    setPointer(x, y) {
+        this._mouse.tx = x;
+        this._mouse.ty = y;
+        if (this._mouse.active) this._dirty = true;
     }
 
-    /**
-     * Actualiza el uniform de resolución con las dimensiones actuales
-     */
+    /** True while time-driven motion requires rendering every frame. */
+    isAnimating() {
+        return !this._frozen && this._speed > 0;
+    }
+
+    /** True once if something changed since the last call (used to skip idle frames). */
+    consumeDirty() {
+        const dirty = this._dirty;
+        this._dirty = false;
+        return dirty;
+    }
+
+    markDirty() {
+        this._dirty = true;
+    }
+
     updateResolution() {
-        const res = this.renderer.getResolution();
-
-        // Keep the WebGL uniform referencing the cached Vector2 (no allocations).
-        if (this.uniforms.u_resolution.value !== res) {
-            this.uniforms.u_resolution.value = res;
-        }
-
-        // WebGPU TSL uniforms need an explicit copy.
-        if (this.renderer.isWebGPUSupported) {
-            TSLUniforms.u_resolution.value.copy(res);
-        }
+        U.u_resolution.value.copy(this.renderer.getResolution());
+        this._dirty = true;
     }
 
-    /**
-     * Obtiene la lista de shaders disponibles
-     * @returns {string[]} Array con los nombres de los shaders
-     */
+    /** Debug/testing: freezes the clock at `t` seconds (null to resume). */
+    freeze(t) {
+        this._frozen = t !== null && t !== undefined;
+        if (this._frozen) {
+            this._phase = t;
+            U.u_time.value = t;
+        }
+        this._dirty = true;
+    }
+
     getAvailableShaders() {
-        return Object.keys(SHADERS);
+        return BACKGROUNDS.map((b) => b.id);
     }
 
-    /**
-     * Obtiene la configuración de un shader específico
-     * @param {string} shaderName
-     * @returns {Object|undefined}
-     */
-    getShaderConfig(shaderName) {
-        return SHADERS?.[shaderName];
+    getShaderConfig(id) {
+        return SHADERS[id];
     }
 
-    /**
-     * Obtiene la configuración del shader actual
-     * @returns {Object} Configuración del shader actual
-     */
     getCurrentShaderConfig() {
         return SHADERS[this.currentShader];
     }
 
     /**
-     * Obtiene los parámetros configurables del shader
-     * @param {string} [shaderName] - Nombre del shader (opcional, usa el actual si no se provee)
-     * @returns {Object} Objeto con los parámetros del shader
+     * Parameter map used by the exporter: uniform name without the `u_` prefix.
+     * @param {string} [id]
+     * @returns {Record<string, number>}
      */
-    getShaderParameters(shaderName) {
-        const shader = SHADERS[shaderName || this.currentShader];
-        if (!shader || !shader.controls) {
-            return {};
-        }
-
-        const parameters = {};
-        shader.controls.forEach(control => {
-            const configuredUniform = control.uniform;
-            const uniformKey = configuredUniform.startsWith('u_')
-                ? configuredUniform
-                : `u_${configuredUniform}`;
-            const uniform = this.uniforms[uniformKey];
-            if (!uniform) {
-                return;
-            }
-
-            const exportKey = configuredUniform.startsWith('u_')
-                ? configuredUniform.slice(2)
-                : configuredUniform;
-            parameters[exportKey] = uniform.value;
+    getShaderParameters(id) {
+        const def = SHADERS[id || this.currentShader];
+        if (!def) return {};
+        const out = {};
+        def.controls.forEach((control) => {
+            const value = this.getParam(control.uniform);
+            if (typeof value === 'number') out[control.uniform.replace(/^u_/, '')] = value;
         });
-
-        return parameters;
-    }
-
-    /**
-     * Obtiene el código GLSL del fragment shader
-     * @param {string} [shaderName] - Nombre del shader (opcional, usa el actual si no se provee)
-     * @returns {string} Código GLSL del fragment shader
-     */
-    getShaderCode(shaderName) {
-        const shader = SHADERS[shaderName || this.currentShader];
-        return shader ? shader.fragment : '';
-    }
-
-    /**
-     * Obtiene el código GLSL del vertex shader actual
-     * @returns {string} Código GLSL del vertex shader
-     */
-    getVertexShaderCode() {
-        const shader = SHADERS[this.currentShader];
-        return shader ? shader.vertex : '';
+        return out;
     }
 }

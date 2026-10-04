@@ -1,111 +1,92 @@
-# 📖 Guía de Uso - MMRG Background Generator
+# 📖 Guía de uso — MMRG Background Generator
 
-Bienvenido a la guía oficial de **MMRG Background Generator**. Esta herramienta te permite crear fondos animados de alto rendimiento utilizando la potencia de **WebGPU** y **Three.js TSL**.
-
-## 🚀 Primeros Pasos
-
-### Requisitos Previos
-Para utilizar el generador, necesitas un navegador compatible con **WebGPU**:
-- **Google Chrome** 113+
-- **Microsoft Edge** 113+
-- **Firefox Nightly** (con configuración habilitada)
-
-Si tu navegador no es compatible, verás un mensaje de advertencia al iniciar la aplicación.
+Crea un fondo animado, ajústalo a tu marca y llévatelo a tu web. Funciona con **WebGPU** y, si tu navegador no lo tiene, con **WebGL2** automáticamente.
 
 ---
 
-## 🖥️ Interfaz de Usuario
+## 🖥️ La interfaz
 
-La interfaz es minimalista y está diseñada para maximizar el espacio visual de tu creación.
+Arriba a la derecha tienes el botón **Exportar** (el paso final), el selector de idioma y el enlace a GitHub. Abajo, el dock:
 
-### 1. Dock de Herramientas (Inferior)
-Es el centro de control principal. Desde aquí accedes a todas las funcionalidades mediante botones:
-- **Config**: Despliega el panel de configuración del efecto.
-- **Colors**: Despliega el gestor de paletas de colores.
-- **Presets**: Muestra configuraciones predefinidas rápidas.
-- **Random**: Genera instantáneamente una combinación aleatoria.
-- **Export**: Abre el modal para obtener el código.
+| Botón | Qué hace |
+|---|---|
+| **Fondos** | Galería con miniaturas y filtro por categoría. Cada tarjeta indica su coste de GPU (▂▄▆). |
+| **Ajustes** | Velocidad y los controles propios del fondo (brillo, contraste, grano, tamaño, ondulación…). |
+| **Colores** | Los 4 colores en OKLCH (luminosidad, croma y tono). Se abre uno a la vez. |
+| **Paletas** | 12 paletas listas, con vista previa de colores. |
+| **Aleatorio** | Una paleta armónica nueva (no cuatro colores al azar). |
+| **Guardados** | Guarda tu diseño con nombre y vuelve a él cuando quieras. |
 
-### 2. Paneles Flotantes
-Al hacer clic en *Config*, *Colors* o *Presets*, aparecerá un panel flotante justo encima del dock (o una hoja deslizante en móviles).
-- **Panel Config**: Contiene el selector de efectos y los controles deslizantes específicos (velocidad, escala, etc.).
-- **Panel Colors**: Permite ajustar los 4 colores principales usando el sistema OKLCH.
-- **Panel Presets**: Ofrece temas de color listos para usar (Sunset, Ocean, Neon, etc.).
+**Atajos:** `←` `→` cambian de fondo · `R` paleta aleatoria · `E` exportar · `Esc` cierra paneles.
 
----
+> En el móvil el dock hace de barra de pestañas: los paneles se abren como una hoja desde abajo y el dock sigue visible para cambiar de panel.
 
-## 🎨 Creando tu Fondo
+## 🎨 Crear tu fondo
 
-### Paso 1: Seleccionar un Efecto
-1. Haz clic en el botón **Config** del dock.
-2. En el panel que aparece, usa el menú desplegable "Shader Type" para elegir un efecto:
+1. **Elige un fondo** en *Fondos*. Pasa el ratón por una tarjeta para leer su descripción.
+2. **Ajusta los colores.** Todos los fondos usan el mismo orden: el color 1 es la base (lo más oscuro, o el fondo) y los siguientes suben hasta el resalte. Por eso cualquier paleta funciona en cualquier fondo.
+3. **Afina los parámetros** en *Ajustes*. Con velocidad 0 el fondo se congela y no usa GPU.
+4. Si te gusta, **guárdalo**.
 
-*   **Aurora**: Luces del norte suaves y etéreas.
-*   **Clouds**: Nubes procedurales en movimiento.
-*   **Flow**: Corrientes fluidas y orgánicas.
-*   **Galaxy**: Espiral cósmica de estrellas y nebulosas.
-*   **Geometric**: Formas geométricas abstractas.
-*   **Liquid**: Simulación de fluidos viscosos.
-*   **Mesh**: Red de vértices conectados.
-*   **Neon Grid**: Rejilla retro-futurista estilo synthwave.
-*   **Particles**: Sistema de partículas interactivo.
-*   **Stripes**: Bandas de color animadas.
-*   **Voronoi**: Patrones celulares naturales.
-*   **Waves**: Ondas suaves y relajantes.
+Algunos fondos reaccionan al puntero (lámpara de lava, rejilla de puntos, rejilla luminosa, foco de luz, hiperespacio).
 
-### Paso 2: Personalizar Colores (OKLCH)
-El generador utiliza el espacio de color **OKLCH** para garantizar gradientes perceptualmente uniformes y vibrantes.
-- Haz clic en los círculos de color para abrir el selector.
-- Ajusta **Lightness (L)**, **Chroma (C)** y **Hue (H)**.
-- Puedes añadir o eliminar paradas de color según lo permita el efecto seleccionado.
+## 📦 Llevarlo a tu web
 
-### Paso 3: Ajustar Parámetros
-Cada efecto tiene sus propios controles únicos. Experimenta con:
-- **Speed**: Velocidad de la animación.
-- **Scale/Zoom**: Tamaño de los patrones.
-- **Intensity/Distortion**: Fuerza del efecto visual.
-- **Noise**: Cantidad de textura o granulosidad.
+Pulsa **Exportar** (o `E`). El modal te da una guía por pestañas: **HTML/JS, React, Vue 3, Angular y Astro**. Tu paleta y tus ajustes ya vienen dentro del código.
 
----
+Cada pestaña tiene un botón **Descargar .zip** con todos los archivos en sus carpetas, o puedes copiarlos uno a uno. Los pasos, en todos los frameworks:
 
-## 💾 Exportando tu Diseño
+1. **Instala three.js:** `npm install three` (es la única dependencia). Sin bundler, usa el import map que te da la pestaña HTML/JS.
+2. **Crea 4 archivos** en la misma carpeta:
+   - `commonUniforms.js` — los uniforms que lee el shader (solo los que usa tu fondo).
+   - `tslLib.js` — utilidades compartidas (ruido, color, acabado).
+   - `background.js` — el fondo en sí: exactamente lo que ves en el generador.
+   - `mountBackground.js` — monta el fondo en un `<canvas>`. Arriba tiene `DEFAULTS` con tu paleta y ajustes.
+3. **Conéctalo a tu app** con el hook (React), composable (Vue), directiva (Angular), componente (Astro) o 5 líneas de JS.
+4. **Revisa la lista final:** el contenido debe quedar por encima del canvas (`position: relative`), un fondo opaco en `body`/`html` lo taparía, y llama a `dispose()` si lo quitas a mano.
 
-Una vez que estés satisfecho con tu creación, haz clic en el botón **"Exportar"** del dock.
+### Qué trae ya resuelto el código exportado
 
-### Opciones de Exportación
-El modal te ofrecerá el código adaptado para:
-1.  **HTML/JS (Vanilla)**: Para sitios web estándar o estáticos.
-2.  **React**: Hook personalizado (`useGradientBackground`).
-3.  **Vue 3**: Composable (`useGradientBackground`).
-4.  **Angular**: Servicio y directiva.
+- **Carga diferida:** three.js se importa después del primer pintado.
+- **Pausa inteligente:** fuera de pantalla, en pestaña oculta o con velocidad 0 no gasta GPU.
+- **Accesibilidad:** con `prefers-reduced-motion` muestra un único fotograma fijo, para todos tus visitantes.
+- **Rendimiento:** resolución reducida cuando el aspecto lo permite, tope de 60 fps, resolución adaptativa si los fotogramas se ralentizan.
+- **Respaldo:** sin WebGPU usa WebGL2; sin ninguno de los dos, un degradado CSS con tu paleta (que también se ve mientras carga).
 
-### Cómo implementar en tu proyecto
-El código generado utiliza **WebGPU** a través de Three.js. El modal te guiará paso a paso, pero el flujo general es:
+Todo se puede ajustar al montar:
 
-1.  **Instalar dependencias**: Necesitarás `three` (motor gráfico) y `culori` (para la gestión de color OKLCH).
-    ```bash
-    npm install three culori
-    ```
-2.  **Archivos Auxiliares**: El exportador te dará el código para dos archivos pequeños que contienen la lógica compartida:
-    *   `commonUniforms.js`: Variables compartidas.
-    *   `shaderNode.js`: La lógica visual del efecto (TSL).
-3.  **Componente Principal**: Finalmente, copias el componente o script que conecta todo en tu framework.
+```js
+mountBackground(canvas, {
+  speed: 0.3,         // más lento (0 = imagen fija)
+  renderScale: 0.5,   // fracción de la resolución nativa
+  maxPixelRatio: 1.5, // límite en pantallas retina
+  maxFps: 30,         // la mitad de trabajo en equipos lentos
+});
+```
 
-> **Nota:** Esta arquitectura modular facilita el mantenimiento y permite que el fondo funcione de manera óptima sin bloquear el hilo principal de tu aplicación.
+La pestaña **Rendimiento** añade cómo cargarlo solo cuando su sección sea visible y cómo usarlo en una sola sección (por ejemplo, un *hero*) en vez de toda la página.
 
----
+### Next.js / SSR
 
-## 🔧 Solución de Problemas
+El hook y la directiva importan `mountBackground` con `import()` dentro del efecto de montaje, así que three.js nunca se evalúa en el servidor. En Next.js marca el componente con `'use client'`.
 
-**El fondo se ve negro o no carga:**
-- Verifica que tu navegador soporte WebGPU.
-- Asegúrate de tener los drivers de tu tarjeta gráfica actualizados.
-- Revisa la consola del navegador (F12) para ver si hay errores.
+## 🔧 Solución de problemas
 
-**La animación va lenta:**
-- Reduce la resolución del navegador o el tamaño de la ventana.
-- Algunos efectos como *Liquid* o *Galaxy* pueden ser intensivos en GPUs antiguas.
+**El fondo se queda en el degradado de la paleta (no se anima):**
+- Ni WebGPU ni WebGL2 están disponibles (aceleración por hardware desactivada, navegador muy antiguo). Es el respaldo previsto. Abre la consola (F12): `mountBackground` avisa del motivo.
+
+**No se ve nada / pantalla en blanco al usar el import map:**
+- Sirve la página por `http(s)`, no con `file://`, y pega el import map antes de cualquier `<script>`.
+
+**El canvas tapa mi contenido o mi contenido no se ve:**
+- Dale `position: relative` al contenedor de tu contenido y comprueba que `body`/`html` no tengan un fondo opaco.
+
+**Va lento en un móvil:**
+- Elige un fondo *Ligero* o baja `renderScale` / `maxFps` (ver arriba). Los *Pesados* (aurora, seda, galaxia, nubes) lucen mejor en escritorio.
+
+**Perdí mis fondos guardados de la versión anterior:**
+- Los fondos se rediseñaron por completo (paletas y parámetros nuevos), así que los ajustes guardados por shader se reinician. Se conserva el idioma. Los fondos guardados con nombre siguen en la lista y cargan su paleta; los que usaban un fondo que ya no existe aparecen como no disponibles.
 
 ---
 
-¿Tienes más preguntas? Revisa el [README](../README.md) principal o abre un issue en el repositorio.
+¿Más preguntas? Revisa el [README](../README.md) o abre un issue en el repositorio.
