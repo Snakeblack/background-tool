@@ -810,10 +810,14 @@ export class UIController {
             });
         }
 
-        // Close the desktop panel when clicking outside it.
+        // Close the desktop panel when clicking outside it. Uses composedPath() instead of
+        // e.target.contains(): panel handlers run first and may re-render or move the clicked
+        // element (filter chips, "Change" button), which would detach e.target and make an
+        // inside click look like an outside one.
         this._addListener(document, 'click', (e) => {
             if (this.isMobile || !this.activePanelId) return;
-            if (this.desktopPanel.contains(e.target) || this.dock.contains(e.target)) return;
+            const path = e.composedPath();
+            if (path.includes(this.desktopPanel) || path.includes(this.dock)) return;
             this.closePanel();
             this.dock.reset?.();
         });
