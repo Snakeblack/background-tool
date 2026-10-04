@@ -30,7 +30,8 @@
     "format": "prettier --write src",
     "format:check": "prettier --check src",
     "clean": "rm -rf dist node_modules/.vite",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "thumbs": "node scripts/thumbs.mjs"
   },
   "devDependencies": {
     "@eslint/js": "^9.0.0",

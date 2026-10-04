@@ -125,7 +125,20 @@ export default defineConfig(({ mode }) => ({
       includeAssets: ['favicon.svg', 'logo-img.jpg', 'robots.txt'],
       manifestFilename: 'site.webmanifest',
       workbox: {
+        // Gallery thumbnails are fetched on demand (and cached after the first view) instead of
+        // inflating the install-time precache.
         globPatterns: ['**/*.{js,css,html,glsl,jpg,svg,woff2}'],
+        globIgnores: ['thumbs/**'],
+        runtimeCaching: [
+          {
+            urlPattern: ({ url }) => url.pathname.startsWith('/thumbs/'),
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'gallery-thumbs',
+              expiration: { maxEntries: 60, maxAgeSeconds: 60 * 60 * 24 * 90 },
+            },
+          },
+        ],
       },
     }),
   ],
