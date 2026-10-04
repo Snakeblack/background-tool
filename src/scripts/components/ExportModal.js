@@ -1,205 +1,341 @@
 /**
- * Export Modal Component - Genera código para implementar en proyectos
+ * Export Modal — step-by-step guide to use the current background on any website.
+ * All code comes from export/codegen.js (built from the real source files).
  */
-import { Package, Rocket, Atom, Layers, Hexagon, Zap, Lightbulb, AlertTriangle, Clipboard, Check, AlertCircle, BarChart, X, Info, AlertOctagon, createElement } from 'lucide';
+import { AlertCircle, AlertOctagon, AlertTriangle, Check, Clipboard, Download, Info, X, createElement } from 'lucide';
 import { evaluateTips } from '../export/evaluateTips.js';
+import { EXPORT_I18N } from '../export/i18n.js';
+import { buildFiles, buildImportMap, buildTuningSnippets } from '../export/codegen.js';
+import { createZip } from '../export/zip.js';
 
-const EXPORT_MODAL_I18N = {
-    en: {
-        modalTitle: 'Export to Your Project',
-        languageLabel: 'Language',
-        tabVanilla: 'HTML/JS',
-        tabReact: 'React',
-        tabVue: 'Vue 3',
-        tabAngular: 'Angular',
-        tabAstro: 'Astro',
-        tabOptimizations: 'Optimizations',
-        copy: 'Copy',
-        copied: 'Copied!',
-        copyError: 'Error',
+const TABS = ['vanilla', 'react', 'vue', 'angular', 'astro', 'tuning'];
+const TAB_KEYS = { vanilla: 'tabVanilla', react: 'tabReact', vue: 'tabVue', angular: 'tabAngular', astro: 'tabAstro', tuning: 'tabTuning' };
 
-        vanillaTitle: 'HTML/JS Implementation (WebGPU)',
-        vanillaDesc: 'Modern implementation using Three.js WebGPURenderer and TSL.',
-        astroTitle: 'Astro Implementation (WebGPU)',
-        astroDesc: 'Client-side mount with a module in src/, ideal for SSR and compatible with View Transitions.',
-        reactTitle: 'React Implementation (WebGPU)',
-        reactDesc: 'Custom hook to integrate the gradient into React components using WebGPU.',
-        vueTitle: 'Vue 3 Implementation (WebGPU)',
-        vueDesc: 'Composable for Vue 3 with the Composition API using WebGPU.',
-        angularTitle: 'Angular Implementation (WebGPU)',
-        angularDesc: 'Service and directive to integrate the gradient into Angular using WebGPU.',
-        optimizationsTitle: 'Performance Optimizations',
+const icon = (Icon, cls = 'icon') => createElement(Icon, { class: cls, 'aria-hidden': 'true' }).outerHTML;
 
-        installDeps: 'Install dependencies',
-        runCommand: 'Run the following command to install Three.js and color utilities:',
-        commonUniforms: 'Common Uniforms',
-        commonUniformsInfo: 'Create this file to share variables between shaders.',
-        commonUniformsAstroInfo: 'Create this file at src/lib/gradient/commonUniforms.js.',
-        shaderNode: 'Shader Node (TSL)',
-        shaderNodeInfo: 'Copy this code containing the shader logic.',
-        shaderNodeAstroInfo: 'Copy this code into src/lib/gradient/shaderNode.js.',
-        htmlStructure: 'HTML Structure',
-        jsImplementation: 'JavaScript Implementation',
-
-        mountModule: 'Mount module',
-        important: 'Important:',
-        astroImportantKeep: 'Keep mountGradient.js, commonUniforms.js and shaderNode.js in the same folder so relative imports work.',
-        astroImportantScript: 'In Astro, use a &lt;script&gt; with no attributes (except src) so Astro can process and resolve imports.',
-        astroComponent: 'Astro component',
-        astroUsage: 'Usage in a page',
-
-        customHook: 'Custom Hook',
-        usageInComponent: 'Usage in component',
-        reactCleanupImportant: 'Make sure to clean up resources in the useEffect cleanup.',
-
-        typeDecl: 'Type Declaration',
-        typeDeclInfo: 'Create this file at src/types.d.ts to avoid culori type errors.',
-        angularTsImportant: 'Make sure generated files use the .ts extension (TypeScript). If you have older .js attempts, delete them to avoid conflicts.',
-        angularCommonUniformsInfo: 'Create this file at src/app/commonUniforms.ts.',
-        angularShaderNodeInfo: 'Copy this code into src/app/shaderNode.ts.',
-        gradientService: 'Gradient service',
-        directive: 'Directive',
-        angularUsageInfo: 'Replace the content of your main component (e.g. src/app/app.ts).',
-        note: 'Note:',
-        angularNote: 'This code uses Angular 19+ with Signals and standalone components.',
-
-        lazyLoading: 'Lazy-load the shader',
-        mobileReduce: 'Reduce calculations on mobile',
-        pauseInactive: 'Pause on inactive tab',
-        metrics: 'Performance metrics:',
-        fpsTarget: '• FPS target: 60fps',
-        gpuUsage: '• GPU usage: ~5-10% (depends on shader complexity)',
-        memory: '• Memory: ~10-20MB',
-
-        // Export tips
-        'export.tips.lowTierComplex.title': 'Low-end GPU + Complex Shader',
-        'export.tips.lowTierComplex.description': 'Your GPU tier is low and the selected shader is complex, which may cause poor performance or crashes on some devices.',
-        'export.tips.lowTierComplex.suggestion': 'Consider setting a DPR cap of 1.0 or switching to a simpler shader before exporting.',
-        'export.tips.lowFps.title': 'Low Frame Rate Detected',
-        'export.tips.lowFps.description': 'The current session is running below 45 fps, which indicates your hardware is under stress.',
-        'export.tips.lowFps.suggestion': 'Try reducing the canvas resolution, lowering the pixel ratio, or simplifying the shader.',
-        'export.tips.mobile.title': 'Mobile Device Detected',
-        'export.tips.mobile.description': 'You are running on a mobile device. Full-screen WebGPU backgrounds may impact battery life.',
-        'export.tips.mobile.suggestion': 'Add pointer-events: none to the canvas and consider limiting the pixel ratio to 1.0 for best mobile performance.',
-        'export.tips.reducedMotion.title': 'Prefers Reduced Motion',
-        'export.tips.reducedMotion.description': 'The user has enabled the "Reduce Motion" accessibility setting.',
-        'export.tips.reducedMotion.suggestion': 'A static fallback gradient has been auto-injected into the exported code. Review it to ensure it matches your design.',
-        'export.tips.ultraStable.title': 'Optimal Performance',
-        'export.tips.ultraStable.description': 'Your GPU is high-end and the frame rate is stable. The animation should run smoothly on most devices.',
-        'export.tips.ultraStable.suggestion': 'You can safely use higher pixel ratios or more complex shaders if needed.'
-    },
-    es: {
-        modalTitle: 'Exportar a tu Proyecto',
-        languageLabel: 'Idioma',
-        tabVanilla: 'HTML/JS',
-        tabReact: 'React',
-        tabVue: 'Vue 3',
-        tabAngular: 'Angular',
-        tabAstro: 'Astro',
-        tabOptimizations: 'Optimizaciones',
-        copy: 'Copiar',
-        copied: 'Copiado!',
-        copyError: 'Error',
-
-        vanillaTitle: 'Implementación HTML/JS (WebGPU)',
-        vanillaDesc: 'Implementación moderna usando Three.js WebGPURenderer y TSL.',
-        astroTitle: 'Implementación Astro (WebGPU)',
-        astroDesc: 'Montaje en cliente con un módulo en src/, ideal para SSR y compatible con View Transitions.',
-        reactTitle: 'Implementación React (WebGPU)',
-        reactDesc: 'Hook personalizado para integrar el gradiente en componentes React usando WebGPU.',
-        vueTitle: 'Implementación Vue 3 (WebGPU)',
-        vueDesc: 'Composable para Vue 3 con Composition API usando WebGPU.',
-        angularTitle: 'Implementación Angular (WebGPU)',
-        angularDesc: 'Servicio y directiva para integrar el gradiente en Angular usando WebGPU.',
-        optimizationsTitle: 'Optimizaciones de Rendimiento',
-
-        installDeps: 'Instalar dependencias',
-        runCommand: 'Ejecuta el siguiente comando para instalar Three.js y las utilidades de color:',
-        commonUniforms: 'Common Uniforms',
-        commonUniformsInfo: 'Crea este archivo para compartir variables entre shaders.',
-        commonUniformsAstroInfo: 'Crea este archivo en src/lib/gradient/commonUniforms.js.',
-        shaderNode: 'Shader Node (TSL)',
-        shaderNodeInfo: 'Copia este código que contiene la lógica del shader.',
-        shaderNodeAstroInfo: 'Copia este código en src/lib/gradient/shaderNode.js.',
-        htmlStructure: 'HTML Structure',
-        jsImplementation: 'JavaScript Implementation',
-
-        mountModule: 'Módulo de montaje',
-        important: 'Importante:',
-        astroImportantKeep: 'Mantén mountGradient.js, commonUniforms.js y shaderNode.js en la misma carpeta para que los imports relativos funcionen.',
-        astroImportantScript: 'En Astro, usa un &lt;script&gt; sin atributos (salvo src) para que Astro procese y resuelva imports.',
-        astroComponent: 'Componente Astro',
-        astroUsage: 'Uso en una página',
-
-        customHook: 'Custom Hook',
-        usageInComponent: 'Uso en Componente',
-        reactCleanupImportant: 'Asegúrate de limpiar los recursos en el cleanup de useEffect.',
-
-        typeDecl: 'Declaración de Tipos',
-        typeDeclInfo: 'Crea este archivo en src/types.d.ts para evitar errores con culori.',
-        angularTsImportant: 'Asegúrate de que los archivos generados tengan la extensión .ts (TypeScript). Si tienes archivos .js de intentos anteriores, elimínalos para evitar conflictos.',
-        angularCommonUniformsInfo: 'Crea este archivo en src/app/commonUniforms.ts.',
-        angularShaderNodeInfo: 'Copia este código en src/app/shaderNode.ts.',
-        gradientService: 'Servicio de Gradiente',
-        directive: 'Directiva',
-        angularUsageInfo: 'Reemplaza el contenido de tu componente principal (ej. src/app/app.ts).',
-        note: 'Nota:',
-        angularNote: 'Este código usa Angular 19+ con Signals y standalone components.',
-
-        lazyLoading: 'Lazy Loading del Shader',
-        mobileReduce: 'Reducir Cálculos en Móviles',
-        pauseInactive: 'Pausar en Pestaña Inactiva',
-        metrics: 'Métricas de Rendimiento:',
-        fpsTarget: '• FPS Target: 60fps',
-        gpuUsage: '• GPU Usage: ~5-10% (según complejidad del shader)',
-        memory: '• Memory: ~10-20MB',
-
-        // Export tips
-        'export.tips.lowTierComplex.title': 'GPU de baja gama + Shader complejo',
-        'export.tips.lowTierComplex.description': 'Tu GPU es de baja gama y el shader seleccionado es complejo, lo que puede causar bajo rendimiento o crashes en algunos dispositivos.',
-        'export.tips.lowTierComplex.suggestion': 'Considerá limitar el DPR a 1.0 o elegir un shader más simple antes de exportar.',
-        'export.tips.lowFps.title': 'FPS bajo detectado',
-        'export.tips.lowFps.description': 'La sesión actual corre por debajo de 45 fps, lo que indica que el hardware está bajo estrés.',
-        'export.tips.lowFps.suggestion': 'Probá reducir la resolución del canvas, bajar el pixel ratio o simplificar el shader.',
-        'export.tips.mobile.title': 'Dispositivo móvil detectado',
-        'export.tips.mobile.description': 'Estás usando un dispositivo móvil. Los fondos WebGPU a pantalla completa pueden afectar la batería.',
-        'export.tips.mobile.suggestion': 'Agregá pointer-events: none al canvas y considerá limitar el pixel ratio a 1.0 para mejor rendimiento en móviles.',
-        'export.tips.reducedMotion.title': 'Preferencia de movimiento reducido',
-        'export.tips.reducedMotion.description': 'El usuario tiene activada la configuración de accesibilidad "Reducir Movimiento".',
-        'export.tips.reducedMotion.suggestion': 'Se inyectó automáticamente un gradiente estático de fallback en el código exportado. Revisalo para asegurarte de que coincide con tu diseño.',
-        'export.tips.ultraStable.title': 'Rendimiento óptimo',
-        'export.tips.ultraStable.description': 'Tu GPU es de alta gama y la tasa de cuadros es estable. La animación debería correr sin problemas en la mayoría de los dispositivos.',
-        'export.tips.ultraStable.suggestion': 'Podés usar pixel ratios más altos o shaders más complejos si lo necesitás.'
+const STYLE = `
+    :host {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.62);
+        backdrop-filter: blur(10px);
+        z-index: 1000;
+        align-items: center;
+        justify-content: center;
+        opacity: 0;
+        transition: opacity 0.25s ease;
+        font-family: var(--font-body, 'Inter', sans-serif);
     }
-};
+    :host(.open) { display: flex; opacity: 1; }
+
+    * { box-sizing: border-box; }
+
+    .modal-container {
+        background: rgba(14, 14, 18, 0.97);
+        border-radius: 24px;
+        max-width: 880px;
+        width: 92%;
+        max-height: 90vh;
+        max-height: 90dvh;
+        overflow: hidden;
+        box-shadow: 0 25px 80px rgba(0, 0, 0, 0.8);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        display: flex;
+        flex-direction: column;
+        color: #fff;
+    }
+
+    .modal-header {
+        padding: 1.25rem 1.75rem;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+    }
+
+    .modal-title {
+        font-family: var(--font-display, 'Space Grotesk', sans-serif);
+        font-size: 1.35rem;
+        font-weight: 600;
+        letter-spacing: -0.02em;
+        margin: 0;
+    }
+
+    .header-actions { display: flex; align-items: center; gap: 0.75rem; }
+
+    .lang-switch {
+        display: inline-flex;
+        gap: 0.25rem;
+        padding: 0.25rem;
+        border-radius: 9999px;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .lang-btn {
+        padding: 0.375rem 0.7rem;
+        border: none;
+        background: transparent;
+        color: #b4b4b4;
+        cursor: pointer;
+        border-radius: 9999px;
+        font-weight: 600;
+        font-size: 0.75rem;
+        transition: color 0.2s, background-color 0.2s;
+    }
+    .lang-btn:hover { color: #fff; background: rgba(255, 255, 255, 0.08); }
+    .lang-btn.active { color: var(--accent, #ccff00); background: rgba(204, 255, 0, 0.12); }
+
+    .close-btn {
+        width: 36px;
+        height: 36px;
+        border: none;
+        background: rgba(255, 255, 255, 0.06);
+        color: #b4b4b4;
+        border-radius: 50%;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: background-color 0.2s, color 0.2s, transform 0.2s;
+    }
+    .close-btn:hover { background: rgba(255, 255, 255, 0.12); color: #fff; transform: rotate(90deg); }
+
+    button:focus-visible { outline: 2px solid var(--accent, #ccff00); outline-offset: 2px; }
+
+    .modal-body { padding: 1.5rem 1.75rem 2rem; overflow-y: auto; flex: 1; overscroll-behavior: contain; }
+
+    .summary {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 0.5rem 1rem;
+        margin-bottom: 1rem;
+    }
+    .summary-name { font-family: var(--font-display, 'Space Grotesk', sans-serif); font-weight: 600; font-size: 1.05rem; }
+    .badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        padding: 0.25rem 0.65rem;
+        border-radius: 9999px;
+        background: rgba(255, 255, 255, 0.06);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        font-size: 0.75rem;
+        color: #cfcfcf;
+    }
+    .badge[data-cost='light'] { color: #7dffb0; border-color: rgba(125, 255, 176, 0.35); }
+    .badge[data-cost='medium'] { color: #ffd166; border-color: rgba(255, 209, 102, 0.35); }
+    .badge[data-cost='heavy'] { color: #ff8a5c; border-color: rgba(255, 138, 92, 0.35); }
+    .intro { margin: 0 0 1.25rem; color: #b4b4b4; font-size: 0.9rem; line-height: 1.5; }
+
+    .tabs {
+        display: flex;
+        gap: 0.5rem;
+        margin-bottom: 1.5rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        overflow-x: auto;
+    }
+    .tab {
+        padding: 0.5rem 1rem;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 9999px;
+        color: #b4b4b4;
+        cursor: pointer;
+        font-weight: 500;
+        font-size: 0.875rem;
+        white-space: nowrap;
+        flex-shrink: 0;
+        transition: color 0.2s, background-color 0.2s, border-color 0.2s;
+    }
+    .tab:hover { color: #fff; background: rgba(255, 255, 255, 0.1); }
+    .tab[aria-selected='true'] {
+        color: var(--accent, #ccff00);
+        background: rgba(204, 255, 0, 0.1);
+        border-color: var(--accent, #ccff00);
+        font-weight: 600;
+    }
+
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+
+    .section-head { display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; margin-bottom: 1rem; }
+    .section-title { font-family: var(--font-display, 'Space Grotesk', sans-serif); font-size: 1.1rem; margin: 0; }
+
+    .download-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.55rem 1rem;
+        background: var(--accent, #ccff00);
+        color: var(--accent-ink, #0b0d00);
+        border: none;
+        border-radius: 9999px;
+        font-weight: 600;
+        font-size: 0.85rem;
+        cursor: pointer;
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .download-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(204, 255, 0, 0.3); }
+
+    .step { display: flex; align-items: center; gap: 0.6rem; margin: 1.75rem 0 0.5rem; font-weight: 600; }
+    .step:first-of-type { margin-top: 0.5rem; }
+    .step-number {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 26px;
+        height: 26px;
+        flex: none;
+        background: var(--accent, #ccff00);
+        color: var(--accent-ink, #0b0d00);
+        border-radius: 50%;
+        font-weight: 700;
+        font-size: 0.8rem;
+    }
+    .step-info { margin: 0 0 0.5rem 2.1rem; color: #b4b4b4; font-size: 0.85rem; line-height: 1.5; }
+
+    .code-block {
+        background: rgba(0, 0, 0, 0.35);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 12px;
+        margin: 0.75rem 0;
+        overflow: hidden;
+    }
+    .code-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 1rem;
+        padding: 0.55rem 0.75rem 0.55rem 1rem;
+        background: rgba(255, 255, 255, 0.04);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    .code-title { color: #e8e8e8; font-size: 0.82rem; font-weight: 600; font-family: ui-monospace, 'Cascadia Code', Consolas, monospace; word-break: break-all; }
+    .copy-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        padding: 0.4rem 0.8rem;
+        background: rgba(255, 255, 255, 0.06);
+        border: 1px solid rgba(255, 255, 255, 0.14);
+        color: #e8e8e8;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 0.78rem;
+        line-height: 1;
+        flex: none;
+        transition: background-color 0.2s, border-color 0.2s, color 0.2s;
+    }
+    .copy-btn:hover { background: rgba(255, 255, 255, 0.12); }
+    .copy-btn.copied { color: #7dffb0; border-color: rgba(125, 255, 176, 0.4); background: rgba(125, 255, 176, 0.08); }
+    .copy-btn.copy-error { color: #ff8d8d; border-color: rgba(255, 141, 141, 0.4); background: rgba(255, 141, 141, 0.08); }
+    .file-note { padding: 0.6rem 1rem 0; margin: 0; color: #9a9a9a; font-size: 0.78rem; line-height: 1.45; }
+
+    pre { margin: 0; padding: 0.9rem 1rem 1rem; overflow: auto; max-height: 340px; }
+    code { font-family: ui-monospace, 'Cascadia Code', Consolas, 'Courier New', monospace; font-size: 0.8rem; line-height: 1.6; color: #e5e7eb; }
+
+    .info-box {
+        background: rgba(204, 255, 0, 0.06);
+        border-left: 3px solid var(--accent, #ccff00);
+        padding: 0.9rem 1.1rem;
+        border-radius: 6px;
+        margin: 1rem 0;
+        color: #e5e7eb;
+        font-size: 0.86rem;
+        line-height: 1.55;
+    }
+    .info-box ul { margin: 0; padding-left: 1.1rem; }
+    .info-box li { margin: 0.3rem 0; }
+
+    .icon { width: 1.1rem; height: 1.1rem; stroke-width: 2; flex: none; }
+
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.2); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.3); }
+
+    /* ── Export tips ── */
+    .tips { margin-bottom: 1.25rem; }
+    .tips summary {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        cursor: pointer;
+        color: #b4b4b4;
+        font-size: 0.82rem;
+        padding: 0.35rem 0.75rem 0.35rem 0.6rem;
+        border-radius: 9999px;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        list-style: none;
+    }
+    .tips summary::-webkit-details-marker { display: none; }
+    .tips summary:hover { color: #fff; }
+    .tips[open] summary { margin-bottom: 0.75rem; }
+    .export-tips { display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 1.25rem; }
+    .tips .export-tips { margin-bottom: 0; }
+    .export-tips-all-ok { display: flex; align-items: center; gap: 0.5rem; color: rgba(134, 239, 172, 0.9); font-size: 0.85rem; }
+    .tip-item { display: flex; gap: 0.75rem; padding: 0.65rem 0.9rem; border-radius: 10px; font-size: 0.8rem; line-height: 1.45; }
+    .tip-item.tip-info { background: rgba(96, 165, 250, 0.08); border: 1px solid rgba(96, 165, 250, 0.25); }
+    .tip-item.tip-warning { background: rgba(251, 191, 36, 0.08); border: 1px solid rgba(251, 191, 36, 0.3); }
+    .tip-item.tip-critical { background: rgba(248, 113, 113, 0.08); border: 1px solid rgba(248, 113, 113, 0.35); }
+    .tip-icon { flex-shrink: 0; margin-top: 0.1rem; }
+    .tip-icon.tip-info { color: rgba(96, 165, 250, 0.9); }
+    .tip-icon.tip-warning { color: rgba(251, 191, 36, 0.9); }
+    .tip-icon.tip-critical { color: rgba(248, 113, 113, 0.9); }
+    .tip-body strong { display: block; margin-bottom: 0.2rem; }
+    .tip-suggestion { margin-top: 0.25rem; opacity: 0.75; }
+
+    @media (max-width: 640px) {
+        .modal-container { width: 100%; height: 100%; max-height: 100dvh; border-radius: 0; }
+        .modal-header { padding: 1rem 1.1rem; padding-top: calc(1rem + env(safe-area-inset-top)); }
+        .modal-title { font-size: 1.1rem; }
+        .modal-body { padding: 1.1rem; }
+        .tab { padding: 0.5rem 0.8rem; font-size: 0.8rem; }
+        pre { max-height: 260px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        :host, .close-btn, .download-btn { transition: none; }
+    }
+`;
 
 export class ExportModal extends HTMLElement {
-    /**
-     * Constructor del componente ExportModal
-     */
     constructor() {
         super();
         this.attachShadow({ mode: 'open' });
         this.codeBlocks = new Map();
         this.persistence = null;
+        this.config = null;
+        this.runtimeContext = null;
         this._language = 'en';
+        this._activeTab = 'vanilla';
+        this._previousFocus = null;
+        this._onKeydown = (event) => {
+            if (event.key === 'Escape') this.close();
+        };
     }
 
-    /**
-     * Callback ejecutado cuando el componente se conecta al DOM
-     */
     connectedCallback() {
         this.render();
+    }
+
+    disconnectedCallback() {
+        document.removeEventListener('keydown', this._onKeydown);
     }
 
     setPersistenceManager(persistenceManager) {
         this.persistence = persistenceManager;
         const persisted = this.persistence?.getLanguage?.();
         if (persisted === 'auto') {
-            const raw = (navigator?.languages && navigator.languages.length ? navigator.languages[0] : navigator?.language) || 'en';
-            const effective = String(raw).toLowerCase().startsWith('es') ? 'es' : 'en';
-            this.setLanguage(effective, { persist: false });
-        } else {
+            const raw = (navigator?.languages?.length ? navigator.languages[0] : navigator?.language) || 'en';
+            this.setLanguage(String(raw).toLowerCase().startsWith('es') ? 'es' : 'en', { persist: false });
+        } else if (persisted) {
             this.setLanguage(persisted, { persist: false });
         }
     }
@@ -213,626 +349,90 @@ export class ExportModal extends HTMLElement {
         if (this._language === normalized) return;
 
         this._language = normalized;
-        if (persist && this.persistence?.setLanguage) {
-            this.persistence.setLanguage(normalized);
-        }
+        if (persist) this.persistence?.setLanguage?.(normalized);
 
         const wasOpen = this.classList.contains('open');
         this.render();
         if (wasOpen) {
             this.classList.add('open');
-            if (this.config) {
-                this.generateContent();
-            }
+            if (this.config) this.generateContent();
         }
     }
 
-    t(key) {
-        const lang = this.getLanguage();
-        return EXPORT_MODAL_I18N[lang]?.[key] ?? EXPORT_MODAL_I18N.en[key] ?? key;
+    t(key, params = null) {
+        const raw = EXPORT_I18N[this.getLanguage()]?.[key] ?? EXPORT_I18N.en[key] ?? key;
+        if (!params || typeof raw !== 'string') return raw;
+        return raw.replace(/\{(\w+)\}/g, (_, name) => params[name] ?? `{${name}}`);
     }
 
-    /**
-     * Renderiza el modal con su estructura HTML y estilos
-     */
+    // ── Shell ────────────────────────────────────────────────────────────
+
     render() {
         const lang = this.getLanguage();
-        const title = this.t('modalTitle');
         this.shadowRoot.innerHTML = `
-            <style>
-                :host {
-                    display: none;
-                    position: fixed;
-                    top: 0;
-                    left: 0;
-                    right: 0;
-                    bottom: 0;
-                    background: rgba(0, 0, 0, 0.6);
-                    backdrop-filter: blur(12px);
-                    z-index: 1000;
-                    align-items: center;
-                    justify-content: center;
-                    opacity: 0;
-                    transition: opacity 0.3s ease;
-                }
-                :host(.open) {
-                    display: flex;
-                    opacity: 1;
-                }
-                .modal-container {
-                    background: rgba(15, 15, 20, 0.95);
-                    backdrop-filter: blur(20px);
-                    border-radius: 24px;
-                    max-width: 800px;
-                    width: 90%;
-                    max-height: 90vh;
-                    overflow: hidden;
-                    box-shadow: 0 25px 80px rgba(0, 0, 0, 0.8);
-                    border: 1px solid rgba(255, 255, 255, 0.1);
-                    display: flex;
-                    flex-direction: column;
-                }
-                .modal-header {
-                    padding: 1.5rem 2rem;
-                    background: transparent;
-                    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-                    display: flex;
-                    align-items: center;
-                    justify-content: space-between;
-                }
-                .header-actions {
-                    display: flex;
-                    align-items: center;
-                    gap: 0.75rem;
-                }
-                .lang-switch {
-                    display: inline-flex;
-                    gap: 0.25rem;
-                    padding: 0.25rem;
-                    border-radius: 9999px;
-                    background: rgba(255, 255, 255, 0.05);
-                    border: 1px solid rgba(255, 255, 255, 0.1);
-                }
-                .lang-btn {
-                    padding: 0.375rem 0.625rem;
-                    border: none;
-                    background: transparent;
-                    color: #a0a0a0;
-                    cursor: pointer;
-                    border-radius: 9999px;
-                    font-weight: 600;
-                    font-size: 0.75rem;
-                    transition: all 0.2s;
-                }
-                .lang-btn:hover {
-                    color: white;
-                    background: rgba(255, 255, 255, 0.08);
-                }
-                .lang-btn.active {
-                    color: #ccff00;
-                    background: rgba(204, 255, 0, 0.1);
-                }
-                .modal-title {
-                    font-family: 'Space Grotesk', sans-serif;
-                    font-size: 1.5rem;
-                    font-weight: 600;
-                    color: white;
-                    margin: 0;
-                    text-transform: uppercase;
-                    letter-spacing: -0.02em;
-                }
-                .close-btn {
-                    width: 32px;
-                    height: 32px;
-                    border: none;
-                    background: rgba(255, 255, 255, 0.05);
-                    color: #a0a0a0;
-                    border-radius: 50%;
-                    cursor: pointer;
-                    transition: all 0.2s;
-                    font-size: 1rem;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                }
-                .close-btn:hover {
-                    background: rgba(255, 255, 255, 0.1);
-                    color: white;
-                    transform: rotate(90deg);
-                }
-                .modal-body {
-                    padding: 2rem;
-                    overflow-y: auto;
-                    flex: 1;
-                    font-family: 'Inter', sans-serif;
-                }
-                .tabs {
-                    display: flex;
-                    gap: 0.5rem;
-                    margin-bottom: 2rem;
-                    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-                    padding-bottom: 1rem;
-                }
-                .tab {
-                    padding: 0.5rem 1rem;
-                    background: rgba(255, 255, 255, 0.05);
-                    border: 1px solid rgba(255, 255, 255, 0.1);
-                    border-radius: 9999px;
-                    color: #a0a0a0;
-                    cursor: pointer;
-                    transition: all 0.2s;
-                    font-weight: 500;
-                    font-size: 0.875rem;
-                }
-                .tab:hover {
-                    color: white;
-                    background: rgba(255, 255, 255, 0.1);
-                }
-                .tab.active {
-                    color: #ccff00;
-                    background: rgba(204, 255, 0, 0.1);
-                    border-color: #ccff00;
-                    font-weight: 600;
-                }
-                .tab-content {
-                    display: none;
-                }
-                .tab-content.active {
-                    display: block;
-                }
-                .code-block {
-                    background: rgba(0, 0, 0, 0.3);
-                    border: 1px solid rgba(255, 255, 255, 0.08);
-                    border-radius: 8px;
-                    padding: 1rem;
-                    margin: 1rem 0;
-                    position: relative;
-                }
-                .code-header {
-                    display: flex;
-                    justify-content: space-between;
-                    align-items: center;
-                    margin-bottom: 0.75rem;
-                    padding-bottom: 0.5rem;
-                    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-                }
-                .code-title {
-                    color: #60a5fa;
-                    font-size: 0.875rem;
-                    font-weight: 600;
-                }
-                .copy-btn {
-                    display: inline-flex;
-                    align-items: center;
-                    justify-content: center;
-                    gap: 0.5rem;
-                    padding: 0.5rem 1rem;
-                    background: rgba(59, 130, 246, 0.1);
-                    border: 1px solid rgba(59, 130, 246, 0.3);
-                    color: #60a5fa;
-                    border-radius: 6px;
-                    cursor: pointer;
-                    transition: all 0.2s;
-                    font-size: 0.875rem;
-                    line-height: 1;
-                }
-
-                .copy-btn .icon {
-                    display: block;
-                    flex-shrink: 0;
-                }
-                .copy-btn:hover {
-                    background: rgba(59, 130, 246, 0.2);
-                    border-color: rgba(59, 130, 246, 0.5);
-                }
-                .copy-btn.copied {
-                    background: rgba(34, 197, 94, 0.1);
-                    border-color: rgba(34, 197, 94, 0.3);
-                    color: #4ade80;
-                }
-                .copy-btn.copy-error {
-                    background: rgba(239, 68, 68, 0.1);
-                    border-color: rgba(239, 68, 68, 0.3);
-                    color: #f87171;
-                }
-                pre {
-                    margin: 0;
-                    padding: 0;
-                    overflow-x: auto;
-                }
-                code {
-                    font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
-                    font-size: 0.875rem;
-                    line-height: 1.6;
-                    color: #e5e7eb;
-                }
-                .info-box {
-                    background: rgba(59, 130, 246, 0.1);
-                    border-left: 3px solid #3b82f6;
-                    padding: 1rem;
-                    border-radius: 4px;
-                    margin: 1rem 0;
-                }
-                .info-box p {
-                    margin: 0.5rem 0;
-                    color: #e5e7eb;
-                    font-size: 0.875rem;
-                }
-                .warning-box {
-                    background: rgba(245, 158, 11, 0.1);
-                    border-left: 3px solid #f59e0b;
-                    padding: 1rem;
-                    border-radius: 4px;
-                    margin: 1rem 0;
-                }
-                .warning-box p {
-                    margin: 0.5rem 0;
-                    color: #e5e7eb;
-                    font-size: 0.875rem;
-                }
-
-                /* Custom Scrollbar */
-                ::-webkit-scrollbar {
-                    width: 6px;
-                    height: 6px;
-                }
-                ::-webkit-scrollbar-track {
-                    background: transparent;
-                }
-                ::-webkit-scrollbar-thumb {
-                    background: rgba(255, 255, 255, 0.2);
-                    border-radius: 3px;
-                }
-                ::-webkit-scrollbar-thumb:hover {
-                    background: rgba(255, 255, 255, 0.3);
-                }
-                .step {
-                    margin-bottom: 1.5rem;
-                }
-                .step-number {
-                    display: inline-flex;
-                    align-items: center;
-                    justify-content: center;
-                    width: 28px;
-                    height: 28px;
-                    background: #3b82f6;
-                    color: white;
-                    border-radius: 50%;
-                    font-weight: 600;
-                    font-size: 0.875rem;
-                    margin-right: 0.5rem;
-                }
-
-                @media (max-width: 768px) {
-                    .modal-container {
-                        width: 95%;
-                        max-height: 95vh;
-                        border-radius: 12px;
-                    }
-                    .modal-header {
-                        padding: 1.25rem 1.5rem;
-                    }
-                    .modal-title {
-                        font-size: 1.25rem;
-                    }
-                    .modal-body {
-                        padding: 1.5rem;
-                    }
-                    .tabs {
-                        gap: 0.375rem;
-                        overflow-x: auto;
-                        -webkit-overflow-scrolling: touch;
-                    }
-                    .tab {
-                        font-size: 0.8125rem;
-                        padding: 0.625rem 1rem;
-                        white-space: nowrap;
-                        flex-shrink: 0;
-                    }
-                    .section-title {
-                        font-size: 1rem;
-                    }
-                    .code-block {
-                        font-size: 0.8125rem;
-                    }
-                }
-
-                @media (max-width: 640px) {
-                    .modal-container {
-                        width: 100%;
-                        height: 100%;
-                        max-height: 100dvh;
-                        border-radius: 0;
-                    }
-                    .modal-header {
-                        padding: 1rem 1.25rem;
-                        padding-top: calc(1rem + env(safe-area-inset-top));
-                    }
-                    .modal-title {
-                        font-size: 1.125rem;
-                    }
-                    .close-btn {
-                        width: 28px;
-                        height: 28px;
-                        font-size: 1.125rem;
-                    }
-                    .modal-body {
-                        padding: 1.25rem;
-                    }
-                    .tabs {
-                        gap: 0.25rem;
-                        padding-bottom: 0.5rem;
-                    }
-                    .tab {
-                        font-size: 0.75rem;
-                        padding: 0.5rem 0.75rem;
-                        border-radius: 6px;
-                    }
-                    .section-title {
-                        font-size: 0.9375rem;
-                    }
-                    .section-description {
-                        font-size: 0.8125rem;
-                    }
-                    .code-block {
-                        font-size: 0.75rem;
-                        border-radius: 6px;
-                    }
-                    .code-header {
-                        padding: 0.625rem 0.875rem;
-                        font-size: 0.6875rem;
-                    }
-                    .copy-btn {
-                        padding: 0.375rem 0.625rem;
-                        font-size: 0.6875rem;
-                    }
-                    pre {
-                        padding: 0.875rem;
-                    }
-                    .step {
-                        margin-bottom: 1.25rem;
-                    }
-                    .step-number {
-                        width: 24px;
-                        height: 24px;
-                        font-size: 0.75rem;
-                    }
-                    .info-box, .warning-box {
-                        padding: 0.75rem;
-                        font-size: 0.8125rem;
-                        margin: 0.75rem 0;
-                    }
-                    .info-box p, .warning-box p {
-                        font-size: 0.8125rem;
-                    }
-                }
-
-                @media (max-width: 480px) {
-                    .modal-header {
-                        padding: 0.875rem 1rem;
-                    }
-                    .modal-title {
-                        font-size: 1rem;
-                    }
-                    .close-btn {
-                        width: 24px;
-                        height: 24px;
-                        font-size: 1rem;
-                    }
-                    .modal-body {
-                        padding: 1rem;
-                    }
-                    .tabs {
-                        gap: 0.25rem;
-                    }
-                    .tab {
-                        font-size: 0.6875rem;
-                        padding: 0.5rem 0.625rem;
-                    }
-                    .section-title {
-                        font-size: 0.875rem;
-                        margin-bottom: 0.75rem;
-                    }
-                    .section-description {
-                        font-size: 0.75rem;
-                        margin-bottom: 0.875rem;
-                    }
-                    .code-block {
-                        font-size: 0.6875rem;
-                    }
-                    .code-header {
-                        padding: 0.5rem 0.75rem;
-                        font-size: 0.625rem;
-                    }
-                    .copy-btn {
-                        padding: 0.25rem 0.5rem;
-                        font-size: 0.625rem;
-                    }
-                    pre {
-                        padding: 0.75rem;
-                        font-size: 0.6875rem;
-                    }
-                    .step {
-                        margin-bottom: 1rem;
-                    }
-                    .step-number {
-                        width: 22px;
-                        height: 22px;
-                        font-size: 0.6875rem;
-                        margin-right: 0.375rem;
-                    }
-                    .info-box, .warning-box {
-                        padding: 0.625rem;
-                        margin: 0.625rem 0;
-                    }
-                    .info-box p, .warning-box p {
-                        font-size: 0.75rem;
-                        margin: 0.375rem 0;
-                    }
-                }
-
-                @media (max-height: 600px) and (orientation: landscape) {
-                    .modal-container {
-                        max-height: 98vh;
-                    }
-                    .modal-header {
-                        padding: 0.75rem 1rem;
-                    }
-                    .modal-body {
-                        padding: 1rem;
-                    }
-                    .section {
-                        margin-bottom: 1.5rem;
-                    }
-                }
-                
-                .icon {
-                    width: 1.25rem;
-                    height: 1.25rem;
-                    stroke-width: 2;
-                }
-                
-                .icon-lg {
-                    width: 1.5rem;
-                    height: 1.5rem;
-                    stroke-width: 2;
-                }
-                
-                .section-title {
-                    display: flex;
-                    align-items: center;
-                    gap: 0.75rem;
-                }
-
-                /* ── Export tips ──────────────────────────────── */
-                .export-tips {
-                    padding: 1rem 1.5rem;
-                    display: flex;
-                    flex-direction: column;
-                    gap: 0.5rem;
-                    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-                }
-                .export-tips-all-ok {
-                    display: flex;
-                    align-items: center;
-                    gap: 0.5rem;
-                    color: rgba(134, 239, 172, 0.9);
-                    font-size: 0.875rem;
-                }
-                .tip-item {
-                    display: flex;
-                    gap: 0.75rem;
-                    padding: 0.625rem 0.875rem;
-                    border-radius: 8px;
-                    font-size: 0.8rem;
-                    line-height: 1.4;
-                }
-                .tip-item.tip-info    { background: rgba(96, 165, 250, 0.08); border: 1px solid rgba(96, 165, 250, 0.25); }
-                .tip-item.tip-warning { background: rgba(251, 191, 36, 0.08); border: 1px solid rgba(251, 191, 36, 0.3); }
-                .tip-item.tip-critical{ background: rgba(248, 113, 113, 0.08); border: 1px solid rgba(248, 113, 113, 0.35); }
-                .tip-icon { flex-shrink: 0; margin-top: 0.1rem; }
-                .tip-icon.tip-info    { color: rgba(96, 165, 250, 0.9); }
-                .tip-icon.tip-warning { color: rgba(251, 191, 36, 0.9); }
-                .tip-icon.tip-critical{ color: rgba(248, 113, 113, 0.9); }
-                .tip-body strong { display: block; margin-bottom: 0.2rem; }
-                .tip-suggestion { margin-top: 0.25rem; opacity: 0.75; }
-            </style>
-            
-            <div class="modal-container">
+            <style>${STYLE}</style>
+            <div class="modal-container" role="dialog" aria-modal="true" aria-labelledby="modal-title">
                 <div class="modal-header">
-                    <h2 class="modal-title">${createElement(Package, {class: "icon-lg"}).outerHTML} ${title}</h2>
+                    <h2 class="modal-title" id="modal-title">${this.t('modalTitle')}</h2>
                     <div class="header-actions">
                         <div class="lang-switch" role="group" aria-label="${this.t('languageLabel')}">
                             <button class="lang-btn ${lang === 'en' ? 'active' : ''}" type="button" data-lang="en">EN</button>
                             <button class="lang-btn ${lang === 'es' ? 'active' : ''}" type="button" data-lang="es">ES</button>
                         </div>
-                        <button class="close-btn" id="close-btn">${createElement(X, {class: "icon"}).outerHTML}</button>
+                        <button class="close-btn" id="close-btn" type="button" aria-label="${this.t('close')}">${icon(X)}</button>
                     </div>
                 </div>
                 <div class="modal-body">
                     <div id="export-tips-section"></div>
-                    <div class="tabs">
-                        <button class="tab active" data-tab="vanilla">${this.t('tabVanilla')}</button>
-                        <button class="tab" data-tab="react">${this.t('tabReact')}</button>
-                        <button class="tab" data-tab="vue">${this.t('tabVue')}</button>
-                        <button class="tab" data-tab="angular">${this.t('tabAngular')}</button>
-                        <button class="tab" data-tab="astro">${this.t('tabAstro')}</button>
-                        <button class="tab" data-tab="optimizations">${this.t('tabOptimizations')}</button>
+                    <div id="summary"></div>
+                    <div class="tabs" role="tablist">
+                        ${TABS.map((tab) => `<button class="tab" type="button" role="tab" id="tab-${tab}" aria-controls="${tab}-content" aria-selected="${tab === this._activeTab}" data-tab="${tab}">${this.t(TAB_KEYS[tab])}</button>`).join('')}
                     </div>
-                    
-                    <div class="tab-content active" id="vanilla-content"></div>
-                    <div class="tab-content" id="react-content"></div>
-                    <div class="tab-content" id="vue-content"></div>
-                    <div class="tab-content" id="angular-content"></div>
-                    <div class="tab-content" id="astro-content"></div>
-                    <div class="tab-content" id="optimizations-content"></div>
+                    ${TABS.map((tab) => `<div class="tab-content${tab === this._activeTab ? ' active' : ''}" role="tabpanel" id="${tab}-content" aria-labelledby="tab-${tab}"></div>`).join('')}
                 </div>
             </div>
         `;
-
         this.setupEventListeners();
     }
 
-    /**
-     * Configura todos los event listeners del modal
-     */
     setupEventListeners() {
-        const closeBtn = this.shadowRoot.getElementById('close-btn');
-        closeBtn.addEventListener('click', () => this.close());
+        const root = this.shadowRoot;
 
-        const langButtons = this.shadowRoot.querySelectorAll('.lang-btn');
-        langButtons.forEach(btn => {
-            btn.addEventListener('click', () => {
-                const next = btn.getAttribute('data-lang');
-                this.setLanguage(next, { persist: true });
-            });
+        root.getElementById('close-btn').addEventListener('click', () => this.close());
+        root.querySelectorAll('.lang-btn').forEach((btn) => {
+            btn.addEventListener('click', () => this.setLanguage(btn.dataset.lang, { persist: true }));
         });
 
-        const modalContainer = this.shadowRoot.querySelector('.modal-container');
-        
-        this.addEventListener('click', (e) => {
-            if (e.target === this) {
-                this.close();
-            }
+        // Click on the backdrop closes; clicks inside the dialog never bubble out.
+        this.addEventListener('click', (event) => {
+            if (event.target === this) this.close();
         });
 
-        modalContainer.addEventListener('click', (e) => {
-            let target = e.target;
-            if (target && typeof target.closest !== 'function' && target.parentElement) {
-                target = target.parentElement;
-            }
-
-            const copyBtn = typeof target?.closest === 'function'
-                ? target.closest('.copy-btn')
-                : null;
-            if (copyBtn) {
-                this.copyCode(copyBtn);
-                e.stopPropagation();
-                return;
-            }
-
-            e.stopPropagation();
+        root.querySelector('.modal-container').addEventListener('click', (event) => {
+            const target = event.target instanceof Element ? event.target : event.target?.parentElement;
+            const copyBtn = target?.closest('.copy-btn');
+            if (copyBtn) this.copyCode(copyBtn);
+            const downloadBtn = target?.closest('.download-btn');
+            if (downloadBtn) this.downloadZip(downloadBtn.dataset.framework);
+            event.stopPropagation();
         });
 
-        const tabs = this.shadowRoot.querySelectorAll('.tab');
-        tabs.forEach(tab => {
-            tab.addEventListener('click', () => {
-                tabs.forEach(t => t.classList.remove('active'));
-                tab.classList.add('active');
-                
-                const tabId = tab.dataset.tab;
-                this.shadowRoot.querySelectorAll('.tab-content').forEach(content => {
-                    content.classList.remove('active');
-                });
-                this.shadowRoot.getElementById(`${tabId}-content`).classList.add('active');
-            });
+        root.querySelectorAll('.tab').forEach((tab) => {
+            tab.addEventListener('click', () => this.activateTab(tab.dataset.tab));
         });
     }
 
+    activateTab(tabId) {
+        this._activeTab = tabId;
+        this.shadowRoot.querySelectorAll('.tab').forEach((tab) => tab.setAttribute('aria-selected', String(tab.dataset.tab === tabId)));
+        this.shadowRoot.querySelectorAll('.tab-content').forEach((content) => content.classList.toggle('active', content.id === `${tabId}-content`));
+    }
+
+    // ── Open / close ─────────────────────────────────────────────────────
+
     /**
-     * Abre el modal con la configuración proporcionada
-     * @param {Object} config - Configuración del gradiente a exportar
-     * @param {{ gpuTier: number|null, observedFps: number, isMobile: boolean, prefersReducedMotion: boolean, currentResolution?: { width: number, height: number } }} [runtimeContext]
+     * @param {Object} config  Current background (see UIController.getCurrentConfiguration)
+     * @param {Object} [runtimeContext]  GPU tier, fps, mobile, reduced motion, shader complexity
      */
     open(config, runtimeContext) {
         this.config = config;
@@ -840,1678 +440,237 @@ export class ExportModal extends HTMLElement {
         this.codeBlocks = new Map();
 
         const persisted = this.persistence?.getLanguage?.();
-        if (persisted && persisted !== this.getLanguage()) {
-            this.setLanguage(persisted, { persist: false });
-        }
+        if (persisted && persisted !== 'auto' && persisted !== this.getLanguage()) this.setLanguage(persisted, { persist: false });
 
+        this._previousFocus = document.activeElement;
         this.generateContent();
         this.classList.add('open');
+        document.addEventListener('keydown', this._onKeydown);
+        this.shadowRoot.getElementById('close-btn')?.focus();
     }
 
-    /**
-     * Cierra el modal
-     */
     close() {
         this.classList.remove('open');
+        document.removeEventListener('keydown', this._onKeydown);
+        this._previousFocus?.focus?.();
+        this._previousFocus = null;
     }
 
-    /**
-     * Genera el contenido de todas las pestañas del modal
-     */
+    // ── Content ──────────────────────────────────────────────────────────
+
     generateContent() {
-        this.generateTipsSection();
-        this.generateVanillaContent();
-        this.generateReactContent();
-        this.generateVueContent();
-        this.generateAngularContent();
-        this.generateAstroContent();
-        this.generateOptimizationsContent();
+        this.generateTips();
+        this.generateSummary();
+        ['vanilla', 'react', 'vue', 'angular', 'astro'].forEach((framework) => this.generateFramework(framework));
+        this.generateTuning();
     }
 
-    /**
-     * Renderiza la sección de tips de rendimiento antes del bloque de código exportable.
-     */
-    generateTipsSection() {
+    lang() {
+        return this.getLanguage();
+    }
+
+    generateTips() {
         const container = this.shadowRoot.getElementById('export-tips-section');
         if (!container) return;
-
-        const ctx = this.runtimeContext;
-        if (!ctx) {
+        if (!this.runtimeContext) {
             container.innerHTML = '';
             return;
         }
 
-        const tips = evaluateTips(ctx);
-
+        const tips = evaluateTips(this.runtimeContext);
         const severityIcon = (severity) => {
-            if (severity === 'critical') return createElement(AlertOctagon, { class: 'icon' }).outerHTML;
-            if (severity === 'warning')  return createElement(AlertTriangle, { class: 'icon' }).outerHTML;
-            return createElement(Info, { class: 'icon' }).outerHTML;
+            if (severity === 'critical') return icon(AlertOctagon);
+            if (severity === 'warning') return icon(AlertTriangle);
+            return icon(Info);
         };
 
-        const tipHtml = (tip) => `
-            <div class="tip-item tip-${tip.severity}">
-                <span class="tip-icon tip-${tip.severity}">${severityIcon(tip.severity)}</span>
-                <div class="tip-body">
-                    <strong>${this.t(tip.titleKey)}</strong>
-                    <span>${this.t(tip.descriptionKey)}</span>
-                    <div class="tip-suggestion">${this.t(tip.suggestionKey)}</div>
-                </div>
-            </div>
-        `;
-
         if (tips.length === 0) {
-            container.innerHTML = `
-                <div class="export-tips">
-                    <div class="export-tips-all-ok">
-                        ${createElement(Info, { class: 'icon' }).outerHTML}
-                        <span>All good — no performance issues detected.</span>
-                    </div>
-                </div>
-            `;
+            container.innerHTML = `<div class="export-tips"><div class="export-tips-all-ok">${icon(Check)}<span>${this.t('tipsAllGood')}</span></div></div>`;
             return;
         }
 
+        // Info-level notes stay folded so the guide is the first thing you see.
+        const needsAttention = tips.some((tip) => tip.severity !== 'info');
         container.innerHTML = `
-            <div class="export-tips">
-                ${tips.map(tipHtml).join('')}
+            <details class="tips"${needsAttention ? ' open' : ''}>
+                <summary>${icon(Info)}<span>${this.t('tipsSummary', { n: tips.length })}</span></summary>
+                <div class="export-tips">${tips.map((tip) => `
+                    <div class="tip-item tip-${tip.severity}">
+                        <span class="tip-icon tip-${tip.severity}">${severityIcon(tip.severity)}</span>
+                        <div class="tip-body">
+                            <strong>${this.t(tip.titleKey)}</strong>
+                            <span>${this.t(tip.descriptionKey)}</span>
+                            <div class="tip-suggestion">${this.t(tip.suggestionKey)}</div>
+                        </div>
+                    </div>`).join('')}</div>
+            </details>`;
+    }
+
+    generateSummary() {
+        const { config } = this;
+        const name = config.name?.[this.lang()] ?? config.name?.en ?? config.shader;
+        const scale = Math.round((config.renderScale ?? 1) * 100);
+        this.shadowRoot.getElementById('summary').innerHTML = `
+            <div class="summary">
+                <span class="summary-name">${this.escapeHtml(name)}</span>
+                <span class="badge" data-cost="${config.cost}">${this.t('cost')}: ${this.t(`cost.${config.cost}`)}</span>
+                <span class="badge">${this.t('renderScale', { scale })}</span>
             </div>
-        `;
+            <p class="intro">${this.escapeHtml(this.t('intro'))}</p>`;
     }
 
-    /**
-     * Procesa el código fuente TSL para asegurar que exporte 'main'
-     * @param {string} tslSource - Código fuente original
-     * @returns {string} Código fuente procesado
-     */
-    processTSLSource(tslSource) {
-        if (!tslSource) return '// TSL Source not available';
-        
-        // Case 1: export const somethingTSL = main; -> export { main };
-        if (/export const \w+TSL = main;/.test(tslSource)) {
-            return tslSource.replace(/export const \w+TSL = main;/, 'export { main };');
-        }
-        
-        // Case 2: export const somethingTSL = Fn(...) -> export const main = Fn(...)
-        return tslSource.replace(/export const \w+TSL =/, 'export const main =');
+    step(number, title, info = '') {
+        return `
+            <div class="step"><span class="step-number">${number}</span><span>${this.escapeHtml(title)}</span></div>
+            ${info ? `<p class="step-info">${this.escapeHtml(info)}</p>` : ''}`;
     }
 
-    generateVanillaContent() {
-        const container = this.shadowRoot.getElementById('vanilla-content');
-        const tslSource = this.processTSLSource(this.config.tslSource);
-
-        const commonUniformsCode = this.getCommonUniformsCode();
-
-        container.innerHTML = `
-            <div class="section">
-                <h3 class="section-title">${createElement(Rocket, {class: "icon"}).outerHTML} ${this.t('vanillaTitle')}</h3>
-                <p class="section-description">${this.t('vanillaDesc')}</p>
-                
-                <div class="step">
-                    <span class="step-number">1</span>
-                    <strong>${this.t('installDeps')}</strong>
-                </div>
-                <p class="info-box">${this.t('runCommand')}</p>
-                ${this.createCodeBlock('bash', 'npm install three culori', 'Terminal')}
-                
-                <div class="step">
-                    <span class="step-number">2</span>
-                    <strong>${this.t('commonUniforms')}</strong>
-                </div>
-                <p class="info-box">${this.t('commonUniformsInfo')}</p>
-                ${this.createCodeBlock('javascript', commonUniformsCode, 'commonUniforms.js')}
-
-                <div class="step">
-                    <span class="step-number">3</span>
-                    <strong>${this.t('shaderNode')}</strong>
-                </div>
-                <p class="info-box">${this.t('shaderNodeInfo')}</p>
-                ${this.createCodeBlock('javascript', tslSource, 'shaderNode.js')}
-
-                <div class="step">
-                    <span class="step-number">4</span>
-                    <strong>${this.t('htmlStructure')}</strong>
-                </div>
-                
-                ${this.createCodeBlock('html', this.generateHTMLCode(), 'index.html')}
-                
-                <div class="step">
-                    <span class="step-number">5</span>
-                    <strong>${this.t('jsImplementation')}</strong>
-                </div>
-                
-                ${this.createCodeBlock('javascript', this.generateVanillaJS(), 'main.js')}
-            </div>
-        `;
+    /** @param {{ id: string, path: string, language: string, code: string }} file */
+    fileBlock(file) {
+        return this.codeBlock(file.path, file.code, this.t(`file.${file.id}`));
     }
 
-    generateAstroContent() {
-        const container = this.shadowRoot.getElementById('astro-content');
-        const tslSource = this.processTSLSource(this.config.tslSource);
-        const commonUniformsCode = this.getCommonUniformsCode();
-
-        container.innerHTML = `
-            <div class="section">
-                <h3 class="section-title">${createElement(Lightbulb, {class: "icon"}).outerHTML} ${this.t('astroTitle')}</h3>
-                <p class="section-description">
-                    ${this.t('astroDesc')}
-                </p>
-
-                <div class="step">
-                    <span class="step-number">1</span>
-                    <strong>${this.t('installDeps')}</strong>
-                </div>
-                <p class="info-box">${this.t('runCommand')}</p>
-                ${this.createCodeBlock('bash', 'npm install three culori', 'Terminal')}
-
-                <div class="step">
-                    <span class="step-number">2</span>
-                    <strong>${this.t('commonUniforms')}</strong>
-                </div>
-                <p class="info-box">${this.t('commonUniformsAstroInfo')}</p>
-                ${this.createCodeBlock('javascript', commonUniformsCode, 'src/lib/gradient/commonUniforms.js')}
-
-                <div class="step">
-                    <span class="step-number">3</span>
-                    <strong>${this.t('shaderNode')}</strong>
-                </div>
-                <p class="info-box">${this.t('shaderNodeAstroInfo')}</p>
-                ${this.createCodeBlock('javascript', tslSource, 'src/lib/gradient/shaderNode.js')}
-
-                <div class="step">
-                    <span class="step-number">4</span>
-                    <strong>${this.t('mountModule')}</strong>
-                </div>
-                <div class="info-box">
-                    <p><strong>${this.t('important')}</strong> ${this.t('astroImportantKeep')}</p>
-                    <p>${this.t('astroImportantScript')}</p>
-                </div>
-                ${this.createCodeBlock('javascript', this.generateAstroMountModule(), 'src/lib/gradient/mountGradient.js')}
-
-                <div class="step">
-                    <span class="step-number">5</span>
-                    <strong>${this.t('astroComponent')}</strong>
-                </div>
-                ${this.createCodeBlock('astro', this.generateAstroComponent(), 'src/components/GradientBackground.astro')}
-
-                <div class="step">
-                    <span class="step-number">6</span>
-                    <strong>${this.t('astroUsage')}</strong>
-                </div>
-                ${this.createCodeBlock('astro', this.generateAstroUsage(), 'src/pages/index.astro')}
-            </div>
-        `;
-    }
-
-        generateAstroMountModule() {
-                const { colors, speed, parameters } = this.config;
-                const normalizedColors = this.normalizeColors(colors);
-                const colorStrings = normalizedColors.map(color => this.formatColorForExport(color));
-                const extraUniforms = Object.keys(parameters || {}).map(k => 'u_' + k);
-
-                return `import * as THREE from 'three';
-import { WebGPURenderer } from 'three/webgpu';
-import { MeshBasicNodeMaterial } from 'three/webgpu';
-import * as culori from 'culori';
-import { main } from './shaderNode.js';
-import {
-    u_time, u_resolution, u_mouse, u_speed,
-    u_color1, u_color2, u_color3, u_color4,
-    ${extraUniforms.length ? `${extraUniforms.join(', ')}` : ''}
-} from './commonUniforms.js';
-
-export async function mountGradient(canvas) {
-    if (!canvas) return () => {};
-
-    const scene = new THREE.Scene();
-    const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 10);
-    camera.position.z = 1;
-
-    const renderer = new WebGPURenderer({
-        canvas,
-        antialias: true,
-        alpha: false
-    });
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-
-    try {
-        await renderer.init();
-    } catch (error) {
-        console.error('Failed to initialize WebGPURenderer:', error);
-        return () => {};
-    }
-
-    const oklchToThree = (oklch) => {
-        const rgb = culori.rgb({ mode: 'oklch', ...oklch });
-        return new THREE.Color(rgb.r, rgb.g, rgb.b);
-    };
-
-    // Uniforms
-    u_speed.value = ${this.formatUniformValue(speed ?? 0.5)};
-    u_color1.value = oklchToThree(${colorStrings[0]});
-    u_color2.value = oklchToThree(${colorStrings[1]});
-    u_color3.value = oklchToThree(${colorStrings[2]});
-    u_color4.value = oklchToThree(${colorStrings[3]});
-
-    ${Object.entries(parameters || {}).map(([key, value]) => `u_${key}.value = ${this.formatUniformValue(value)};`).join('\n  ')}
-
-    const material = new MeshBasicNodeMaterial();
-    material.colorNode = main();
-
-    const geometry = new THREE.PlaneGeometry(2, 2);
-    const mesh = new THREE.Mesh(geometry, material);
-    scene.add(mesh);
-
-    const onResize = () => {
-        renderer.setSize(window.innerWidth, window.innerHeight);
-        const pixelRatio = renderer.getPixelRatio();
-        u_resolution.value.set(window.innerWidth * pixelRatio, window.innerHeight * pixelRatio);
-    };
-    window.addEventListener('resize', onResize);
-    onResize();
-
-    const onPointerMove = (event) => {
-        const rect = canvas.getBoundingClientRect();
-        const w = Math.max(rect.width, 1);
-        const h = Math.max(rect.height, 1);
-        const x = (event.clientX - rect.left) / w;
-        const y = 1 - (event.clientY - rect.top) / h;
-        u_mouse.value.set(x, y);
-    };
-    window.addEventListener('pointermove', onPointerMove, { passive: true });
-
-    const clock = new THREE.Clock();
-    let rafId = 0;
-
-    const animate = () => {
-        rafId = requestAnimationFrame(animate);
-        u_time.value = clock.getElapsedTime();
-        renderer.render(scene, camera);
-    };
-    animate();
-
-    return () => {
-        cancelAnimationFrame(rafId);
-        window.removeEventListener('resize', onResize);
-        window.removeEventListener('pointermove', onPointerMove);
-        geometry.dispose?.();
-        material.dispose?.();
-        renderer.dispose?.();
-    };
-}`;
-        }
-
-        generateAstroComponent() {
-                const reducedMotion = this.runtimeContext?.prefersReducedMotion
-                    ? this.generateReducedMotionBlock('.gradient-canvas')
-                    : '';
-                return `---
-// Componente 100% Astro (SSR) + montaje WebGPU en cliente
-// Nota: el <script> NO debe tener atributos (salvo src) para que Astro procese y resuelva imports.
----
-
-<canvas id="gradient-canvas" class="gradient-canvas" aria-hidden="true"></canvas>
-
-<style>
-    .gradient-canvas {
-        position: fixed;
-        inset: 0;
-        width: 100%;
-        height: 100%;
-        z-index: -1;
-    }${reducedMotion}
-</style>
-
-<script>
-    import { mountGradient } from '../lib/gradient/mountGradient.js';
-
-    let cleanup;
-
-    async function setupGradient() {
-        if (cleanup) return;
-        const canvas = document.getElementById('gradient-canvas');
-        if (!canvas) return;
-
-        cleanup = await mountGradient(canvas);
-    }
-
-    function teardownGradient() {
-        cleanup?.();
-        cleanup = undefined;
-    }
-
-    // View Transitions (Astro v3+): usar astro:page-load para re-montar en cada navegación
-    document.addEventListener('astro:page-load', setupGradient);
-    document.addEventListener('astro:before-swap', teardownGradient);
-
-    // Fallback si no estás usando View Transitions
-    document.addEventListener('DOMContentLoaded', setupGradient, { once: true });
-</script>`;
-        }
-
-        generateAstroUsage() {
-                const isEs = this.getLanguage() === 'es';
-                const htmlLang = isEs ? 'es' : 'en';
-                const title = isEs ? 'Mi página con fondo animado' : 'My page with an animated background';
-                const heading = isEs ? 'Contenido encima del fondo' : 'Content above the background';
-
-                return `---
-import GradientBackground from '../components/GradientBackground.astro';
----
-
-<html lang="${htmlLang}">
-    <head>
-        <meta charset="utf-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <title>${title}</title>
-    </head>
-    <body>
-        <GradientBackground />
-
-        <main style="position: relative; z-index: 1;">
-            <h1>${heading}</h1>
-        </main>
-    </body>
-</html>`;
-        }
-
-    getCommonUniformsCode() {
-        return `import { Vector2, Color } from 'three';
-import { uniform } from 'three/tsl';
-
-// Common Uniforms shared across TSL shaders
-export const u_time = uniform(0);
-export const u_resolution = uniform(new Vector2(1, 1));
-export const u_mouse = uniform(new Vector2(0.5, 0.5));
-
-// Colors
-export const u_color1 = uniform(new Color(0xff0000));
-export const u_color2 = uniform(new Color(0x00ff00));
-export const u_color3 = uniform(new Color(0x0000ff));
-export const u_color4 = uniform(new Color(0xffff00));
-
-// Common Parameters
-export const u_speed = uniform(1.0);
-export const u_intensity = uniform(1.0);
-export const u_scale = uniform(1.0);
-export const u_brightness = uniform(0.0);
-export const u_contrast = uniform(1.0);
-export const u_noise = uniform(0.0);
-
-// Specific Parameters
-export const u_wave_amplitude = uniform(0.4);
-export const u_wave_frequency = uniform(2.5);
-export const u_zoom = uniform(3.0);
-export const u_stripe_width = uniform(8.0);
-export const u_stripe_speed = uniform(0.8);
-export const u_noise_scale = uniform(2.0);
-export const u_octaves = uniform(4.0);
-export const u_persistence = uniform(0.5);
-export const u_lacunarity = uniform(2.0);
-export const u_rotation = uniform(0.0);
-export const u_distortion = uniform(0.6);
-export const u_grid_size = uniform(3.0);
-export const u_glow = uniform(1.0);
-export const u_offset_x = uniform(0.0);
-export const u_offset_y = uniform(0.0);
-export const u_sun_size = uniform(0.25);
-export const u_core_size = uniform(1.0);
-export const u_spiral_density = uniform(3.0);
-export const u_star_density = uniform(50.0);
-export const u_cell_density = uniform(8.0);
-export const u_border_width = uniform(0.1);`;
-    }
-
-    generateWebGPUContent() {
-        // Deprecated
-    }
-
-    generateWebGPUJS() {
-        // Deprecated
-    }
-
-    generateReactContent() {
-        const container = this.shadowRoot.getElementById('react-content');
-        const tslSource = this.processTSLSource(this.config.tslSource);
-        const commonUniformsCode = this.getCommonUniformsCode();
-
-        container.innerHTML = `
-            <div class="section">
-                <h3 class="section-title">${createElement(Atom, {class: "icon"}).outerHTML} ${this.t('reactTitle')}</h3>
-                <p class="section-description">
-                    ${this.t('reactDesc')}
-                </p>
-                
-                <div class="step">
-                    <span class="step-number">1</span>
-                    <strong>${this.t('installDeps')}</strong>
-                </div>
-                <p class="info-box">${this.t('runCommand')}</p>
-                ${this.createCodeBlock('bash', 'npm install three culori', 'Terminal')}
-
-                <div class="step">
-                    <span class="step-number">2</span>
-                    <strong>${this.t('commonUniforms')}</strong>
-                </div>
-                <p class="info-box">${this.t('commonUniformsInfo')}</p>
-                ${this.createCodeBlock('javascript', commonUniformsCode, 'commonUniforms.js')}
-
-                <div class="step">
-                    <span class="step-number">3</span>
-                    <strong>${this.t('shaderNode')}</strong>
-                </div>
-                <p class="info-box">${this.t('shaderNodeInfo')}</p>
-                ${this.createCodeBlock('javascript', tslSource, 'shaderNode.js')}
-                
-                <div class="step">
-                    <span class="step-number">4</span>
-                    <strong>${this.t('customHook')}</strong>
-                </div>
-                
-                ${this.createCodeBlock('javascript', this.generateReactHook(), 'useGradientBackground.js')}
-                
-                <div class="step">
-                    <span class="step-number">5</span>
-                    <strong>${this.t('usageInComponent')}</strong>
-                </div>
-                
-                ${this.createCodeBlock('jsx', this.generateReactUsage(), 'App.jsx')}
-                
-                <div class="warning-box">
-                    <p><strong>${createElement(AlertTriangle, {class: "icon"}).outerHTML} ${this.t('important')}</strong> ${this.t('reactCleanupImportant')}</p>
-                </div>
-            </div>
-        `;
-    }
-
-    generateVueContent() {
-        const container = this.shadowRoot.getElementById('vue-content');
-        const tslSource = this.processTSLSource(this.config.tslSource);
-        const commonUniformsCode = this.getCommonUniformsCode();
-
-        container.innerHTML = `
-            <div class="section">
-                <h3 class="section-title">${createElement(Layers, {class: "icon"}).outerHTML} ${this.t('vueTitle')}</h3>
-                <p class="section-description">
-                    ${this.t('vueDesc')}
-                </p>
-                
-                <div class="step">
-                    <span class="step-number">1</span>
-                    <strong>${this.t('installDeps')}</strong>
-                </div>
-                <p class="info-box">${this.t('runCommand')}</p>
-                ${this.createCodeBlock('bash', 'npm install three culori', 'Terminal')}
-
-                <div class="step">
-                    <span class="step-number">2</span>
-                    <strong>${this.t('commonUniforms')}</strong>
-                </div>
-                <p class="info-box">${this.t('commonUniformsInfo')}</p>
-                ${this.createCodeBlock('javascript', commonUniformsCode, 'commonUniforms.js')}
-
-                <div class="step">
-                    <span class="step-number">3</span>
-                    <strong>${this.t('shaderNode')}</strong>
-                </div>
-                <p class="info-box">${this.t('shaderNodeInfo')}</p>
-                ${this.createCodeBlock('javascript', tslSource, 'shaderNode.js')}
-                
-                <div class="step">
-                    <span class="step-number">4</span>
-                    <strong>Composable</strong>
-                </div>
-                
-                ${this.createCodeBlock('javascript', this.generateVueComposable(), 'useGradientBackground.js')}
-                
-                <div class="step">
-                    <span class="step-number">5</span>
-                    <strong>${this.t('usageInComponent')}</strong>
-                </div>
-                
-                ${this.createCodeBlock('vue', this.generateVueUsage(), 'App.vue')}
-            </div>
-        `;
-    }
-
-    processTSLForTypeScript(tslSource) {
-        let tsSource = tslSource;
-        
-        // Fix 1: Add type annotation to Fn results to allow calling them with arguments
-        // const random = Fn(...) -> const random: any = Fn(...)
-        tsSource = tsSource.replace(/const (\w+) = Fn\(/g, 'const $1: any = Fn(');
-        
-        // Fix 2: Handle destructuring in Fn arguments
-        // Fn(([p]) => -> Fn(([p]: any) =>
-        tsSource = tsSource.replace(/Fn\(\s*\(\s*\[(.*?)\]\s*\)\s*=>/g, 'Fn( ([$1]: any) =>');
-
-        return tsSource;
-    }
-
-    generateAngularContent() {
-        const container = this.shadowRoot.getElementById('angular-content');
-        const tslSource = this.processTSLForTypeScript(this.processTSLSource(this.config.tslSource));
-        const commonUniformsCode = this.getCommonUniformsCode();
-
-        container.innerHTML = `
-            <div class="section">
-                <h3 class="section-title">${createElement(Hexagon, {class: "icon"}).outerHTML} ${this.t('angularTitle')}</h3>
-                <p class="section-description">
-                    ${this.t('angularDesc')}
-                </p>
-                
-                <div class="step">
-                    <span class="step-number">1</span>
-                    <strong>${this.t('installDeps')}</strong>
-                </div>
-                <p class="info-box">${this.t('runCommand')}</p>
-                ${this.createCodeBlock('bash', 'npm install three culori\nnpm install --save-dev @types/three', 'Terminal')}
-
-                <div class="step">
-                    <span class="step-number">2</span>
-                    <strong>${this.t('typeDecl')}</strong>
-                </div>
-                <p class="info-box">${this.t('typeDeclInfo')}</p>
-                ${this.createCodeBlock('typescript', "declare module 'culori';", 'src/types.d.ts')}
-
-                <div class="warning-box">
-                    <p><strong>${createElement(AlertTriangle, {class: "icon"}).outerHTML} ${this.t('important')}</strong> ${this.t('angularTsImportant')}</p>
-                </div>
-
-                <div class="step">
-                    <span class="step-number">3</span>
-                    <strong>${this.t('commonUniforms')}</strong>
-                </div>
-                <p class="info-box">${this.t('angularCommonUniformsInfo')}</p>
-                ${this.createCodeBlock('typescript', commonUniformsCode, 'src/app/commonUniforms.ts')}
-
-                <div class="step">
-                    <span class="step-number">4</span>
-                    <strong>${this.t('shaderNode')}</strong>
-                </div>
-                <p class="info-box">${this.t('angularShaderNodeInfo')}</p>
-                ${this.createCodeBlock('typescript', tslSource, 'src/app/shaderNode.ts')}
-                
-                <div class="step">
-                    <span class="step-number">5</span>
-                    <strong>${this.t('gradientService')}</strong>
-                </div>
-                
-                ${this.createCodeBlock('typescript', this.generateAngularService(), 'src/app/gradient-background.service.ts')}
-                
-                <div class="step">
-                    <span class="step-number">6</span>
-                    <strong>${this.t('directive')}</strong>
-                </div>
-                
-                ${this.createCodeBlock('typescript', this.generateAngularDirective(), 'src/app/gradient-background.directive.ts')}
-                
-                <div class="step">
-                    <span class="step-number">7</span>
-                    <strong>${this.t('usageInComponent')}</strong>
-                </div>
-                <p class="info-box">${this.t('angularUsageInfo')}</p>
-                ${this.createCodeBlock('typescript', this.generateAngularUsage(), 'src/app/app.ts')}
-                
-                <div class="info-box">
-                    <p><strong>${createElement(Lightbulb, {class: "icon"}).outerHTML} ${this.t('note')}</strong> ${this.t('angularNote')}</p>
-                </div>
-            </div>
-        `;
-    }
-
-    generateOptimizationsContent() {
-        const container = this.shadowRoot.getElementById('optimizations-content');
-        container.innerHTML = `
-            <div class="section">
-                <h3 class="section-title">${createElement(Zap, {class: "icon"}).outerHTML} ${this.t('optimizationsTitle')}</h3>
-                
-                <div class="step">
-                    <span class="step-number">1</span>
-                    <strong>${this.t('lazyLoading')}</strong>
-                </div>
-                
-                ${this.createCodeBlock('javascript', this.generateLazyLoading(), 'lazyGradient.js')}
-                
-                <div class="step">
-                    <span class="step-number">2</span>
-                    <strong>${this.t('mobileReduce')}</strong>
-                </div>
-                
-                ${this.createCodeBlock('javascript', this.generateMobileOptimization(), 'mobileOptimization.js')}
-                
-                <div class="step">
-                    <span class="step-number">3</span>
-                    <strong>${this.t('pauseInactive')}</strong>
-                </div>
-                
-                ${this.createCodeBlock('javascript', this.generateVisibilityAPI(), 'visibilityOptimization.js')}
-                
-                <div class="info-box">
-                    <p><strong>${createElement(BarChart, {class: "icon"}).outerHTML} ${this.t('metrics')}</strong></p>
-                    <p>${this.t('fpsTarget')}</p>
-                    <p>${this.t('gpuUsage')}</p>
-                    <p>${this.t('memory')}</p>
-                </div>
-            </div>
-        `;
-    }
-
-    /**
-     * Crea un bloque de código con botón de copiar
-     * @param {string} language - Lenguaje del código
-     * @param {string} code - Código a mostrar
-     * @param {string} title - Título del bloque
-     * @returns {string} HTML del bloque de código
-     */
-    createCodeBlock(language, code, title) {
-        const blockId = `code-${Math.random().toString(36).substr(2, 9)}`;
-        
-        if (!this.codeBlocks) {
-            this.codeBlocks = new Map();
-        }
+    codeBlock(title, code, note = '') {
+        const blockId = `code-${Math.random().toString(36).slice(2, 11)}`;
         this.codeBlocks.set(blockId, code);
-        
         return `
             <div class="code-block">
                 <div class="code-header">
-                    <span class="code-title">${title}</span>
-                    <button class="copy-btn" data-block-id="${blockId}">
-                        ${createElement(Clipboard, {class: "icon"}).outerHTML} ${this.t('copy')}
-                    </button>
+                    <span class="code-title">${this.escapeHtml(title)}</span>
+                    <button class="copy-btn" type="button" data-block-id="${blockId}">${icon(Clipboard)} ${this.t('copy')}</button>
                 </div>
+                ${note ? `<p class="file-note">${this.escapeHtml(note)}</p>` : ''}
                 <pre><code>${this.escapeHtml(code)}</code></pre>
+            </div>`;
+    }
+
+    generateFramework(framework) {
+        const container = this.shadowRoot.getElementById(`${framework}-content`);
+        const files = buildFiles(framework, this.config);
+        const common = files.filter((f) => ['uniforms', 'lib', 'shader', 'mount'].includes(f.id));
+        const glue = files.filter((f) => !['uniforms', 'lib', 'shader', 'mount'].includes(f.id));
+
+        let n = 0;
+        const install = framework === 'vanilla'
+            ? `${this.step(++n, this.t('stepInstall'), this.t('stepInstallInfo'))}
+               ${this.codeBlock('Terminal', 'npm install three')}
+               ${this.step(++n, this.t('stepNoBuild'), this.t('stepNoBuildInfo'))}
+               ${this.codeBlock('index.html', buildImportMap())}`
+            : `${this.step(++n, this.t('stepInstall'), this.t('stepInstallInfo'))}
+               ${this.codeBlock('Terminal', 'npm install three')}`;
+
+        container.innerHTML = `
+            <div class="section-head">
+                <h3 class="section-title">${this.t(TAB_KEYS[framework])}</h3>
+                <button class="download-btn" type="button" data-framework="${framework}" title="${this.t('downloadHint')}">${icon(Download)} ${this.t('download')}</button>
             </div>
+            ${install}
+            ${this.step(++n, this.t('stepFiles'), this.t('stepFilesInfo'))}
+            ${common.map((file) => this.fileBlock(file)).join('')}
+            ${this.step(++n, this.t('stepGlue'))}
+            ${glue.map((file) => this.fileBlock(file)).join('')}
+            ${this.step(++n, this.t('stepChecklist'))}
+            <div class="info-box"><ul>${this.t('checklist').map((item) => `<li>${this.escapeHtml(item)}</li>`).join('')}</ul></div>
         `;
     }
 
-    /**
-     * Copia el código al portapapeles usando múltiples métodos de fallback
-     * @param {HTMLButtonElement} button - Botón que desencadenó la acción
-     */
+    generateTuning() {
+        const container = this.shadowRoot.getElementById('tuning-content');
+        const snippets = buildTuningSnippets(this.config);
+
+        container.innerHTML = `
+            <div class="section-head"><h3 class="section-title">${this.t('tuningTitle')}</h3></div>
+            ${this.step(1, this.t('tuningBuiltIn'))}
+            <div class="info-box"><ul>${this.t('builtIn').map((item) => `<li>${this.escapeHtml(item)}</li>`).join('')}</ul></div>
+            <p class="step-info">${this.escapeHtml(this.t('tuningSupport'))}</p>
+            ${this.step(2, this.t('tuningOptions'), this.t('tuningOptionsInfo'))}
+            ${this.codeBlock('mountBackground options', snippets.options)}
+            ${this.step(3, this.t('tuningLazy'), this.t('tuningLazyInfo'))}
+            ${this.codeBlock('lazy.js', snippets.lazy)}
+            ${this.step(4, this.t('tuningSection'), this.t('tuningSectionInfo'))}
+            ${this.codeBlock('section.css', snippets.section)}
+        `;
+    }
+
+    // ── ZIP ──────────────────────────────────────────────────────────────
+
+    downloadZip(framework) {
+        if (!this.config) return;
+        const files = buildFiles(framework, this.config);
+        const readme = [
+            `# ${this.config.name?.en ?? this.config.shader} — animated background`,
+            '',
+            'Generated with MMRG Background Generator (https://background.mretamozo.com).',
+            '',
+            '1. `npm install three`',
+            '2. Copy the files into your project, keeping the folder structure.',
+            '3. Follow the usage example (the last file) to mount it in your page.',
+            '',
+            'Palette and settings live in the DEFAULTS object at the top of the mount module.',
+        ].join('\n');
+
+        const blob = createZip([...files.map((f) => ({ path: f.path, content: f.code })), { path: 'README.md', content: readme }]);
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `${this.config.shader}-${framework}-background.zip`;
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 2000);
+    }
+
+    // ── Clipboard ────────────────────────────────────────────────────────
+
     async copyCode(button) {
-        const blockId = button.getAttribute('data-block-id');
-        const code = this.codeBlocks.get(blockId);
-        
+        const code = this.codeBlocks.get(button.getAttribute('data-block-id'));
         if (!code) {
-            console.error('No se encontró el código para copiar');
-            this.showCopyError(button);
+            this.flash(button, 'copy-error', icon(AlertCircle), this.t('copyError'), 2500);
             return;
         }
 
         let success = false;
-
-        if (navigator.clipboard && navigator.clipboard.writeText) {
-            try {
-                await navigator.clipboard.writeText(code);
-                success = true;
-            } catch (err) {
-                console.error('Clipboard API error:', err);
-            }
-        }
-
-        if (!success) {
-            success = this.copyUsingCopyEvent(code);
-        }
-
-        if (!success) {
-            success = this.copyUsingTextarea(code);
-        }
-
-        if (success) {
-            this.showCopySuccess(button);
-        } else {
-            this.showCopyError(button);
-        }
-    }
-    
-    copyUsingCopyEvent(text) {
-        if (typeof document === 'undefined') {
-            return false;
-        }
-
-        const handleCopy = (event) => {
-            if (!event.clipboardData) {
-                return;
-            }
-            event.preventDefault();
-            event.clipboardData.setData('text/plain', text);
-        };
-
-        document.addEventListener('copy', handleCopy, { once: true });
-
-        let successful = false;
         try {
-            successful = document.execCommand('copy');
-        } catch (err) {
-            console.error('execCommand copy error:', err);
-            successful = false;
+            await navigator.clipboard.writeText(code);
+            success = true;
+        } catch {
+            success = this.copyWithTextarea(code);
         }
 
-        if (!successful) {
-            document.removeEventListener('copy', handleCopy);
-        }
-
-        return successful;
+        if (success) this.flash(button, 'copied', icon(Check), this.t('copied'), 2000);
+        else this.flash(button, 'copy-error', icon(AlertCircle), this.t('copyError'), 2500);
     }
 
-    /**
-     * Método de fallback para copiar usando textarea temporal
-     * @param {string} text - Texto a copiar
-     * @returns {boolean} True si tuvo éxito
-     */
-    copyUsingTextarea(text) {
-        if (typeof document === 'undefined' || !document.body) {
-            return false;
-        }
-
-        const textArea = document.createElement('textarea');
-        textArea.value = text;
-        textArea.setAttribute('readonly', '');
-        textArea.style.position = 'fixed';
-        textArea.style.left = '-9999px';
-        textArea.style.top = '-9999px';
-
-        document.body.appendChild(textArea);
-
+    /** Fallback for insecure contexts / denied clipboard permission. */
+    copyWithTextarea(text) {
+        const area = document.createElement('textarea');
+        area.value = text;
+        area.setAttribute('readonly', '');
+        area.style.cssText = 'position:fixed;left:-9999px;top:-9999px;';
+        document.body.appendChild(area);
         try {
-            if (typeof textArea.focus === 'function') {
-                try {
-                    textArea.focus({ preventScroll: true });
-                } catch (_) {
-                    textArea.focus();
-                }
-            }
-            textArea.select();
-            const successful = document.execCommand('copy');
-            document.body.removeChild(textArea);
-            return successful;
-        } catch (err) {
-            console.error('Textarea copy error:', err);
-            document.body.removeChild(textArea);
+            area.select();
+            return document.execCommand('copy');
+        } catch {
             return false;
+        } finally {
+            area.remove();
         }
     }
-    
-    /**
-     * Muestra feedback visual de copiado exitoso
-     * @param {HTMLButtonElement} button - Botón a actualizar
-     */
-    showCopySuccess(button) {
-        const originalText = button.innerHTML;
-        button.innerHTML = `${createElement(Check, {class: "icon"}).outerHTML} ${this.t('copied')}`;
-        button.classList.add('copied');
-        
+
+    flash(button, className, iconHtml, label, ms) {
+        const original = button.innerHTML;
+        button.innerHTML = `${iconHtml} ${label}`;
+        button.classList.add(className);
         setTimeout(() => {
-            button.innerHTML = originalText;
-            button.classList.remove('copied');
-        }, 2000);
+            button.innerHTML = original;
+            button.classList.remove(className);
+        }, ms);
     }
 
-    /**
-     * Muestra feedback visual de error al copiar
-     * @param {HTMLButtonElement} button - Botón a actualizar
-     */
-    showCopyError(button) {
-        const originalText = button.innerHTML;
-        button.innerHTML = `${createElement(AlertCircle, {class: "icon"}).outerHTML} ${this.t('copyError')}`;
-        button.classList.add('copy-error');
-
-        setTimeout(() => {
-            button.innerHTML = originalText;
-            button.classList.remove('copy-error');
-        }, 2500);
-    }
-
-    /**
-     * Escapa caracteres HTML para mostrar código de forma segura
-     * @param {string} text - Texto a escapar
-     * @returns {string} Texto escapado
-     */
     escapeHtml(text) {
-        const div = document.createElement('div');
-        div.textContent = text;
-        return div.innerHTML;
+        return String(text).replace(/[&<>"']/g, (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[ch]);
     }
-
-    /**
-     * Normaliza el array de colores asegurando valores válidos
-     * @param {Array} colors - Array de colores a normalizar
-     * @returns {Array} Array de colores normalizados
-     */
-    normalizeColors(colors = []) {
-        const defaults = [
-            { l: 0.7, c: 0.25, h: 330 },
-            { l: 0.6, c: 0.3, h: 280 },
-            { l: 0.8, c: 0.2, h: 150 },
-            { l: 0.65, c: 0.28, h: 60 },
-        ];
-
-        const parseChannel = (value, fallbackValue) => {
-            const numeric = Number.parseFloat(value);
-            return Number.isFinite(numeric) ? numeric : fallbackValue;
-        };
-
-        return defaults.map((fallback, index) => {
-            const entry = colors[index];
-            const oklch = entry?.oklch ?? entry;
-            if (!oklch) {
-                return { ...fallback };
-            }
-
-            return {
-                l: parseChannel(oklch.l, fallback.l),
-                c: parseChannel(oklch.c, fallback.c),
-                h: parseChannel(oklch.h, fallback.h),
-            };
-        });
-    }
-
-    /**
-     * Formatea un color OKLCH para exportar como código
-     * @param {Object} color - Color en formato OKLCH
-     * @returns {string} Color formateado como código JavaScript
-     */
-    formatColorForExport(color) {
-        return `{ l: ${color.l.toFixed(3)}, c: ${color.c.toFixed(3)}, h: ${color.h.toFixed(1)} }`;
-    }
-
-    /**
-     * Genera el bloque @media (prefers-reduced-motion: reduce) con gradiente estático fallback.
-     * Usa los colores actuales del config para construir el linear-gradient.
-     * @param {string} selector - CSS selector a aplicar (ej. '#gradient-canvas', '.gradient-canvas')
-     * @returns {string} Bloque CSS listo para inyectar
-     */
-    generateReducedMotionBlock(selector = 'canvas') {
-        const { colors } = this.config ?? {};
-        const normalized = this.normalizeColors(colors ?? []);
-        // Build CSS oklch() stops from the first 2-3 colors
-        const toOklch = (c) => `oklch(${c.l.toFixed(3)} ${c.c.toFixed(3)} ${c.h.toFixed(1)})`;
-        const stops = normalized.slice(0, 3).map((c, i) => {
-            const pct = normalized.length >= 3 ? [0, 50, 100][i] : (i === 0 ? 0 : 100);
-            return `${toOklch(c)} ${pct}%`;
-        });
-        const gradient = `linear-gradient(135deg, ${stops.join(', ')})`;
-        return `\n@media (prefers-reduced-motion: reduce) {\n  ${selector} {\n    animation: none;\n    background: ${gradient};\n  }\n}`;
-    }
-
-    /**
-     * Formatea un valor de uniform para exportar como código
-     * @param {*} value - Valor a formatear
-     * @returns {string|number} Valor formateado
-     */
-    formatUniformValue(value) {
-        if (typeof value === 'number') {
-            return Number.isInteger(value) ? value : Number(value);
-        }
-
-        const numeric = Number(value);
-        if (Number.isFinite(numeric)) {
-            return Number.isInteger(numeric) ? numeric : numeric;
-        }
-
-        if (typeof value === 'boolean') {
-            return value ? 'true' : 'false';
-        }
-
-        if (Array.isArray(value)) {
-            return `[${value.map(item => this.formatUniformValue(item)).join(', ')}]`;
-        }
-
-        return JSON.stringify(value);
-    }
-
-    // Code generators
-    generateHTMLCode() {
-        const lang = this.getLanguage() === 'es' ? 'es' : 'en';
-        const reducedMotion = this.runtimeContext?.prefersReducedMotion
-            ? this.generateReducedMotionBlock('#gradient-canvas')
-            : '';
-        return `<!DOCTYPE html>
-<html lang="${lang}">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Animated Gradient Background</title>
-    <style>
-        body, html {
-            margin: 0;
-            padding: 0;
-            overflow: hidden;
-            width: 100%;
-            height: 100%;
-        }
-        #gradient-canvas {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: -1;
-        }${reducedMotion}
-    </style>
-</head>
-<body>
-    <canvas id="gradient-canvas"></canvas>
-    <script type="module" src="main.js"></script>
-</body>
-</html>`;
-    }
-
-    /**
-     * Genera código JavaScript vanilla para el gradiente
-     * @returns {string} Código JavaScript completo
-     */
-    generateVanillaJS() {
-        const { colors, speed, parameters } = this.config;
-        const normalizedColors = this.normalizeColors(colors);
-        const colorStrings = normalizedColors.map(color => this.formatColorForExport(color));
-        const extraUniforms = Object.keys(parameters || {}).map(k => 'u_' + k);
-
-        return `import * as THREE from 'three';
-import { WebGPURenderer } from 'three/webgpu';
-import { MeshBasicNodeMaterial } from 'three/webgpu';
-import * as culori from 'culori';
-import { main } from './shaderNode.js';
-import { 
-    u_time, u_resolution, u_mouse, u_speed, 
-    u_color1, u_color2, u_color3, u_color4,
-    ${extraUniforms.length ? `${extraUniforms.join(', ')}` : ''}
-} from './commonUniforms.js';
-
-class WebGPUGradient {
-    constructor(canvasId) {
-        this.canvas = document.getElementById(canvasId);
-        this.init();
-        this.animate();
-    }
-
-    async init() {
-        this.scene = new THREE.Scene();
-        this.camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 10);
-        this.camera.position.z = 1;
-
-        // WebGPU Renderer
-        this.renderer = new WebGPURenderer({
-            canvas: this.canvas,
-            antialias: true,
-            alpha: false
-        });
-        this.renderer.setSize(window.innerWidth, window.innerHeight);
-        this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-        try {
-            await this.renderer.init();
-        } catch (error) {
-            console.error('Failed to initialize WebGPURenderer:', error);
-            return;
-        }
-
-        // Setup Uniforms
-        u_speed.value = ${this.formatUniformValue(speed ?? 0.5)};
-        u_color1.value = this.oklchToThree(${colorStrings[0]});
-        u_color2.value = this.oklchToThree(${colorStrings[1]});
-        u_color3.value = this.oklchToThree(${colorStrings[2]});
-        u_color4.value = this.oklchToThree(${colorStrings[3]});
-        
-        ${Object.entries(parameters || {}).map(([key, value]) => `u_${key}.value = ${this.formatUniformValue(value)};`).join('\n        ')}
-
-        // Material
-        const material = new MeshBasicNodeMaterial();
-        material.colorNode = main();
-
-        const geometry = new THREE.PlaneGeometry(2, 2);
-        this.mesh = new THREE.Mesh(geometry, material);
-        this.scene.add(this.mesh);
-
-        this.clock = new THREE.Clock();
-        window.addEventListener('resize', this.onResize.bind(this));
-        this.onResize();
-
-        window.addEventListener('pointermove', (event) => {
-            if (!this.canvas) return;
-            const rect = this.canvas.getBoundingClientRect();
-            const w = Math.max(rect.width, 1);
-            const h = Math.max(rect.height, 1);
-            const x = (event.clientX - rect.left) / w;
-            const y = 1 - (event.clientY - rect.top) / h;
-            u_mouse.value.set(x, y);
-        }, { passive: true });
-    }
-
-    oklchToThree(oklch) {
-        const rgb = culori.rgb({ mode: 'oklch', ...oklch });
-        return new THREE.Color(rgb.r, rgb.g, rgb.b);
-    }
-
-    onResize() {
-        this.renderer.setSize(window.innerWidth, window.innerHeight);
-        const pixelRatio = this.renderer.getPixelRatio();
-        u_resolution.value.set(window.innerWidth * pixelRatio, window.innerHeight * pixelRatio);
-    }
-
-    animate() {
-        requestAnimationFrame(() => this.animate());
-        u_time.value = this.clock.getElapsedTime();
-        this.renderer.render(this.scene, this.camera);
-    }
-}
-
-new WebGPUGradient('gradient-canvas');`;
-    }
-
-    generateReactHook() {
-        const { colors, speed, parameters } = this.config;
-        const normalizedColors = this.normalizeColors(colors);
-        const colorStrings = normalizedColors.map(color => this.formatColorForExport(color));
-        const extraUniforms = Object.keys(parameters || {}).map(k => 'u_' + k);
-
-        return `import { useEffect, useRef } from 'react';
-import * as THREE from 'three';
-import { WebGPURenderer } from 'three/webgpu';
-import { MeshBasicNodeMaterial } from 'three/webgpu';
-import * as culori from 'culori';
-import { main } from './shaderNode.js';
-import { 
-    u_time, u_resolution, u_mouse, u_speed, 
-    u_color1, u_color2, u_color3, u_color4,
-    ${extraUniforms.length ? `${extraUniforms.join(', ')}` : ''}
-} from './commonUniforms.js';
-
-export function useGradientBackground() {
-    const canvasRef = useRef(null);
-    const rendererRef = useRef(null);
-
-    useEffect(() => {
-        if (!canvasRef.current) return;
-
-        let isMounted = true;
-        let animationId;
-        let resizeHandler;
-        let pointerHandler;
-        let geometry;
-        let material;
-
-        const init = async () => {
-            // Scene & Camera
-            const scene = new THREE.Scene();
-            const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 10);
-            camera.position.z = 1;
-
-            // Renderer
-            const renderer = new WebGPURenderer({
-                canvas: canvasRef.current,
-                antialias: true,
-                alpha: false
-            });
-            renderer.setSize(window.innerWidth, window.innerHeight);
-            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-            
-            try {
-                await renderer.init();
-            } catch (error) {
-                console.error('Failed to initialize WebGPURenderer:', error);
-                return;
-            }
-
-            if (!isMounted) {
-                renderer.dispose();
-                return;
-            }
-            
-            rendererRef.current = renderer;
-
-            // Helper function
-            const oklchToThree = (oklch) => {
-                const rgb = culori.rgb({ mode: 'oklch', ...oklch });
-                return new THREE.Color(rgb.r, rgb.g, rgb.b);
-            };
-
-            // Setup Uniforms
-            u_speed.value = ${this.formatUniformValue(speed ?? 0.5)};
-            u_color1.value = oklchToThree(${colorStrings[0]});
-            u_color2.value = oklchToThree(${colorStrings[1]});
-            u_color3.value = oklchToThree(${colorStrings[2]});
-            u_color4.value = oklchToThree(${colorStrings[3]});
-            
-            ${Object.entries(parameters || {}).map(([key, value]) => `u_${key}.value = ${this.formatUniformValue(value)};`).join('\n            ')}
-
-            // Material
-            material = new MeshBasicNodeMaterial();
-            material.colorNode = main();
-
-            // Mesh
-            geometry = new THREE.PlaneGeometry(2, 2);
-            const mesh = new THREE.Mesh(geometry, material);
-            scene.add(mesh);
-
-            // Animation
-            const clock = new THREE.Clock();
-            const animate = () => {
-                if (!isMounted) return;
-                animationId = requestAnimationFrame(animate);
-                u_time.value = clock.getElapsedTime();
-                renderer.render(scene, camera);
-            };
-            animate();
-
-            // Resize Handler
-            resizeHandler = () => {
-                if (!isMounted || !renderer) return;
-                renderer.setSize(window.innerWidth, window.innerHeight);
-                const pixelRatio = renderer.getPixelRatio();
-                u_resolution.value.set(window.innerWidth * pixelRatio, window.innerHeight * pixelRatio);
-            };
-            window.addEventListener('resize', resizeHandler);
-            resizeHandler();
-
-            pointerHandler = (event) => {
-                const canvas = canvasRef.current;
-                if (!canvas) return;
-                const rect = canvas.getBoundingClientRect();
-                const w = Math.max(rect.width, 1);
-                const h = Math.max(rect.height, 1);
-                const x = (event.clientX - rect.left) / w;
-                const y = 1 - (event.clientY - rect.top) / h;
-                u_mouse.value.set(x, y);
-            };
-            window.addEventListener('pointermove', pointerHandler, { passive: true });
-        };
-
-        init();
-
-        // Cleanup
-        return () => {
-            isMounted = false;
-            if (animationId) cancelAnimationFrame(animationId);
-            if (resizeHandler) window.removeEventListener('resize', resizeHandler);
-            if (pointerHandler) window.removeEventListener('pointermove', pointerHandler);
-            if (rendererRef.current) {
-                rendererRef.current.dispose();
-                rendererRef.current = null;
-            }
-            geometry?.dispose?.();
-            material?.dispose?.();
-        };
-    }, []);
-
-    return canvasRef;
-}`;
-    }
-
-    generateReactUsage() {
-        return `import { useGradientBackground } from './useGradientBackground';
-
-function App() {
-    const canvasRef = useGradientBackground();
-
-    return (
-        <div className="App" style={{ width: '100vw', height: '100vh'}}>
-            <canvas ref={canvasRef} style={{
-                position: 'fixed',
-                top: 0,
-                left: 0,
-                width: '100%',
-                height: '100%',
-                zIndex: -1
-            }} />
-            
-            <main style={{ position: 'relative', zIndex: 1, color: 'white', display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', width: '100%' }}>
-                <h1>Mi Aplicación React</h1>
-            </main>
-        </div>
-    );
-}
-
-export default App;`;
-    }
-
-    generateVueComposable() {
-        const { colors, speed, parameters } = this.config;
-        const normalizedColors = this.normalizeColors(colors);
-        const colorStrings = normalizedColors.map(color => this.formatColorForExport(color));
-        const extraUniforms = Object.keys(parameters || {}).map(k => 'u_' + k);
-
-        return `import { ref, onMounted, onUnmounted } from 'vue';
-import * as THREE from 'three';
-import { WebGPURenderer } from 'three/webgpu';
-import { MeshBasicNodeMaterial } from 'three/webgpu';
-import * as culori from 'culori';
-import { main } from './shaderNode.js';
-import { 
-    u_time, u_resolution, u_mouse, u_speed, 
-    u_color1, u_color2, u_color3, u_color4,
-    ${extraUniforms.length ? `${extraUniforms.join(', ')}` : ''}
-} from './commonUniforms.js';
-
-export function useGradientBackground() {
-    const canvasRef = ref(null);
-    let renderer, scene, camera, material, mesh, geometry, clock, animationId;
-
-    const oklchToThree = (oklch) => {
-        const rgb = culori.rgb({ mode: 'oklch', ...oklch });
-        return new THREE.Color(rgb.r, rgb.g, rgb.b);
-    };
-
-    const init = async () => {
-        if (!canvasRef.value) return;
-
-        // Scene
-        scene = new THREE.Scene();
-        
-        // Camera
-        camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 10);
-        camera.position.z = 1;
-
-        // Renderer
-        renderer = new WebGPURenderer({
-            canvas: canvasRef.value,
-            antialias: true,
-            alpha: false
-        });
-        renderer.setSize(window.innerWidth, window.innerHeight);
-        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-        try {
-            await renderer.init();
-        } catch (error) {
-            console.error('Failed to initialize WebGPURenderer:', error);
-            return;
-        }
-
-        // Setup Uniforms
-        u_speed.value = ${this.formatUniformValue(speed ?? 0.5)};
-        u_color1.value = oklchToThree(${colorStrings[0]});
-        u_color2.value = oklchToThree(${colorStrings[1]});
-        u_color3.value = oklchToThree(${colorStrings[2]});
-        u_color4.value = oklchToThree(${colorStrings[3]});
-        
-        ${Object.entries(parameters || {}).map(([key, value]) => `u_${key}.value = ${this.formatUniformValue(value)};`).join('\n        ')}
-
-        // Material
-        material = new MeshBasicNodeMaterial();
-        material.colorNode = main();
-
-        // Mesh
-        geometry = new THREE.PlaneGeometry(2, 2);
-        mesh = new THREE.Mesh(geometry, material);
-        scene.add(mesh);
-
-        // Animation
-        clock = new THREE.Clock();
-        animate();
-
-        window.addEventListener('resize', onResize);
-        onResize();
-
-        window.addEventListener('pointermove', onPointerMove, { passive: true });
-    };
-
-    const animate = () => {
-        animationId = requestAnimationFrame(animate);
-        u_time.value = clock.getElapsedTime();
-        renderer.render(scene, camera);
-    };
-
-    const onResize = () => {
-        renderer.setSize(window.innerWidth, window.innerHeight);
-        const pixelRatio = renderer.getPixelRatio();
-        u_resolution.value.set(window.innerWidth * pixelRatio, window.innerHeight * pixelRatio);
-    };
-
-    const onPointerMove = (event) => {
-        const canvas = canvasRef.value;
-        if (!canvas) return;
-        const rect = canvas.getBoundingClientRect();
-        const w = Math.max(rect.width, 1);
-        const h = Math.max(rect.height, 1);
-        const x = (event.clientX - rect.left) / w;
-        const y = 1 - (event.clientY - rect.top) / h;
-        u_mouse.value.set(x, y);
-    };
-
-    const cleanup = () => {
-        if (animationId) cancelAnimationFrame(animationId);
-        window.removeEventListener('resize', onResize);
-        window.removeEventListener('pointermove', onPointerMove);
-        
-        geometry?.dispose?.();
-        material?.dispose?.();
-        if (renderer) renderer.dispose();
-    };
-
-    onMounted(() => {
-        init();
-    });
-
-    onUnmounted(() => {
-        cleanup();
-    });
-
-    return { canvasRef };
-}`;
-    }
-
-    generateVueUsage() {
-        const reducedMotion = this.runtimeContext?.prefersReducedMotion
-            ? this.generateReducedMotionBlock('.gradient-bg')
-            : '';
-        return `<template>
-    <div class="app">
-        <canvas ref="canvasRef" class="gradient-bg" />
-        <div class="content">
-            <h1>Mi App Vue</h1>
-        </div>
-    </div>
-</template>
-
-<script setup>
-import { useGradientBackground } from './useGradientBackground';
-
-const { canvasRef } = useGradientBackground();
-</script>
-
-<style>
-html, body {
-    margin: 0;
-    padding: 0;
-    width: 100%;
-    height: 100%;
-    overflow: hidden;
-}
-#app {
-    width: 100%;
-    height: 100%;
-}
-</style>
-
-<style scoped>
-.app {
-    width: 100%;
-    height: 100%;
-    position: relative;
-}
-
-.gradient-bg {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    display: block;
-    z-index: 0;
-}
-
-.content {
-    position: relative;
-    z-index: 1;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    width: 100%;
-    height: 100%;
-    color: white;
-    font-family: Arial, sans-serif;
-}${reducedMotion}
-</style>`;
-    }
-
-    generateAngularService() {
-        const { colors, speed, parameters } = this.config;
-        const normalizedColors = this.normalizeColors(colors);
-        const colorStrings = normalizedColors.map(color => this.formatColorForExport(color));
-        const extraUniforms = Object.keys(parameters || {}).map(k => 'u_' + k);
-
-        return `import { Injectable, signal, effect } from '@angular/core';
-import * as THREE from 'three';
-import { WebGPURenderer } from 'three/webgpu';
-import { MeshBasicNodeMaterial } from 'three/webgpu';
-import * as culori from 'culori';
-import { main } from './shaderNode';
-import { 
-    u_time, u_resolution, u_mouse, u_speed, 
-    u_color1, u_color2, u_color3, u_color4,
-    ${extraUniforms.length ? `${extraUniforms.join(', ')}` : ''}
-} from './commonUniforms';
-
-export interface GradientConfig {
-    shader: string;
-    speed: number;
-    colors: any[];
-}
-
-@Injectable({
-    providedIn: 'root'
-})
-export class GradientBackgroundService {
-    private scene?: THREE.Scene;
-    private camera?: THREE.OrthographicCamera;
-    private renderer?: WebGPURenderer;
-    private mesh?: THREE.Mesh;
-    private material?: MeshBasicNodeMaterial;
-    private geometry?: THREE.PlaneGeometry;
-    private clock = new THREE.Clock();
-    private animationId?: number;
-    private pointerHandler = (event: PointerEvent) => {
-        const canvas = this.renderer?.domElement as HTMLCanvasElement | undefined;
-        if (!canvas) return;
-        const rect = canvas.getBoundingClientRect();
-        const w = Math.max(rect.width, 1);
-        const h = Math.max(rect.height, 1);
-        const x = (event.clientX - rect.left) / w;
-        const y = 1 - (event.clientY - rect.top) / h;
-        u_mouse.value.set(x, y);
-    };
-    
-    // Signal para controlar estado
-    isRunning = signal(false);
-
-    async init(canvas: HTMLCanvasElement) {
-        // Scene
-        this.scene = new THREE.Scene();
-        
-        // Camera
-        this.camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 10);
-        this.camera.position.z = 1;
-        
-        // Renderer
-        this.renderer = new WebGPURenderer({
-            canvas,
-            antialias: true,
-            alpha: false
-        });
-        this.renderer.setSize(window.innerWidth, window.innerHeight);
-        this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-        try {
-            await this.renderer.init();
-        } catch (error) {
-            console.error('Failed to initialize WebGPURenderer:', error);
-            return;
-        }
-        
-        // Setup Uniforms
-        u_speed.value = ${this.formatUniformValue(speed ?? 0.5)};
-        u_color1.value = this.oklchToThree(${colorStrings[0]});
-        u_color2.value = this.oklchToThree(${colorStrings[1]});
-        u_color3.value = this.oklchToThree(${colorStrings[2]});
-        u_color4.value = this.oklchToThree(${colorStrings[3]});
-        
-        ${Object.entries(parameters || {}).map(([key, value]) => `u_${key}.value = ${this.formatUniformValue(value)};`).join('\n        ')}
-
-        // Material
-        this.material = new MeshBasicNodeMaterial();
-        this.material.colorNode = main();
-        
-        // Geometry
-        this.geometry = new THREE.PlaneGeometry(2, 2);
-        this.mesh = new THREE.Mesh(this.geometry, this.material);
-        this.scene.add(this.mesh);
-
-        this.onResize();
-        window.addEventListener('pointermove', this.pointerHandler, { passive: true });
-        
-        this.isRunning.set(true);
-        this.animate();
-    }
-
-    private oklchToThree(oklch: any): THREE.Color {
-        const rgb = culori.rgb({ mode: 'oklch', ...oklch });
-        return new THREE.Color(rgb.r, rgb.g, rgb.b);
-    }
-
-    private animate = () => {
-        if (!this.isRunning()) return;
-        
-        this.animationId = requestAnimationFrame(this.animate);
-        
-        u_time.value = this.clock.getElapsedTime();
-        
-        if (this.renderer && this.scene && this.camera) {
-            this.renderer.render(this.scene, this.camera);
-        }
-    };
-
-    onResize() {
-        if (!this.camera || !this.renderer || !this.mesh) return;
-        
-        this.renderer.setSize(window.innerWidth, window.innerHeight);
-        const pixelRatio = this.renderer.getPixelRatio();
-        u_resolution.value.set(window.innerWidth * pixelRatio, window.innerHeight * pixelRatio);
-    }
-
-    dispose() {
-        this.isRunning.set(false);
-        
-        if (this.animationId) {
-            cancelAnimationFrame(this.animationId);
-        }
-        
-        window.removeEventListener('pointermove', this.pointerHandler);
-        this.geometry?.dispose();
-        this.material?.dispose?.();
-        this.renderer?.dispose();
-    }
-}`;
-    }
-
-    generateAngularDirective() {
-        return `import { Directive, ElementRef, OnInit, OnDestroy, inject } from '@angular/core';
-import { GradientBackgroundService } from './gradient-background.service';
-
-@Directive({
-    selector: '[appGradientBackground]',
-    standalone: true
-})
-export class GradientBackgroundDirective implements OnInit, OnDestroy {
-    private el = inject(ElementRef);
-    private gradientService = inject(GradientBackgroundService);
-    private resizeHandler = () => this.gradientService.onResize();
-
-    ngOnInit() {
-        const canvas = this.el.nativeElement as HTMLCanvasElement;
-        
-        if (canvas.tagName === 'CANVAS') {
-            this.gradientService.init(canvas);
-            window.addEventListener('resize', this.resizeHandler, { passive: true });
-        } else {
-            console.error('GradientBackgroundDirective must be used on a canvas element');
-        }
-    }
-
-    ngOnDestroy() {
-        window.removeEventListener('resize', this.resizeHandler);
-        this.gradientService.dispose();
-    }
-}`;
-    }
-
-    generateAngularUsage() {
-        return `import { Component, ViewEncapsulation } from '@angular/core';
-import { GradientBackgroundDirective } from './gradient-background.directive';
-
-@Component({
-    selector: 'app-root',
-    standalone: true,
-    imports: [GradientBackgroundDirective],
-    template: \`
-        <div class="app-container">
-            <canvas
-                appGradientBackground
-                class="gradient-canvas">
-            </canvas>
-
-            <div class="content">
-                <h1>Mi Aplicación</h1>
-            </div>
-        </div>
-    \`,
-    styles: [\`
-        html, body {
-            margin: 0;
-            padding: 0;
-            width: 100vw;
-            height: 100vh;
-            overflow: hidden;
-        }
-
-        .gradient-canvas {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: -1;
-        }
-
-        .content {
-            position: relative;
-            z-index: 1;
-            color: white;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            width: 100vw;
-        }
-    \`],
-    encapsulation: ViewEncapsulation.None
-})
-export class App {}`;
-    }
-
-    generateLazyLoading() {
-        return `// Use dynamic import to load the gradient only when visible
-const observer = new IntersectionObserver((entries) => {
-    entries.forEach(entry => {
-        if (entry.isIntersecting) {
-            import('./main.js'); // This will execute the code and start the gradient
-            observer.disconnect();
-        }
-    });
-}, { threshold: 0.1 });
-
-observer.observe(document.getElementById('gradient-canvas'));`;
-    }
-
-    generateMobileOptimization() {
-        return `import { u_resolution } from './commonUniforms.js';
-
-const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-const pixelRatio = isMobile ? 1 : Math.min(window.devicePixelRatio, 2);
-
-renderer.setPixelRatio(pixelRatio);
-u_resolution.value.set(window.innerWidth * pixelRatio, window.innerHeight * pixelRatio);`;
-    }
-
-    generateVisibilityAPI() {
-        return `// Add this check inside your animate() loop
-animate() {
-    if (document.hidden) return; // Stop rendering when tab is not visible
-    
-    requestAnimationFrame(() => this.animate());
-    // ... rest of your animation code
-}`;
-    }
-
 }
 
 customElements.define('export-modal', ExportModal);
