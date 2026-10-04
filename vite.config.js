@@ -98,8 +98,6 @@ export default defineConfig(({ mode }) => ({
     },
   },
   
-  assetsInclude: ['**/*.glsl'],
-  
   optimizeDeps: {
     include: ['three', 'culori'],
     exclude: [],
@@ -109,7 +107,7 @@ export default defineConfig(({ mode }) => ({
   },
   
   resolve: {
-    extensions: ['.js', '.glsl', '.json'],
+    extensions: ['.js', '.json'],
   },
   
   plugins: [
@@ -127,7 +125,7 @@ export default defineConfig(({ mode }) => ({
       workbox: {
         // Gallery thumbnails are fetched on demand (and cached after the first view) instead of
         // inflating the install-time precache.
-        globPatterns: ['**/*.{js,css,html,glsl,jpg,svg,woff2}'],
+        globPatterns: ['**/*.{js,css,html,jpg,svg,woff2}'],
         globIgnores: ['thumbs/**'],
         runtimeCaching: [
           {

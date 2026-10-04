@@ -2,6 +2,17 @@
  * UI Controller - Gestiona toda la interacción con la interfaz (HUD & Mobile)
  */
 
+import { BACKGROUNDS, CATEGORIES, DEFAULT_BACKGROUND, SHADERS } from './shaders/registry.js';
+import { PRESETS } from './palettes.js';
+
+const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
+
+/** Maps the registry's relative cost to the vocabulary used by evaluateTips. */
+const COMPLEXITY_BY_COST = { light: 'simple', medium: 'medium', heavy: 'complex' };
+
+/** Tooltip auto-hide delay on touch devices (ms). */
+const TOUCH_TOOLTIP_MS = 2600;
+
 export class UIController {
     constructor(shaderManager, colorManager, persistenceManager = null, backgroundLibraryManager = null, i18nManager = null) {
         this.shaderManager = shaderManager;
@@ -9,21 +20,22 @@ export class UIController {
         this.persistence = persistenceManager;
         this.library = backgroundLibraryManager;
         this.i18n = i18nManager;
-        
+
         // Cache DOM elements
         this.dock = document.querySelector('hud-dock');
         this.bottomSheet = document.querySelector('bottom-sheet');
         this.desktopPanel = document.getElementById('desktop-panel-container');
         this.templates = document.getElementById('templates');
-        
+
         // State
         this.activePanelId = null;
         this.isMobile = window.innerWidth <= 768;
         this.tooltipElement = null;
+        this.galleryFilter = 'all';
 
         this._renderSavedBackgrounds = null;
-        this._globalSpeedTooltipBound = false;
         this._languageSelectBound = false;
+        this._tooltipTimer = null;
 
         /** @type {Array<{target: EventTarget, event: string, handler: EventListenerOrEventListenerObject, options?: AddEventListenerOptions | boolean}>} */
         this._listeners = [];
@@ -34,19 +46,13 @@ export class UIController {
 
     /**
      * Registers an event listener and tracks it for later cleanup via dispose().
-     * @param {EventTarget} target
-     * @param {string} event
-     * @param {EventListenerOrEventListenerObject} handler
-     * @param {AddEventListenerOptions | boolean} [options]
      */
     _addListener(target, event, handler, options) {
         target.addEventListener(event, handler, options);
         this._listeners.push({ target, event, handler, options });
     }
 
-    /**
-     * Removes all registered event listeners and clears the registry.
-     */
+    /** Removes all registered event listeners. */
     dispose() {
         for (const { target, event, handler, options } of this._listeners) {
             target.removeEventListener(event, handler, options);
@@ -55,7 +61,7 @@ export class UIController {
     }
 
     /**
-     * Provides runtime context (GPU tier, observed FPS getter) used when opening the Export Modal.
+     * Provides runtime context (GPU tier, observed FPS getter) used by the export tips.
      * @param {{ gpuTier?: number | null, getObservedFps?: () => number }} ctx
      */
     setRuntimeContext({ gpuTier, getObservedFps } = {}) {
@@ -73,80 +79,57 @@ export class UIController {
         return this.shaderManager?.currentShader || null;
     }
 
-    applyPersistedForShader(shaderName, shaderConfig) {
-        if (!this.persistence || !shaderName || !shaderConfig) return;
-
-        const persisted = this.persistence.getShaderState(shaderName);
-        if (!persisted) return;
-
-        // Apply persisted uniform values (numbers) to both shader runtime + UI config
-        if (persisted.uniforms && shaderConfig.controls) {
-            shaderConfig.controls.forEach(control => {
-                const uniformName = control.uniform;
-                const savedValue = persisted.uniforms[uniformName];
-                if (typeof savedValue === 'number' && Number.isFinite(savedValue)) {
-                    control.value = savedValue;
-                    this.shaderManager.updateUniform(uniformName, savedValue);
-                }
-            });
-        }
-
-        // Apply persisted colors if present
-        if (persisted.colors) {
-            this.colorManager.setColors(persisted.colors);
-            for (let i = 1; i <= 4; i++) {
-                const color = this.colorManager.getColor(i);
-                if (!color) continue;
-                const component = document.querySelector(`color-control[color-index="${i}"]`);
-                if (component) {
-                    component.setAttribute('l-value', color.l);
-                    component.setAttribute('c-value', color.c);
-                    component.setAttribute('h-value', color.h);
-                }
-                this.initializeColorComponent(i);
-            }
-        }
-
-        // Sync speed UI if present (u_speed can be persisted per shader)
-        const speedInput = document.getElementById('speed');
-        const speedVal = document.getElementById('speed-value');
-        const savedSpeed = persisted.uniforms?.u_speed;
-        if (speedInput && typeof savedSpeed === 'number' && Number.isFinite(savedSpeed)) {
-            speedInput.value = String(savedSpeed);
-            if (speedVal) speedVal.textContent = Math.round(savedSpeed * 100);
-            this.shaderManager.updateUniform('u_speed', savedSpeed);
-        }
+    /** Localized view of a registry entry. */
+    localized(id) {
+        const def = SHADERS[id];
+        if (!def) return null;
+        return this.i18n?.localizeShader ? this.i18n.localizeShader(id, def) : def;
     }
+
+    // ─────────────────────────────────────────────────────────────────────
+    // Init
+    // ─────────────────────────────────────────────────────────────────────
 
     init() {
         this.createGlobalTooltip();
         this.setupResizeListener();
         this.setupHudListeners();
         this.setupI18n();
-        this.setupShaderSelector();
+        this.setupGallery();
         this.setupColorControls();
         this.setupPresets();
         this.setupExportButton();
         this.setupSavedBackgrounds();
-        
-        // Initial setup
+        this.setupKeyboard();
         this.updateLayoutMode();
+
+        this.selectShader(this.resolveInitialShader());
     }
+
+    resolveInitialShader() {
+        let fromUrl = null;
+        try {
+            fromUrl = new URLSearchParams(location.search).get('bg');
+        } catch {
+            // ignore
+        }
+        if (fromUrl && SHADERS[fromUrl]) return fromUrl;
+
+        const persisted = this.persistence?.getLastShader();
+        if (persisted && SHADERS[persisted]) return persisted;
+        return DEFAULT_BACKGROUND;
+    }
+
+    // ─────────────────────────────────────────────────────────────────────
+    // i18n
+    // ─────────────────────────────────────────────────────────────────────
 
     setupI18n() {
         if (!this.i18n) return;
 
         this.applyI18nToDocument();
-
-        if (this.dock?.setI18nManager) {
-            this.dock.setI18nManager(this.i18n);
-        }
-
-        if (this.bottomSheet?.setI18nManager) {
-            this.bottomSheet.setI18nManager(this.i18n);
-        }
-
-        this.setupGlobalSpeedTooltip();
+        this.dock?.setI18nManager?.(this.i18n);
+        this.bottomSheet?.setI18nManager?.(this.i18n);
 
         const refreshLanguageSelect = () => {
             const langSelect = document.getElementById('language-select');
@@ -160,12 +143,11 @@ export class UIController {
             langSelect.addOption('es', this.t('language.es', null, 'Español'));
 
             langSelect.value = pref;
-            if (langSelect.updateDisplay) langSelect.updateDisplay();
+            langSelect.updateDisplay?.();
 
             if (!this._languageSelectBound) {
                 this._addListener(langSelect, 'change', (e) => {
-                    const next = e?.detail?.value;
-                    this.i18n.setPreference?.(next);
+                    this.i18n.setPreference?.(e?.detail?.value);
                 });
                 this._languageSelectBound = true;
             }
@@ -176,166 +158,432 @@ export class UIController {
         this._addListener(document, 'i18n:change', () => {
             this.applyI18nToDocument();
             refreshLanguageSelect();
-            this.refreshShaderSelectorOptions();
-
-            if (this.dock?.applyTranslations) {
-                this.dock.applyTranslations();
-            }
-
-            if (this.bottomSheet?.applyTranslations) {
-                this.bottomSheet.applyTranslations();
-            }
-
-            this.setupGlobalSpeedTooltip();
-
-            if (typeof this._renderSavedBackgrounds === 'function') {
-                this._renderSavedBackgrounds();
-            }
-
-            // Rebuild controls so labels/tooltips update, but keep current slider values.
-            const shaderConfig = this.shaderManager?.getCurrentShaderConfig?.();
-            if (shaderConfig?.controls) {
-                shaderConfig.controls.forEach(c => {
-                    const input = document.getElementById(c.id);
-                    if (!input) return;
-                    const v = parseFloat(input.value);
-                    if (Number.isFinite(v)) c.value = v;
-                });
-                this.updateShaderControls(shaderConfig);
-            }
+            this.dock?.applyTranslations?.();
+            this.bottomSheet?.applyTranslations?.();
+            this.renderGallery();
+            this.renderPresets();
+            this._renderSavedBackgrounds?.();
+            this.syncColorLabels();
+            if (this.getCurrentShaderName()) this.renderSettings();
         });
-    }
-
-    setupGlobalSpeedTooltip() {
-        if (this._globalSpeedTooltipBound) return;
-        const infoIcon = document.getElementById('global-speed-info');
-        if (!infoIcon) return;
-
-        const show = () => {
-            if (!this.tooltipElement) return;
-            const rect = infoIcon.getBoundingClientRect();
-            this.tooltipElement.textContent = this.t('settings.globalSpeed.tooltip', null, 'Controls the overall animation speed.');
-            this.tooltipElement.classList.add('visible');
-
-            const tooltipRect = this.tooltipElement.getBoundingClientRect();
-            const left = rect.left + (rect.width / 2) - (tooltipRect.width / 2);
-            const top = rect.top - tooltipRect.height - 8;
-
-            this.tooltipElement.style.left = `${left}px`;
-            this.tooltipElement.style.top = `${top}px`;
-        };
-
-        const hide = () => {
-            if (this.tooltipElement) {
-                this.tooltipElement.classList.remove('visible');
-            }
-        };
-
-        this._addListener(infoIcon, 'mouseenter', show);
-        this._addListener(infoIcon, 'mouseleave', hide);
-        this._addListener(infoIcon, 'focus', show);
-        this._addListener(infoIcon, 'blur', hide);
-
-        this._globalSpeedTooltipBound = true;
     }
 
     applyI18nToDocument() {
-        // textContent
-        document.querySelectorAll('[data-i18n]').forEach(el => {
+        document.querySelectorAll('[data-i18n]').forEach((el) => {
             const key = el.getAttribute('data-i18n');
-            if (!key) return;
-            el.textContent = this.t(key, null, el.textContent);
+            if (key) el.textContent = this.t(key, null, el.textContent);
         });
 
-        // placeholders
-        document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+        document.querySelectorAll('[data-i18n-placeholder]').forEach((el) => {
             const key = el.getAttribute('data-i18n-placeholder');
-            if (!key) return;
-            el.setAttribute('placeholder', this.t(key, null, el.getAttribute('placeholder') || ''));
+            if (key) el.setAttribute('placeholder', this.t(key, null, el.getAttribute('placeholder') || ''));
         });
 
-        // aria-label
-        document.querySelectorAll('[data-i18n-aria]').forEach(el => {
+        document.querySelectorAll('[data-i18n-aria]').forEach((el) => {
             const key = el.getAttribute('data-i18n-aria');
-            if (!key) return;
-            el.setAttribute('aria-label', this.t(key, null, el.getAttribute('aria-label') || ''));
+            if (key) el.setAttribute('aria-label', this.t(key, null, el.getAttribute('aria-label') || ''));
+        });
+
+        document.querySelectorAll('[data-i18n-title]').forEach((el) => {
+            const key = el.getAttribute('data-i18n-title');
+            if (key) el.setAttribute('title', this.t(key, null, el.getAttribute('title') || ''));
         });
     }
 
-    getShaderDisplayName(shaderName) {
-        const prettyNames = {
-            'neon_grid': 'Synthwave Grid',
-            'aurora': 'Northern Lights',
-            'voronoi': 'Organic Cells',
-            'flow': 'Vanta Flow',
-            'clouds': 'Dream Flight',
-            'liquid': 'Liquid Metal',
-            'geometric': 'Geometric Patterns',
-            'galaxy': 'Cosmic Galaxy',
-            'stripes': 'Retro Stripes',
-            'mesh': 'Wireframe Mesh',
-            'particles': 'Starfield',
-            'waves': 'Waves'
+    // ─────────────────────────────────────────────────────────────────────
+    // Background selection
+    // ─────────────────────────────────────────────────────────────────────
+
+    /**
+     * Single entry point to switch backgrounds: gallery, saved backgrounds,
+     * keyboard and startup all go through here.
+     * @param {string} id
+     * @param {{ snapshot?: { uniforms?: Object, colors?: Object } }} [options]
+     */
+    selectShader(id, { snapshot = null } = {}) {
+        const def = this.shaderManager.loadShader(id);
+        if (!def) return;
+
+        this.persistence?.setLastShader(id);
+
+        const persisted = this.persistence?.getShaderState(id) ?? null;
+        const colors = snapshot?.colors ?? persisted?.colors ?? null;
+        const uniforms = { ...(persisted?.uniforms ?? {}), ...(snapshot?.uniforms ?? {}) };
+
+        // Palette: explicit/persisted colors win, otherwise the background's own palette.
+        if (colors) this.colorManager.setColors(colors);
+        else this.colorManager.setPalette(def.palette);
+
+        // Parameters: persisted values overlay the defaults, clamped to the control range.
+        Object.entries(uniforms).forEach(([name, raw]) => {
+            if (typeof raw !== 'number' || !Number.isFinite(raw)) return;
+            if (name === 'u_speed') {
+                this.shaderManager.setParam('u_speed', clamp(raw, 0, 1));
+                return;
+            }
+            const control = def.controls.find((c) => c.uniform === name);
+            if (control) this.shaderManager.setParam(name, clamp(raw, control.min, control.max));
+        });
+
+        if (snapshot) {
+            // Loaded from the library: remember it as the new state of this background
+            // (only the parameters this background still has).
+            this.persistence?.setShaderColors(id, this.colorManager.colors);
+            const known = new Set(['u_speed', ...def.controls.map((c) => c.uniform)]);
+            Object.entries(uniforms).forEach(([name, value]) => {
+                if (known.has(name) && typeof value === 'number') {
+                    this.persistence?.setShaderUniform(id, name, this.shaderManager.getParam(name) ?? value);
+                }
+            });
+        }
+
+        this.syncColorControls();
+        this.syncColorLabels();
+        this.renderSettings();
+        this.updateGallerySelection();
+        this.persistColors();
+    }
+
+    cycleShader(direction) {
+        const ids = BACKGROUNDS.map((b) => b.id);
+        const index = ids.indexOf(this.getCurrentShaderName());
+        const next = ids[(index + direction + ids.length) % ids.length];
+        this.selectShader(next);
+    }
+
+    // ─────────────────────────────────────────────────────────────────────
+    // Gallery
+    // ─────────────────────────────────────────────────────────────────────
+
+    setupGallery() {
+        const root = document.getElementById('content-gallery');
+        if (!root) return;
+
+        this._addListener(root, 'click', (e) => {
+            const chip = e.target.closest('[data-filter]');
+            if (chip) {
+                this.galleryFilter = chip.dataset.filter;
+                this.renderGallery();
+                return;
+            }
+
+            const card = e.target.closest('[data-bg-id]');
+            if (card) this.selectShader(card.dataset.bgId);
+        });
+
+        this.renderGallery();
+    }
+
+    renderGallery() {
+        const root = document.getElementById('content-gallery');
+        if (!root) return;
+
+        const lang = this.i18n?.getLanguage?.() ?? 'en';
+        const chips = [{ id: 'all', label: this.t('gallery.all', null, 'All') }, ...CATEGORIES.map((c) => ({ id: c.id, label: c.label[lang] }))];
+
+        root.querySelector('.gallery-chips').innerHTML = chips
+            .map((c) => `<button type="button" class="chip${c.id === this.galleryFilter ? ' active' : ''}" data-filter="${c.id}" aria-pressed="${c.id === this.galleryFilter}">${c.label}</button>`)
+            .join('');
+
+        const visible = this.galleryFilter === 'all' ? BACKGROUNDS : BACKGROUNDS.filter((b) => b.category === this.galleryFilter);
+        const current = this.getCurrentShaderName();
+
+        root.querySelector('.gallery-grid').innerHTML = visible
+            .map((b) => {
+                const name = b.name[lang];
+                const cost = this.t(`cost.${b.cost}`);
+                const active = b.id === current;
+                return `
+                    <button type="button" class="bg-card${active ? ' active' : ''}" data-bg-id="${b.id}" aria-pressed="${active}" title="${b.description[lang]}">
+                        <span class="bg-card-thumb" style="background-image:${this.paletteGradient(b.palette)}">
+                            <img src="/thumbs/${b.id}.jpg" alt="" loading="lazy" decoding="async" width="320" height="200" onerror="this.remove()">
+                        </span>
+                        <span class="bg-card-meta">
+                            <span class="bg-card-name">${name}</span>
+                            <span class="cost-badge" data-cost="${b.cost}" title="${this.t('cost.title')}"><i></i><i></i><i></i><span class="visually-hidden">${cost}</span></span>
+                        </span>
+                    </button>`;
+            })
+            .join('');
+    }
+
+    updateGallerySelection() {
+        const current = this.getCurrentShaderName();
+        document.querySelectorAll('#content-gallery .bg-card, #desktop-panel-container .bg-card, bottom-sheet .bg-card').forEach((card) => {
+            const active = card.dataset.bgId === current;
+            card.classList.toggle('active', active);
+            card.setAttribute('aria-pressed', String(active));
+        });
+    }
+
+    /** CSS gradient preview from an OKLCH palette (used as card placeholder / swatch). */
+    paletteGradient(palette) {
+        const stops = palette.map((c) => this.colorManager.oklchToHex(c)).join(', ');
+        return `linear-gradient(135deg, ${stops})`;
+    }
+
+    // ─────────────────────────────────────────────────────────────────────
+    // Settings panel (current background + sliders)
+    // ─────────────────────────────────────────────────────────────────────
+
+    renderSettings() {
+        const container = document.getElementById('shader-controls-content');
+        const id = this.getCurrentShaderName();
+        const def = id ? this.localized(id) : null;
+        if (!container || !def) return;
+
+        container.innerHTML = '';
+
+        // Current background header
+        const header = document.createElement('div');
+        header.className = 'bg-current';
+        header.innerHTML = `
+            <span class="bg-current-thumb" style="background-image:${this.paletteGradient(SHADERS[id].palette)}"></span>
+            <span class="bg-current-info">
+                <span class="field-label">${this.t('settings.background')}</span>
+                <strong class="bg-current-name"></strong>
+            </span>
+            <button type="button" class="chip-btn" data-action="open-gallery">${this.t('settings.change')}</button>`;
+        header.querySelector('.bg-current-name').textContent = def.name;
+        header.querySelector('[data-action="open-gallery"]').addEventListener('click', () => this.openPanelFromDock('gallery'));
+        container.appendChild(header);
+
+        // Global speed
+        container.appendChild(this.createField({
+            id: 'speed',
+            label: this.t('settings.globalSpeed'),
+            tooltip: this.t('settings.globalSpeed.tooltip'),
+            min: 0,
+            max: 1,
+            step: 0.001,
+            value: this.shaderManager.getParam('u_speed') ?? 0.5,
+            onInput: (value) => {
+                this.shaderManager.setParam('u_speed', value);
+                this.persistence?.setShaderUniform(id, 'u_speed', value);
+            },
+        }));
+
+        def.controls.forEach((control) => {
+            container.appendChild(this.createField({
+                id: control.id,
+                label: control.label,
+                tooltip: control.tooltip,
+                min: control.min,
+                max: control.max,
+                step: 0.001,
+                value: this.shaderManager.getParam(control.uniform) ?? control.value,
+                onInput: (value) => {
+                    this.shaderManager.setParam(control.uniform, value);
+                    this.persistence?.setShaderUniform(id, control.uniform, value);
+                },
+            }));
+        });
+    }
+
+    /**
+     * One consistent slider row used by every panel.
+     * @param {{ id: string, label: string, tooltip?: string, min: number, max: number, step: number, value: number, onInput: (value: number) => void }} opts
+     */
+    createField({ id, label, tooltip, min, max, step, value, onInput }) {
+        const field = document.createElement('div');
+        field.className = 'field';
+
+        const head = document.createElement('div');
+        head.className = 'field-head';
+
+        const labelEl = document.createElement('label');
+        labelEl.className = 'field-label';
+        labelEl.htmlFor = `ctl-${id}`;
+        labelEl.textContent = label;
+        head.appendChild(labelEl);
+
+        if (tooltip) head.appendChild(this.createInfoIcon(tooltip, label));
+
+        const output = document.createElement('output');
+        output.className = 'field-value';
+        output.htmlFor = `ctl-${id}`;
+        output.textContent = this.getVisualValue(value, min, max);
+        head.appendChild(output);
+
+        const input = document.createElement('input');
+        input.type = 'range';
+        input.id = `ctl-${id}`;
+        input.min = String(min);
+        input.max = String(max);
+        input.step = String(step);
+        input.value = String(value);
+        input.style.setProperty('--fill', `${this.getVisualValue(value, min, max)}%`);
+
+        this._addListener(input, 'input', (e) => {
+            const next = parseFloat(e.target.value);
+            const visual = this.getVisualValue(next, min, max);
+            output.textContent = visual;
+            input.style.setProperty('--fill', `${visual}%`);
+            onInput(next);
+        });
+
+        field.appendChild(head);
+        field.appendChild(input);
+        return field;
+    }
+
+    getVisualValue(value, min, max) {
+        return Math.round(((value - min) / (max - min)) * 100);
+    }
+
+    createInfoIcon(text, label) {
+        const icon = document.createElement('span');
+        icon.className = 'info-icon';
+        icon.tabIndex = 0;
+        icon.setAttribute('role', 'button');
+        icon.setAttribute('aria-label', `${label}: ${text}`);
+        icon.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>';
+        this.bindTooltip(icon, text);
+        return icon;
+    }
+
+    createGlobalTooltip() {
+        this.tooltipElement = document.createElement('div');
+        this.tooltipElement.className = 'global-tooltip';
+        this.tooltipElement.setAttribute('role', 'tooltip');
+        document.body.appendChild(this.tooltipElement);
+    }
+
+    /** Hover/focus on desktop, tap on touch (auto-hides). */
+    bindTooltip(el, text) {
+        const show = () => {
+            if (!this.tooltipElement) return;
+            clearTimeout(this._tooltipTimer);
+            const rect = el.getBoundingClientRect();
+            this.tooltipElement.textContent = text;
+            this.tooltipElement.classList.add('visible');
+
+            const tip = this.tooltipElement.getBoundingClientRect();
+            const left = clamp(rect.left + rect.width / 2 - tip.width / 2, 8, window.innerWidth - tip.width - 8);
+            const top = rect.top - tip.height - 8 < 8 ? rect.bottom + 8 : rect.top - tip.height - 8;
+            this.tooltipElement.style.left = `${left}px`;
+            this.tooltipElement.style.top = `${top}px`;
+        };
+        const hide = () => {
+            clearTimeout(this._tooltipTimer);
+            this.tooltipElement?.classList.remove('visible');
         };
 
-        const base = this.shaderManager?.getShaderConfig?.(shaderName) || {};
-        const localized = this.i18n?.localizeShader ? this.i18n.localizeShader(shaderName, base) : base;
-
-        if (localized?.name) return localized.name;
-
-        let label = prettyNames[shaderName];
-        if (!label) {
-            label = shaderName.split('_')
-                .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-                .join(' ');
-        }
-        return label;
+        this._addListener(el, 'mouseenter', show);
+        this._addListener(el, 'mouseleave', hide);
+        this._addListener(el, 'focus', show);
+        this._addListener(el, 'blur', hide);
+        this._addListener(el, 'click', (e) => {
+            e.stopPropagation();
+            show();
+            this._tooltipTimer = setTimeout(hide, TOUCH_TOOLTIP_MS);
+        });
+        this._addListener(el, 'keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                show();
+            } else if (e.key === 'Escape') {
+                hide();
+            }
+        });
     }
 
-    refreshShaderSelectorOptions() {
-        const selector = document.getElementById('shader-type');
-        if (!selector) return;
+    // ─────────────────────────────────────────────────────────────────────
+    // Colors & presets
+    // ─────────────────────────────────────────────────────────────────────
 
-        const shaders = this.shaderManager.getAvailableShaders();
-        const current = selector.value;
-
-        if (selector.clearOptions) selector.clearOptions();
-        shaders.forEach(shaderName => {
-            selector.addOption(shaderName, this.getShaderDisplayName(shaderName));
+    setupColorControls() {
+        this._addListener(document, 'color-change', (e) => {
+            const { colorIndex, channel, value } = e.detail;
+            const color = { ...this.colorManager.getColor(colorIndex), [channel]: value };
+            const hex = this.colorManager.updateColor(colorIndex, color.l, color.c, color.h);
+            document.querySelector(`color-control[color-index="${colorIndex}"]`)?.updatePreview(hex);
+            this.persistColors();
         });
 
-        if (current && shaders.includes(current)) {
-            selector.value = current;
-            if (selector.updateDisplay) selector.updateDisplay();
+        // Accordion: only one color section open at a time.
+        this._addListener(document, 'color-toggle', (e) => {
+            if (!e.detail.open) return;
+            document.querySelectorAll('color-control').forEach((c) => {
+                if (c !== e.target) c.setOpen?.(false);
+            });
+        });
+    }
+
+    syncColorControls() {
+        for (let i = 1; i <= 4; i++) {
+            const color = this.colorManager.getColor(i);
+            const component = document.querySelector(`color-control[color-index="${i}"]`);
+            if (!color || !component) continue;
+            component.setColor?.(color, this.colorManager.oklchToHex(color));
         }
     }
+
+    syncColorLabels() {
+        const id = this.getCurrentShaderName();
+        const def = id ? this.localized(id) : null;
+        const lang = this.i18n?.getLanguage?.() ?? 'en';
+        document.querySelectorAll('color-control').forEach((component) => {
+            const index = Number(component.getAttribute('color-index'));
+            if (def?.colorLabels?.[index - 1]) component.setAttribute('label', def.colorLabels[index - 1]);
+            component.setAttribute('l-label', this.t('color.lightness'));
+            component.setAttribute('c-label', this.t('color.chroma'));
+            component.setAttribute('h-label', this.t('color.hue'));
+            component.setAttribute('lang', lang);
+        });
+    }
+
+    persistColors() {
+        const id = this.getCurrentShaderName();
+        if (this.persistence && id) this.persistence.setShaderColors(id, this.colorManager.colors);
+    }
+
+    setupPresets() {
+        this._addListener(document.body, 'click', (e) => {
+            const btn = e.target.closest('[data-preset]');
+            if (!btn || !this.colorManager.setPreset(btn.dataset.preset)) return;
+            this.syncColorControls();
+            this.persistColors();
+        });
+        this.renderPresets();
+    }
+
+    renderPresets() {
+        const grid = document.getElementById('preset-grid');
+        if (!grid) return;
+        const lang = this.i18n?.getLanguage?.() ?? 'en';
+
+        grid.innerHTML = PRESETS.map((preset) => `
+            <button type="button" class="preset-btn" data-preset="${preset.id}">
+                <span class="preset-swatch" style="background-image:${this.paletteGradient(preset.colors)}"></span>
+                <span class="preset-name">${preset.name[lang]}</span>
+            </button>`).join('');
+    }
+
+    randomize() {
+        this.colorManager.randomize();
+        this.syncColorControls();
+        this.persistColors();
+    }
+
+    // ─────────────────────────────────────────────────────────────────────
+    // Saved backgrounds
+    // ─────────────────────────────────────────────────────────────────────
 
     getBackgroundSnapshot() {
         const shader = this.getCurrentShaderName();
         if (!shader) return null;
 
-        const config = this.shaderManager.getCurrentShaderConfig();
+        const def = this.shaderManager.getCurrentShaderConfig();
         const uniforms = {};
 
-        // Only save numeric uniforms relevant to the shader controls (small + stable)
-        if (config?.controls) {
-            config.controls.forEach(control => {
-                const uniformName = control.uniform;
-                const u = this.shaderManager.uniforms?.[uniformName];
-                const value = u?.value;
-                if (typeof value === 'number' && Number.isFinite(value)) {
-                    uniforms[uniformName] = value;
-                }
-            });
-        }
+        // Only the numeric uniforms exposed by the controls (small + stable).
+        def.controls.forEach((control) => {
+            const value = this.shaderManager.getParam(control.uniform);
+            if (typeof value === 'number' && Number.isFinite(value)) uniforms[control.uniform] = value;
+        });
+        uniforms.u_speed = this.shaderManager.getParam('u_speed');
 
-        // Also include global speed
-        const speed = this.shaderManager.uniforms?.u_speed?.value;
-        if (typeof speed === 'number' && Number.isFinite(speed)) {
-            uniforms.u_speed = speed;
-        }
-
-        // OKLCH colors (deep copy)
         const colors = {};
         for (let i = 1; i <= 4; i++) {
             const c = this.colorManager.getColor(i);
@@ -345,76 +593,14 @@ export class UIController {
         return { shader, uniforms, colors };
     }
 
-    applyBackgroundSnapshot(snapshot) {
-        if (!snapshot || typeof snapshot !== 'object') return;
-        if (!snapshot.shader || typeof snapshot.shader !== 'string') return;
-
-        const shaderName = snapshot.shader;
-
-        // Update selector visually (no event)
-        const selector = document.getElementById('shader-type');
-        const available = this.shaderManager.getAvailableShaders();
-        if (!available.includes(shaderName)) return;
-        if (selector) {
-            selector.value = shaderName;
-            if (selector.updateDisplay) selector.updateDisplay();
-        }
-
-        if (this.persistence) this.persistence.setLastShader(shaderName);
-
-        const shaderConfig = this.shaderManager.loadShader(shaderName);
-        if (!shaderConfig) return;
-
-        // Apply uniforms (numbers)
-        const uniforms = snapshot.uniforms && typeof snapshot.uniforms === 'object' ? snapshot.uniforms : {};
-        Object.entries(uniforms).forEach(([uniformName, value]) => {
-            if (typeof value !== 'number' || !Number.isFinite(value)) return;
-            this.shaderManager.updateUniform(uniformName, value);
-            if (this.persistence) this.persistence.setShaderUniform(shaderName, uniformName, value);
-
-            if (shaderConfig.controls) {
-                const control = shaderConfig.controls.find(c => c.uniform === uniformName);
-                if (control) control.value = value;
-            }
-        });
-
-        // Apply colors
-        if (snapshot.colors) {
-            this.colorManager.setColors(snapshot.colors);
-            for (let i = 1; i <= 4; i++) {
-                const color = this.colorManager.getColor(i);
-                if (!color) continue;
-                const component = document.querySelector(`color-control[color-index="${i}"]`);
-                if (component) {
-                    component.setAttribute('l-value', color.l);
-                    component.setAttribute('c-value', color.c);
-                    component.setAttribute('h-value', color.h);
-                }
-                this.initializeColorComponent(i);
-            }
-
-            if (this.persistence) this.persistence.setShaderColors(shaderName, this.colorManager.colors);
-        }
-
-        // Sync speed UI
-        const speedInput = document.getElementById('speed');
-        const speedVal = document.getElementById('speed-value');
-        const speed = uniforms.u_speed;
-        if (speedInput && typeof speed === 'number' && Number.isFinite(speed)) {
-            speedInput.value = String(speed);
-            if (speedVal) speedVal.textContent = Math.round(speed * 100);
-        }
-
-        this.updateShaderControls(shaderConfig);
-    }
-
     setupSavedBackgrounds() {
         const nameInput = document.getElementById('bg-save-name');
         const saveBtn = document.getElementById('bg-save-btn');
-        const exportBtn = document.getElementById('bg-export-btn');
         const listEl = document.getElementById('bg-saved-list');
 
         if (!nameInput || !saveBtn || !listEl || !this.library) return;
+
+        const lang = () => this.i18n?.getLanguage?.() ?? 'en';
 
         const render = () => {
             const items = this.library.list();
@@ -422,45 +608,46 @@ export class UIController {
 
             if (!items.length) {
                 const empty = document.createElement('div');
-                empty.className = 'saved-bg-empty';
-                empty.textContent = this.t('saved.empty', null, 'No saved backgrounds yet.');
+                empty.className = 'empty-state';
+                empty.textContent = this.t('saved.empty');
                 listEl.appendChild(empty);
                 return;
             }
 
             const frag = document.createDocumentFragment();
-            items.forEach(item => {
+            items.forEach((item) => {
                 const row = document.createElement('div');
                 row.className = 'saved-bg-item-row';
 
+                const available = Boolean(SHADERS[item.shader]);
                 const loadBtn = document.createElement('button');
                 loadBtn.type = 'button';
                 loadBtn.className = 'saved-bg-item';
                 loadBtn.dataset.bgId = item.id;
                 loadBtn.dataset.bgAction = 'load';
+                loadBtn.disabled = !available;
 
-                const title = document.createElement('div');
+                const title = document.createElement('span');
                 title.className = 'saved-bg-title';
                 title.textContent = item.name;
 
-                const meta = document.createElement('div');
+                const meta = document.createElement('span');
                 meta.className = 'saved-bg-meta';
-                meta.textContent = `v${item.version} • ${item.shader}`;
+                const shaderName = SHADERS[item.shader]?.name?.[lang()];
+                meta.textContent = available ? `v${item.version} • ${shaderName}` : `v${item.version} • ${this.t('saved.unavailable')}`;
 
-                loadBtn.appendChild(title);
-                loadBtn.appendChild(meta);
+                loadBtn.append(title, meta);
 
                 const delBtn = document.createElement('button');
                 delBtn.type = 'button';
-                delBtn.className = 'saved-bg-save-btn saved-bg-icon-btn saved-bg-delete-btn';
-                delBtn.textContent = '×';
-                delBtn.setAttribute('aria-label', this.t('saved.deleteAria', null, 'Delete'));
-                delBtn.title = this.t('saved.deleteTitle', null, 'Delete');
+                delBtn.className = 'icon-action danger';
+                delBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14H6L5 6"/></svg>';
+                delBtn.setAttribute('aria-label', this.t('saved.deleteAria'));
+                delBtn.title = this.t('saved.deleteTitle');
                 delBtn.dataset.bgId = item.id;
                 delBtn.dataset.bgAction = 'delete';
 
-                row.appendChild(loadBtn);
-                row.appendChild(delBtn);
+                row.append(loadBtn, delBtn);
                 frag.appendChild(row);
             });
 
@@ -469,100 +656,137 @@ export class UIController {
 
         this._renderSavedBackgrounds = render;
 
-        this._addListener(saveBtn, 'click', () => {
+        const save = () => {
             const name = (nameInput.value || '').trim();
-            if (!name) return;
+            if (!name) {
+                nameInput.focus();
+                return;
+            }
             const snapshot = this.getBackgroundSnapshot();
             if (!snapshot) return;
             this.library.saveNewVersion(name, snapshot);
+            nameInput.value = '';
             render();
+            this.flashButton(saveBtn, this.t('saved.saved'));
+        };
+
+        this._addListener(saveBtn, 'click', save);
+        this._addListener(nameInput, 'keydown', (e) => {
+            if (e.key === 'Enter') save();
         });
-
-        if (exportBtn) {
-            this._addListener(exportBtn, 'click', () => {
-                const exportModal = document.getElementById('export-modal');
-                if (!exportModal) return;
-
-                if (this.persistence && typeof exportModal.setPersistenceManager === 'function') {
-                    exportModal.setPersistenceManager(this.persistence);
-                } else if (this.persistence) {
-                    exportModal.persistence = this.persistence;
-                }
-
-                if (this.i18n?.getLanguage && typeof exportModal.setLanguage === 'function') {
-                    exportModal.setLanguage(this.i18n.getLanguage(), { persist: false });
-                }
-
-                const config = this.getCurrentConfiguration();
-                const runtimeContext = {
-                    gpuTier: this._runtimeContext.gpuTier,
-                    observedFps: this._runtimeContext.getObservedFps(),
-                    prefersReducedMotion: window.matchMedia('(prefers-reduced-motion: reduce)').matches,
-                    isMobile: this.isMobile,
-                };
-                exportModal.open(config, runtimeContext);
-            });
-        }
 
         this._addListener(listEl, 'click', (e) => {
             const btn = e.target.closest('[data-bg-action]');
             if (!btn) return;
 
-            const id = btn.dataset.bgId;
-            const action = btn.dataset.bgAction;
+            const item = this.library.get(btn.dataset.bgId);
+            if (!item) return;
 
-            if (action === 'delete') {
-                const item = this.library.get(id);
-                if (!item) return;
-                const ok = confirm(this.t('saved.deleteConfirm', { name: item.name }, `Delete saved background "${item.name}"?`));
-                if (!ok) return;
-                this.library.remove(id);
+            if (btn.dataset.bgAction === 'delete') {
+                if (!confirm(this.t('saved.deleteConfirm', { name: item.name }))) return;
+                this.library.remove(item.id);
                 render();
                 return;
             }
 
-            if (action === 'load') {
-                const item = this.library.get(id);
-                if (!item) return;
-                this.applyBackgroundSnapshot({
-                    shader: item.shader,
-                    uniforms: item.uniforms,
-                    colors: item.colors
-                });
+            if (SHADERS[item.shader]) {
+                this.selectShader(item.shader, { snapshot: { uniforms: item.uniforms, colors: item.colors } });
             }
         });
 
         render();
     }
 
-    createGlobalTooltip() {
-        this.tooltipElement = document.createElement('div');
-        this.tooltipElement.className = 'global-tooltip';
-        document.body.appendChild(this.tooltipElement);
+    /** Briefly swaps a button's label to confirm an action. */
+    flashButton(button, text, ms = 1400) {
+        const original = button.textContent;
+        button.textContent = text;
+        button.classList.add('flash');
+        setTimeout(() => {
+            button.textContent = original;
+            button.classList.remove('flash');
+        }, ms);
     }
+
+    // ─────────────────────────────────────────────────────────────────────
+    // Export
+    // ─────────────────────────────────────────────────────────────────────
+
+    setupExportButton() {
+        const exportBtn = document.getElementById('export-btn');
+        if (!exportBtn) return;
+        this._addListener(exportBtn, 'click', () => this.openExport());
+    }
+
+    async openExport() {
+        const id = this.getCurrentShaderName();
+        if (!id) return;
+
+        // The export modal (and code generator) is only loaded when first needed.
+        await import('./components/ExportModal.js');
+        await customElements.whenDefined('export-modal');
+        const exportModal = document.getElementById('export-modal');
+        if (!exportModal) return;
+
+        if (this.persistence) exportModal.setPersistenceManager?.(this.persistence);
+        if (this.i18n?.getLanguage) exportModal.setLanguage?.(this.i18n.getLanguage(), { persist: false });
+
+        const config = await this.getCurrentConfiguration();
+        exportModal.open(config, {
+            gpuTier: this._runtimeContext.gpuTier,
+            observedFps: this._runtimeContext.getObservedFps(),
+            prefersReducedMotion: window.matchMedia('(prefers-reduced-motion: reduce)').matches,
+            isMobile: this.isMobile,
+            shaderComplexity: COMPLEXITY_BY_COST[config.cost],
+        });
+    }
+
+    async getCurrentConfiguration() {
+        const id = this.getCurrentShaderName();
+        const def = SHADERS[id];
+
+        const colors = [];
+        for (let i = 1; i <= 4; i++) {
+            const color = this.colorManager.getColor(i);
+            if (color) colors.push({ id: i, oklch: { ...color } });
+        }
+
+        const source = await def.source();
+
+        return {
+            shader: id,
+            name: def.name,
+            speed: this.shaderManager.getParam('u_speed') ?? 0.5,
+            colors,
+            parameters: this.shaderManager.getShaderParameters(id),
+            tslSource: source.default,
+            cost: def.cost,
+            renderScale: def.renderScale,
+            mouse: def.mouse,
+        };
+    }
+
+    // ─────────────────────────────────────────────────────────────────────
+    // HUD / panels
+    // ─────────────────────────────────────────────────────────────────────
 
     setupResizeListener() {
         this._addListener(window, 'resize', () => {
-            const newIsMobile = window.innerWidth <= 768;
-            if (this.isMobile !== newIsMobile) {
-                this.isMobile = newIsMobile;
+            const nextIsMobile = window.innerWidth <= 768;
+            if (this.isMobile !== nextIsMobile) {
+                this.isMobile = nextIsMobile;
                 this.updateLayoutMode();
-                // If a panel is open, re-open it in the new mode
+                // Panels live in different containers per layout: close to avoid glitches.
                 if (this.activePanelId) {
-                    this.closePanel(); // Close current
-                    // Re-opening would require logic to trigger the dock, 
-                    // for now let's just close it to avoid glitches.
+                    this.closePanel();
+                    this.dock?.reset?.();
                 }
             }
         });
     }
 
     updateLayoutMode() {
-        if (this.isMobile) {
-            document.body.classList.add('mobile-mode');
-        } else {
-            document.body.classList.remove('mobile-mode');
-        }
+        document.body.classList.toggle('mobile-mode', this.isMobile);
     }
 
     setupHudListeners() {
@@ -571,98 +795,74 @@ export class UIController {
             return;
         }
 
-        // Listen for events from hud-dock
-        this._addListener(this.dock, 'panel-open', (e) => {
-            this.openPanel(e.detail.panel);
-        });
-
-        this._addListener(this.dock, 'panel-close', () => {
-            this.closePanel();
-        });
-
+        this._addListener(this.dock, 'panel-open', (e) => this.openPanel(e.detail.panel));
+        this._addListener(this.dock, 'panel-close', () => this.closePanel());
         this._addListener(this.dock, 'action', (e) => {
-            this.handleAction(e.detail.action);
+            if (e.detail.action === 'random') this.randomize();
         });
 
-        // Listen for bottom sheet events
         if (this.bottomSheet) {
             this._addListener(this.bottomSheet, 'close', () => {
                 if (this.activePanelId) {
                     this.closePanel();
-                    // Reset dock state
-                    if (this.dock.reset) {
-                        this.dock.reset();
-                    }
+                    this.dock.reset?.();
                 }
             });
         }
 
-        // Close panel when clicking outside (Desktop)
+        // Close the desktop panel when clicking outside it.
         this._addListener(document, 'click', (e) => {
-            if (!this.isMobile && this.activePanelId) {
-                const isClickInsidePanel = this.desktopPanel.contains(e.target);
-                const isClickInsideDock = this.dock.contains(e.target);
-                
-                if (!isClickInsidePanel && !isClickInsideDock) {
-                    this.dock.togglePanel(this.activePanelId, this.dock.shadowRoot.querySelector('.dock-item.active'));
-                }
-            }
+            if (this.isMobile || !this.activePanelId) return;
+            if (this.desktopPanel.contains(e.target) || this.dock.contains(e.target)) return;
+            this.closePanel();
+            this.dock.reset?.();
         });
     }
 
+    /** Opens a panel as if the user clicked its dock button (keeps the dock state in sync). */
+    openPanelFromDock(panelId) {
+        this.dock?.openPanel?.(panelId);
+    }
+
     openPanel(panelId) {
-        // Prevent reopening same panel
         if (this.activePanelId === panelId) return;
 
-        // If another panel is open, move its content back to templates first
-        if (this.activePanelId) {
-            const currentContent = this.isMobile ? this.bottomSheet.firstElementChild : this.desktopPanel.firstElementChild;
-            if (currentContent && this.templates) {
-                this.templates.appendChild(currentContent);
-            }
-        }
+        // Park the previous panel's content back in the templates container.
+        if (this.activePanelId) this.parkActiveContent();
 
-        // 1. Identify content
-        const contentId = `content-${panelId === 'settings' ? 'settings' : panelId}`; // mapping 'settings' -> 'content-settings'
-        const content = document.getElementById(contentId);
-        
+        const content = document.getElementById(`content-${panelId}`);
         if (!content) {
             console.warn(`Content not found for panel: ${panelId}`);
             return;
         }
 
-        // 2. Move content to container
         if (this.isMobile) {
-            this.bottomSheet.innerHTML = ''; // Clear previous
+            this.bottomSheet.innerHTML = '';
             this.bottomSheet.appendChild(content);
             this.bottomSheet.open();
         } else {
             this.desktopPanel.innerHTML = '';
             this.desktopPanel.appendChild(content);
+            this.desktopPanel.toggleAttribute('wide', panelId === 'gallery');
             this.desktopPanel.classList.remove('hidden');
-            
-            // Position above the active dock item
-            // Note: We'd need to get the rect of the active item from the shadow DOM or just center it.
-            // For simplicity in this version, we'll center the panel above the dock.
-            this.desktopPanel.style.bottom = '110px'; // Increased to clear the dock
-            this.desktopPanel.style.left = '50%';
-            this.desktopPanel.style.transform = 'translateX(-50%)';
-            
-            // Add animation class
+            this.desktopPanel.classList.remove('fade-in-up');
+            // restart the entrance animation
+            void this.desktopPanel.offsetWidth;
             this.desktopPanel.classList.add('fade-in-up');
         }
 
         this.activePanelId = panelId;
     }
 
+    parkActiveContent() {
+        const content = this.isMobile ? this.bottomSheet.firstElementChild : this.desktopPanel.firstElementChild;
+        if (content && this.templates) this.templates.appendChild(content);
+    }
+
     closePanel() {
         if (!this.activePanelId) return;
 
-        // Move content back to templates to preserve state
-        const content = this.isMobile ? this.bottomSheet.firstElementChild : this.desktopPanel.firstElementChild;
-        if (content && this.templates) {
-            this.templates.appendChild(content);
-        }
+        this.parkActiveContent();
 
         if (this.isMobile) {
             this.bottomSheet.close();
@@ -674,393 +874,43 @@ export class UIController {
         this.activePanelId = null;
     }
 
-    handleAction(action) {
-        if (action === 'random') {
-            this.randomize();
-        }
-    }
+    // ─────────────────────────────────────────────────────────────────────
+    // Keyboard
+    // ─────────────────────────────────────────────────────────────────────
 
-    randomize() {
-        // Randomize colors
-        for (let i = 1; i <= 4; i++) {
-            const l = parseFloat((0.5 + Math.random() * 0.4).toFixed(2));
-            const c = parseFloat((0.1 + Math.random() * 0.2).toFixed(3));
-            const h = Math.round(Math.random() * 360);
-            this.colorManager.updateColor(i, l, c, h);
-            
-            // Update UI if visible
-            const component = document.querySelector(`color-control[color-index="${i}"]`);
-            if (component) {
-                component.setAttribute('l-value', l);
-                component.setAttribute('c-value', c);
-                component.setAttribute('h-value', h);
-                component.updatePreview(this.colorManager.oklchToHex({l, c, h}));
-            }
-        }
+    setupKeyboard() {
+        this._addListener(document, 'keydown', (e) => {
+            if (e.defaultPrevented || e.metaKey || e.ctrlKey || e.altKey) return;
 
-        const shaderName = this.getCurrentShaderName();
-        if (this.persistence && shaderName) {
-            this.persistence.setShaderColors(shaderName, this.colorManager.colors);
-        }
-    }
+            const target = e.target;
+            const tag = target?.tagName;
+            if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || target?.isContentEditable) return;
+            if (document.getElementById('export-modal')?.classList.contains('open')) return;
 
-    setupShaderSelector() {
-        const selector = document.getElementById('shader-type');
-        if (!selector) return;
-
-        const shaders = this.shaderManager.getAvailableShaders();
-
-        this.refreshShaderSelectorOptions();
-
-        this._addListener(selector, 'change', (e) => {
-            const nextShader = e.detail.value;
-            if (this.persistence) this.persistence.setLastShader(nextShader);
-
-            const shaderConfig = this.shaderManager.loadShader(nextShader);
-
-            const persisted = this.persistence ? this.persistence.getShaderState(nextShader) : null;
-            const hasPersistedColors = !!persisted?.colors;
-
-            // Sync ColorManager with new defaults if they exist (only if no persisted colors)
-            if (!hasPersistedColors && shaderConfig?.defaults) {
-                const { u_color1, u_color2, u_color3, u_color4 } = shaderConfig.defaults;
-                if (u_color1 && u_color2 && u_color3 && u_color4) {
-                    this.colorManager.setColorsFromThreeColors(u_color1, u_color2, u_color3, u_color4);
-                    // Update UI components
-                    for (let i = 1; i <= 4; i++) {
-                        this.initializeColorComponent(i);
+            switch (e.key) {
+                case 'ArrowRight':
+                    this.cycleShader(1);
+                    break;
+                case 'ArrowLeft':
+                    this.cycleShader(-1);
+                    break;
+                case 'r':
+                case 'R':
+                    this.randomize();
+                    break;
+                case 'e':
+                case 'E':
+                    this.openExport();
+                    break;
+                case 'Escape':
+                    if (this.activePanelId) {
+                        this.closePanel();
+                        this.dock?.reset?.();
                     }
-                }
-            }
-
-            // Apply persisted uniforms/colors after loadShader (overrides defaults)
-            this.applyPersistedForShader(nextShader, shaderConfig);
-
-            const localized = this.i18n?.localizeShader ? this.i18n.localizeShader(nextShader, shaderConfig) : shaderConfig;
-            this.updateShaderControls(localized);
-        });
-
-        if (shaders.length > 0) {
-            // Select first option without triggering event initially if needed, 
-            // or just load shader. CustomSelect.select triggers event.
-            // Let's just load the shader manually and set the value visually.
-            const persistedShader = this.persistence ? this.persistence.getLastShader() : null;
-            const initialShader = (persistedShader && shaders.includes(persistedShader)) ? persistedShader : shaders[0];
-            selector.value = initialShader;
-            selector.updateDisplay();
-            
-            const initialConfig = this.shaderManager.loadShader(initialShader);
-
-            if (this.persistence) this.persistence.setLastShader(initialShader);
-
-            const persisted = this.persistence ? this.persistence.getShaderState(initialShader) : null;
-            const hasPersistedColors = !!persisted?.colors;
-            
-            // Sync ColorManager with initial defaults
-            if (!hasPersistedColors && initialConfig?.defaults) {
-                const { u_color1, u_color2, u_color3, u_color4 } = initialConfig.defaults;
-                if (u_color1 && u_color2 && u_color3 && u_color4) {
-                    this.colorManager.setColorsFromThreeColors(u_color1, u_color2, u_color3, u_color4);
-                    // Update UI components
-                    for (let i = 1; i <= 4; i++) {
-                        this.initializeColorComponent(i);
-                    }
-                }
-            }
-
-            this.applyPersistedForShader(initialShader, initialConfig);
-
-            const localized = this.i18n?.localizeShader ? this.i18n.localizeShader(initialShader, initialConfig) : initialConfig;
-            this.updateShaderControls(localized);
-        }
-    }
-
-    getVisualValue(value, min, max) {
-        return Math.round(((value - min) / (max - min)) * 100);
-    }
-
-    updateShaderControls(shaderConfig) {
-        const shaderName = this.getCurrentShaderName();
-        const localizedConfig = this.i18n?.localizeShader
-            ? this.i18n.localizeShader(shaderName, shaderConfig)
-            : shaderConfig;
-
-        this.updateColorLabels(localizedConfig);
-
-        const container = document.getElementById('shader-controls-content');
-        if (!container) return;
-        
-        container.innerHTML = '';
-
-        if (!localizedConfig?.controls) return;
-
-        localizedConfig.controls.forEach(control => {
-            const controlDiv = document.createElement('div');
-            controlDiv.className = 'control-group';
-
-            const visualValue = this.getVisualValue(control.value, control.min, control.max);
-            
-            // Header container for label and info icon
-            const headerDiv = document.createElement('div');
-            headerDiv.className = 'control-header';
-            headerDiv.style.display = 'flex';
-            headerDiv.style.alignItems = 'center';
-            headerDiv.style.justifyContent = 'space-between';
-            headerDiv.style.marginBottom = '8px';
-
-            const labelContainer = document.createElement('div');
-            labelContainer.style.display = 'flex';
-            labelContainer.style.alignItems = 'center';
-            labelContainer.style.gap = '6px';
-
-            const label = document.createElement('label');
-            label.className = 'control-label';
-            label.htmlFor = control.id;
-            label.style.marginBottom = '0'; // Override default
-            label.textContent = control.label;
-
-            labelContainer.appendChild(label);
-
-            if (control.tooltip) {
-                const infoIcon = document.createElement('div');
-                infoIcon.className = 'info-icon';
-                infoIcon.innerHTML = `
-                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <circle cx="12" cy="12" r="10"></circle>
-                        <line x1="12" y1="16" x2="12" y2="12"></line>
-                        <line x1="12" y1="8" x2="12.01" y2="8"></line>
-                    </svg>
-                `;
-                
-                // Event listeners for global tooltip
-                this._addListener(infoIcon, 'mouseenter', (e) => {
-                    if (!this.tooltipElement) return;
-                    
-                    const rect = infoIcon.getBoundingClientRect();
-                    this.tooltipElement.textContent = control.tooltip;
-                    this.tooltipElement.classList.add('visible');
-                    
-                    // Calculate position (centered above the icon)
-                    const tooltipRect = this.tooltipElement.getBoundingClientRect();
-                    const left = rect.left + (rect.width / 2) - (tooltipRect.width / 2);
-                    const top = rect.top - tooltipRect.height - 8; // 8px gap
-                    
-                    this.tooltipElement.style.left = `${left}px`;
-                    this.tooltipElement.style.top = `${top}px`;
-                });
-
-                this._addListener(infoIcon, 'mouseleave', () => {
-                    if (this.tooltipElement) {
-                        this.tooltipElement.classList.remove('visible');
-                    }
-                });
-
-                labelContainer.appendChild(infoIcon);
-            }
-
-            const valueDisplay = document.createElement('span');
-            valueDisplay.id = `${control.id}-value`;
-            valueDisplay.textContent = visualValue;
-            valueDisplay.style.fontSize = '0.85rem';
-            valueDisplay.style.opacity = '0.7';
-
-            headerDiv.appendChild(labelContainer);
-            headerDiv.appendChild(valueDisplay);
-
-            const input = document.createElement('input');
-            input.type = 'range';
-            input.id = control.id;
-            input.min = control.min;
-            input.max = control.max;
-            // Force high precision step for fluidity
-            input.step = '0.001';
-            input.value = control.value;
-
-            this._addListener(input, 'input', (e) => {
-                const value = parseFloat(e.target.value);
-                const valueSpan = document.getElementById(`${control.id}-value`);
-                if (valueSpan) {
-                    valueSpan.textContent = this.getVisualValue(value, control.min, control.max);
-                }
-                control.value = value;
-                this.shaderManager.updateUniform(control.uniform, value);
-
-                const shaderName = this.getCurrentShaderName();
-                if (this.persistence && shaderName) {
-                    this.persistence.setShaderUniform(shaderName, control.uniform, value);
-                }
-            });
-
-            controlDiv.appendChild(headerDiv);
-            controlDiv.appendChild(input);
-            container.appendChild(controlDiv);
-        });
-    }
-
-    updateColorLabels(shaderConfig) {
-        if (!shaderConfig?.colorLabels) return;
-        
-        shaderConfig.colorLabels.forEach((label, index) => {
-            const colorIndex = index + 1;
-            const component = document.querySelector(`color-control[color-index="${colorIndex}"]`);
-            if (component) {
-                component.setAttribute('label', label);
+                    break;
+                default:
+                    return;
             }
         });
-    }
-
-    setupColorControls() {
-        this._addListener(document, 'color-change', (e) => {
-            const { colorIndex, channel, value } = e.detail;
-            this.handleColorChange(colorIndex, channel, value);
-        });
-
-        this._addListener(document, 'request-preview-update', (e) => {
-            const { colorIndex } = e.detail;
-            this.initializeColorComponent(colorIndex);
-        });
-
-        const speedInput = document.getElementById('speed');
-        if (speedInput) {
-            this._addListener(speedInput, 'input', (e) => {
-                const value = parseFloat(e.target.value);
-                this.shaderManager.updateUniform('u_speed', value);
-                const speedVal = document.getElementById('speed-value');
-                if (speedVal) {
-                    // Speed is 0.0 to 1.0
-                    speedVal.textContent = Math.round(value * 100);
-                }
-
-                const shaderName = this.getCurrentShaderName();
-                if (this.persistence && shaderName) {
-                    this.persistence.setShaderUniform(shaderName, 'u_speed', value);
-                }
-            });
-        }
-
-        setTimeout(() => {
-            for (let i = 1; i <= 4; i++) {
-                this.initializeColorComponent(i);
-            }
-        }, 100);
-    }
-
-    handleColorChange(colorIndex, channel, value) {
-        const color = this.colorManager.getColor(colorIndex);
-        color[channel] = value;
-        const hex = this.colorManager.updateColor(colorIndex, color.l, color.c, color.h);
-        
-        const component = document.querySelector(`color-control[color-index="${colorIndex}"]`);
-        if (component) {
-            component.updatePreview(hex);
-        }
-
-        const shaderName = this.getCurrentShaderName();
-        if (this.persistence && shaderName) {
-            this.persistence.setShaderColors(shaderName, this.colorManager.colors);
-        }
-    }
-
-    initializeColorComponent(colorIndex) {
-        const color = this.colorManager.getColor(colorIndex);
-        if (color) {
-            const hex = this.colorManager.updateColor(colorIndex, color.l, color.c, color.h);
-            const component = document.querySelector(`color-control[color-index="${colorIndex}"]`);
-            if (component) {
-                component.updatePreview(hex);
-            }
-        }
-    }
-
-    setupPresets() {
-        // Use event delegation for presets since they might be moved around
-        this._addListener(document.body, 'click', (e) => {
-            const btn = e.target.closest('[data-preset]');
-            if (!btn) return;
-
-            const preset = btn.dataset.preset;
-            if (this.colorManager.setPreset(preset)) {
-                for (let i = 1; i <= 4; i++) {
-                    const color = this.colorManager.getColor(i);
-                    if (color) {
-                        const component = document.querySelector(`color-control[color-index="${i}"]`);
-                        if (component) {
-                            component.setAttribute('l-value', color.l);
-                            component.setAttribute('c-value', color.c);
-                            component.setAttribute('h-value', color.h);
-                            
-                            const hex = this.colorManager.oklchToHex(color);
-                            component.updatePreview(hex);
-                        }
-                    }
-                }
-
-                const shaderName = this.getCurrentShaderName();
-                if (this.persistence && shaderName) {
-                    this.persistence.setShaderColors(shaderName, this.colorManager.colors);
-                }
-            }
-        });
-    }
-
-    setupExportButton() {
-        const exportBtn = document.getElementById('export-btn');
-        const exportModal = document.getElementById('export-modal');
-
-        if (!exportBtn || !exportModal) return;
-
-        if (this.persistence && typeof exportModal.setPersistenceManager === 'function') {
-            exportModal.setPersistenceManager(this.persistence);
-        } else if (this.persistence) {
-            exportModal.persistence = this.persistence;
-        }
-
-        this._addListener(exportBtn, 'click', () => {
-            const config = this.getCurrentConfiguration();
-
-            if (this.i18n?.getLanguage && typeof exportModal.setLanguage === 'function') {
-                exportModal.setLanguage(this.i18n.getLanguage(), { persist: false });
-            }
-
-            const runtimeContext = {
-                gpuTier: this._runtimeContext.gpuTier,
-                observedFps: this._runtimeContext.getObservedFps(),
-                prefersReducedMotion: window.matchMedia('(prefers-reduced-motion: reduce)').matches,
-                isMobile: this.isMobile,
-            };
-            exportModal.open(config, runtimeContext);
-        });
-    }
-
-    getCurrentConfiguration() {
-        const shaderName = this.shaderManager.currentShader;
-        const speedUniform = this.shaderManager?.uniforms?.u_speed;
-        const speed = typeof speedUniform?.value === 'number' ? speedUniform.value : 0.5;
-        
-        const colors = [];
-        for (let i = 1; i <= 4; i++) {
-            const color = this.colorManager.getColor(i);
-            if (color) {
-                colors.push({
-                    id: i,
-                    oklch: { ...color }
-                });
-            }
-        }
-
-        const parameters = this.shaderManager.getShaderParameters(shaderName);
-        const shaderCode = this.shaderManager.getShaderCode(shaderName);
-        const vertexCode = this.shaderManager.getVertexShaderCode();
-        const shaderConfig = this.shaderManager.getCurrentShaderConfig();
-
-        return {
-            shader: shaderName,
-            speed: speed,
-            colors: colors,
-            parameters: parameters,
-            shaderCode: shaderCode,
-            vertexCode: vertexCode,
-            tslSource: shaderConfig.tslSource
-        };
     }
 }

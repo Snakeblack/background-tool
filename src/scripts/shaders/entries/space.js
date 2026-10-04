@@ -1,0 +1,113 @@
+import { t, P, slider, globals } from './helpers.js';
+import { main as galaxy } from '../nodes/galaxy.js';
+import { main as particles } from '../nodes/particles.js';
+import { main as warp } from '../nodes/warp.js';
+import { main as neonGrid } from '../nodes/neon_grid.js';
+
+/** @type {import('../registry.js').Background[]} */
+export const space = [
+    {
+        id: 'galaxy',
+        category: 'space',
+        cost: 'heavy',
+        renderScale: 0.8,
+        mouse: false,
+        speed: 0.5,
+        palette: [P(0.1, 0.04, 275), P(0.5, 0.2, 295), P(0.72, 0.16, 235), P(0.96, 0.07, 80)],
+        name: t('Spiral Galaxy', 'Galaxia espiral'),
+        description: t(
+            'A tilted spiral galaxy with dusty arms, a hot core, a faint nebula and stars.',
+            'Una galaxia espiral inclinada con brazos de polvo, núcleo brillante, nebulosa tenue y estrellas.',
+        ),
+        colorLabels: { en: ['Void', 'Arms', 'Dust glow', 'Core'], es: ['Vacío', 'Brazos', 'Brillo de polvo', 'Núcleo'] },
+        controls: [
+            ...globals({ noise: 0.03 }),
+            slider('galaxy-size', 'u_size', [0.4, 1.6, 0.05, 1.0],
+                t('Size', 'Tamaño'), t('Size of the galaxy.', 'Tamaño de la galaxia.')),
+            slider('galaxy-twist', 'u_distortion', [0, 1.5, 0.05, 0.6],
+                t('Twist', 'Espiral'), t('How tightly the arms wind.', 'Qué tan enrolladas están las espirales.')),
+            slider('galaxy-stars', 'u_density', [0, 1, 0.05, 0.5],
+                t('Stars', 'Estrellas'), t('How many stars fill the sky.', 'Cuántas estrellas llenan el cielo.')),
+        ],
+        main: galaxy,
+        source: () => import('../nodes/galaxy.js?raw'),
+    },
+    {
+        id: 'particles',
+        category: 'space',
+        cost: 'medium',
+        renderScale: 1,
+        mouse: false,
+        speed: 0.5,
+        palette: [P(0.1, 0.04, 265), P(0.2, 0.09, 285), P(0.82, 0.1, 230), P(0.96, 0.05, 90)],
+        name: t('Starfield', 'Campo de estrellas'),
+        description: t(
+            'Three parallax layers of twinkling stars, a faint nebula and the odd shooting star.',
+            'Tres capas de estrellas titilantes con paralaje, una nebulosa tenue y alguna estrella fugaz.',
+        ),
+        colorLabels: { en: ['Space', 'Nebula', 'Stars', 'Shooting star'], es: ['Espacio', 'Nebulosa', 'Estrellas', 'Estrella fugaz'] },
+        controls: [
+            ...globals({ noise: 0.02 }),
+            slider('stars-density', 'u_density', [0, 1, 0.05, 0.5],
+                t('Stars', 'Estrellas'), t('How many stars fill the sky.', 'Cuántas estrellas llenan el cielo.')),
+            slider('stars-brightness', 'u_intensity', [0.3, 2.0, 0.05, 1.0],
+                t('Star brightness', 'Brillo de estrellas'), t('Brightness of the stars.', 'Brillo de las estrellas.')),
+            slider('stars-nebula', 'u_glow', [0, 1.5, 0.05, 0.8],
+                t('Nebula', 'Nebulosa'), t('Strength of the background nebula.', 'Fuerza de la nebulosa de fondo.')),
+        ],
+        main: particles,
+        source: () => import('../nodes/particles.js?raw'),
+    },
+    {
+        id: 'warp',
+        category: 'space',
+        cost: 'medium',
+        renderScale: 0.85,
+        mouse: true,
+        speed: 0.5,
+        palette: [P(0.1, 0.05, 275), P(0.25, 0.12, 285), P(0.72, 0.17, 230), P(0.97, 0.05, 90)],
+        name: t('Hyperspace', 'Hiperespacio'),
+        description: t(
+            'Stars stretching into streaks as you jump to light speed; the vanishing point follows your pointer.',
+            'Estrellas que se estiran en estelas al saltar a velocidad luz; el punto de fuga sigue tu puntero.',
+        ),
+        colorLabels: { en: ['Space', 'Halo', 'Streaks', 'Core'], es: ['Espacio', 'Halo', 'Estelas', 'Núcleo'] },
+        controls: [
+            ...globals({ noise: 0.03 }),
+            slider('warp-density', 'u_density', [0, 1, 0.05, 0.5],
+                t('Stars', 'Estrellas'), t('How many streaks fill the screen.', 'Cuántas estelas llenan la pantalla.')),
+            slider('warp-streak', 'u_spread', [0.3, 2.0, 0.05, 1.0],
+                t('Streak length', 'Longitud'), t('How long the streaks stretch.', 'Cuánto se estiran las estelas.')),
+            slider('warp-glow', 'u_glow', [0, 2, 0.05, 1.0],
+                t('Core glow', 'Resplandor central'), t('Brightness of the vanishing point.', 'Brillo del punto de fuga.')),
+        ],
+        main: warp,
+        source: () => import('../nodes/warp.js?raw'),
+    },
+    {
+        id: 'neon_grid',
+        category: 'space',
+        cost: 'light',
+        renderScale: 1,
+        mouse: false,
+        speed: 0.5,
+        palette: [P(0.16, 0.09, 295), P(0.45, 0.2, 340), P(0.85, 0.15, 200), P(0.82, 0.19, 65)],
+        name: t('Synth Horizon', 'Horizonte synth'),
+        description: t(
+            'Striped sun, silhouetted mountains and an endless neon grid in perspective.',
+            'Sol rayado, montañas en silueta y una rejilla de neón infinita en perspectiva.',
+        ),
+        colorLabels: { en: ['Sky', 'Horizon haze', 'Neon grid', 'Sun'], es: ['Cielo', 'Neblina del horizonte', 'Rejilla neón', 'Sol'] },
+        controls: [
+            ...globals({ noise: 0.03 }),
+            slider('synth-sun', 'u_size', [0, 1.6, 0.05, 1.0],
+                t('Sun size', 'Tamaño del sol'), t('Size of the sun on the horizon.', 'Tamaño del sol en el horizonte.')),
+            slider('synth-grid', 'u_density', [0, 1, 0.05, 0.5],
+                t('Grid density', 'Densidad de rejilla'), t('Spacing of the grid lines.', 'Separación de las líneas de la rejilla.')),
+            slider('synth-glow', 'u_glow', [0, 2, 0.05, 1.0],
+                t('Glow', 'Resplandor'), t('Intensity of the neon glow.', 'Intensidad del brillo neón.')),
+        ],
+        main: neonGrid,
+        source: () => import('../nodes/neon_grid.js?raw'),
+    },
+];

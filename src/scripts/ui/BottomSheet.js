@@ -5,29 +5,8 @@ export class BottomSheet extends HTMLElement {
         this.isOpen = false;
         this.startY = 0;
         this.currentY = 0;
-        this._ignoreTouchGesture = false;
-        this.frames = 0;
-        this.animationId = null;
+        this._swipeFromHandle = false;
         this.i18n = null;
-    }
-
-    shouldIgnoreTouchGesture(e) {
-        try {
-            const path = typeof e.composedPath === 'function' ? e.composedPath() : [];
-            for (const node of path) {
-                if (!node || node.nodeType !== 1) continue; // Element
-                const el = node;
-                const cls = el.classList;
-
-                // Ignore sheet drag when interacting with an OPEN custom-select dropdown.
-                // We detect this via internal shadow DOM nodes that appear in composedPath.
-                if (cls?.contains('options-list')) return true;
-                if (cls?.contains('select-container') && cls?.contains('open')) return true;
-            }
-        } catch {
-            // ignore
-        }
-        return false;
     }
 
     setI18nManager(i18nManager) {
@@ -49,30 +28,7 @@ export class BottomSheet extends HTMLElement {
     connectedCallback() {
         this.render();
         this.setupEvents();
-        this.startAnimation();
         this.applyTranslations();
-    }
-
-    disconnectedCallback() {
-        if (this.animationId) {
-            cancelAnimationFrame(this.animationId);
-        }
-    }
-
-    startAnimation() {
-        const animate = () => {
-            this.frames += 0.05;
-            // Oscilación sutil de la frecuencia
-            const freq = 0.008 + Math.sin(this.frames * 0.05) * 0.002;
-            
-            const turb = this.shadowRoot.getElementById('turb-control-sheet');
-            if (turb) {
-                turb.setAttribute('baseFrequency', `${freq} ${freq}`);
-            }
-            
-            this.animationId = requestAnimationFrame(animate);
-        };
-        animate();
     }
 
     render() {
@@ -82,16 +38,22 @@ export class BottomSheet extends HTMLElement {
                 bottom: 0;
                 left: 0;
                 width: 100%;
-                height: 80vh;
+                height: 72vh;
+                height: 72dvh;
                 transform: translateY(100%);
-                transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+                /* Hidden once the slide-out ends: otherwise the closed sheet's shadow
+                   bleeds onto the bottom edge of the screen. */
+                visibility: hidden;
+                transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), visibility 0s linear 0.4s;
                 z-index: 200;
                 display: block;
-                pointer-events: none; /* Allow clicks through when closed/transparent parts */
+                pointer-events: none;
             }
 
             :host(.open) {
                 transform: translateY(0);
+                visibility: visible;
+                transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), visibility 0s;
                 pointer-events: auto;
             }
 
@@ -102,28 +64,11 @@ export class BottomSheet extends HTMLElement {
                 overflow: hidden;
                 border-radius: 24px 24px 0 0;
                 box-shadow: 0 -10px 40px rgba(0,0,0,0.5);
-                --bg-color: rgba(0, 0, 0, 0.45); /* Slightly darker for mobile readability */
+                --bg-color: rgba(8, 6, 14, 0.66); /* Opaque enough to read on any background; no backdrop blur on mobile (it re-blurs every frame under an animating canvas) */
                 --highlight: rgba(255, 255, 255, 0.15);
                 display: flex;
                 flex-direction: column;
                 pointer-events: auto;
-            }
-
-            .glass-distortion-wrapper {
-                position: absolute;
-                inset: 0;
-                z-index: 10;
-                filter: url(#glass-distortion-sheet) saturate(120%) brightness(1.15);
-                border-radius: inherit;
-                pointer-events: none;
-            }
-
-            .glass-blur {
-                position: absolute;
-                inset: 0;
-                backdrop-filter: blur(12px);
-                -webkit-backdrop-filter: blur(12px);
-                border-radius: inherit;
             }
 
             .glass-tint {
@@ -178,7 +123,8 @@ export class BottomSheet extends HTMLElement {
             .content {
                 flex: 1;
                 overflow-y: auto;
-                padding: 1rem;
+                overscroll-behavior: contain;
+                padding: 0.5rem 1rem calc(6rem + env(safe-area-inset-bottom));
                 opacity: 0;
                 transition: opacity 0.3s ease;
                 
@@ -213,18 +159,6 @@ export class BottomSheet extends HTMLElement {
             <style>${style}</style>
             
             <div class="glass-container">
-                <!-- SVG Filter Definition -->
-                <svg aria-hidden="true" style="position: absolute; width: 0; height: 0; overflow: hidden;">
-                    <filter id="glass-distortion-sheet">
-                        <feTurbulence id="turb-control-sheet" type="turbulence" baseFrequency="0.008" numOctaves="2" result="noise"></feTurbulence>
-                        <feGaussianBlur in="noise" stdDeviation="1.5" result="smoothNoise"/>
-                        <feDisplacementMap in="SourceGraphic" in2="smoothNoise" scale="70"></feDisplacementMap>
-                    </filter>
-                </svg>
-
-                <div class="glass-distortion-wrapper">
-                    <div class="glass-blur"></div>
-                </div>
                 <div class="glass-tint"></div>
                 <div class="glass-highlight"></div>
 
@@ -245,48 +179,29 @@ export class BottomSheet extends HTMLElement {
 
         handle.addEventListener('click', () => this.toggle());
 
-        // Touch gestures
+        // Swipe down on the handle closes the sheet. Gestures that start inside the content
+        // (scrolling, dragging a slider) must never close it.
         this.addEventListener('touchstart', (e) => {
-            this._ignoreTouchGesture = this.shouldIgnoreTouchGesture(e);
-            if (this._ignoreTouchGesture) return;
-            this.startY = e.touches[0].clientY;
-            this.style.transition = 'none';
+            this._swipeFromHandle = e.composedPath().some((n) => n.classList?.contains?.('handle-area'));
+            this.startY = this._swipeFromHandle ? e.touches[0].clientY : 0;
+            this.currentY = this.startY;
         }, { passive: true });
 
         this.addEventListener('touchmove', (e) => {
-            if (this._ignoreTouchGesture) return;
-            this.currentY = e.touches[0].clientY;
-            const delta = this.currentY - this.startY;
-            
-            // Simple logic: if dragging up and closed, or dragging down and open
-            if (!this.isOpen && delta < 0) {
-                // Dragging up
-                // this.style.transform = ... (could add complex physics here, keeping it simple for now)
-            }
+            if (this._swipeFromHandle) this.currentY = e.touches[0].clientY;
         }, { passive: true });
 
-        this.addEventListener('touchend', (e) => {
-            if (this._ignoreTouchGesture) {
-                this._ignoreTouchGesture = false;
-                this.startY = 0;
-                this.currentY = 0;
-                return;
-            }
-            this.style.transition = 'transform 0.4s cubic-bezier(0.16, 1, 0.3, 1)';
-            const delta = this.currentY - this.startY;
-            
-            if (Math.abs(delta) > 50) {
-                if (delta < 0 && !this.isOpen) this.open();
-                if (delta > 0 && this.isOpen) this.close();
-            }
-            
+        this.addEventListener('touchend', () => {
+            if (this._swipeFromHandle && this.isOpen && this.currentY - this.startY > 50) this.close();
+            this._swipeFromHandle = false;
             this.startY = 0;
             this.currentY = 0;
         });
     }
 
     toggle() {
-        this.isOpen ? this.close() : this.open();
+        if (this.isOpen) this.close();
+        else this.open();
     }
 
     open() {

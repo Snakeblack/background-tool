@@ -15,6 +15,7 @@ export class CustomSelect extends HTMLElement {
         this.options = [];
         this._value = null;
         this.isOpen = false;
+        this._activeIndex = 0;
     }
 
     attributeChangedCallback(name, oldValue, newValue) {
@@ -59,18 +60,55 @@ export class CustomSelect extends HTMLElement {
     }
 
     toggle() {
-        this.isOpen = !this.isOpen;
-        const container = this.shadowRoot.querySelector('.select-container');
-        if (this.isOpen) {
-            container.classList.add('open');
-        } else {
-            container.classList.remove('open');
-        }
+        if (this.isOpen) this.close();
+        else this.open();
+    }
+
+    open() {
+        this.isOpen = true;
+        this._activeIndex = Math.max(0, this.options.findIndex((o) => o.value === this.value));
+        this.shadowRoot.querySelector('.select-container').classList.add('open');
+        this.shadowRoot.querySelector('.select-header').setAttribute('aria-expanded', 'true');
+        this.highlightActive();
     }
 
     close() {
         this.isOpen = false;
-        this.shadowRoot.querySelector('.select-container').classList.remove('open');
+        this.shadowRoot.querySelector('.select-container')?.classList.remove('open');
+        this.shadowRoot.querySelector('.select-header')?.setAttribute('aria-expanded', 'false');
+    }
+
+    /** Keyboard highlight inside the open list. */
+    highlightActive() {
+        this.shadowRoot.querySelectorAll('.option-item').forEach((item, index) => {
+            item.classList.toggle('active', index === this._activeIndex);
+            if (index === this._activeIndex) item.scrollIntoView({ block: 'nearest' });
+        });
+    }
+
+    onKeydown(event) {
+        const { key } = event;
+        if (!this.isOpen) {
+            if (key === 'Enter' || key === ' ' || key === 'ArrowDown' || key === 'ArrowUp') {
+                event.preventDefault();
+                this.open();
+            }
+            return;
+        }
+
+        if (key === 'Escape' || key === 'Tab') {
+            this.close();
+        } else if (key === 'ArrowDown' || key === 'ArrowUp') {
+            event.preventDefault();
+            const step = key === 'ArrowDown' ? 1 : -1;
+            this._activeIndex = (this._activeIndex + step + this.options.length) % this.options.length;
+            this.highlightActive();
+        } else if (key === 'Enter' || key === ' ') {
+            event.preventDefault();
+            const option = this.options[this._activeIndex];
+            if (option) this.select(option.value);
+        }
+        if (key === 'Escape') event.stopPropagation();
     }
 
     select(value) {
@@ -101,6 +139,8 @@ export class CustomSelect extends HTMLElement {
         this.options.forEach(opt => {
             const item = document.createElement('div');
             item.className = `option-item ${opt.value === this.value ? 'selected' : ''}`;
+            item.setAttribute('role', 'option');
+            item.setAttribute('aria-selected', String(opt.value === this.value));
             item.textContent = opt.label;
             item.addEventListener('click', (e) => {
                 e.stopPropagation();
@@ -116,6 +156,7 @@ export class CustomSelect extends HTMLElement {
             e.stopPropagation();
             this.toggle();
         });
+        header.addEventListener('keydown', (e) => this.onKeydown(e));
 
         document.addEventListener('click', () => this.close());
     }
@@ -159,9 +200,9 @@ export class CustomSelect extends HTMLElement {
                     overflow: hidden;
                 }
 
-                .select-header:focus,
                 .select-header:focus-visible {
-                    outline: none;
+                    outline: 2px solid var(--accent, #ccff00);
+                    outline-offset: 2px;
                 }
 
                 :host([compact]) .select-header {
@@ -172,6 +213,11 @@ export class CustomSelect extends HTMLElement {
                     box-sizing: border-box;
                     height: 48px;
                     padding: 0 0.75rem;
+                }
+
+                @media (max-width: 520px) {
+                    :host([compact]) { min-width: 96px; }
+                    :host([compact]) .select-header { height: 44px; }
                 }
 
                 :host([compact]) .selected-value {
@@ -272,6 +318,11 @@ export class CustomSelect extends HTMLElement {
                     color: white;
                 }
 
+                .option-item.active {
+                    background: rgba(255, 255, 255, 0.08);
+                    color: white;
+                }
+
                 .option-item.selected {
                     color: #ccff00;
                     background: rgba(204, 255, 0, 0.05);
@@ -279,11 +330,11 @@ export class CustomSelect extends HTMLElement {
             </style>
 
             <div class="select-container">
-                <div class="select-header">
+                <div class="select-header" tabindex="0" role="combobox" aria-haspopup="listbox" aria-expanded="false" aria-controls="options">
                     <span class="selected-value">${this.getPlaceholder()}</span>
                     <span class="arrow-icon">${createElement(ChevronDown, {width: 16, height: 16}).outerHTML}</span>
                 </div>
-                <div class="options-list"></div>
+                <div class="options-list" id="options" role="listbox"></div>
             </div>
         `;
     }

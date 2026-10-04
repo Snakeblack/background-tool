@@ -154,13 +154,13 @@
         <h3>Why use our Background Generator?</h3>
         <ul>
             <li><strong>Easy to use:</strong> Just select a style and customize colors.</li>
-            <li><strong>Universal Export:</strong> Get code for <strong>React</strong>, <strong>Vue</strong>, <strong>Angular</strong>, or plain <strong>HTML/CSS</strong>.</li>
+            <li><strong>Universal Export:</strong> Step-by-step guide and ready-to-download files for <strong>React</strong>, <strong>Vue</strong>, <strong>Angular</strong>, <strong>Astro</strong> or plain <strong>HTML/JS</strong>.</li>
             <li><strong>High Performance:</strong> Powered by modern web technologies (WebGPU) for smooth animations that don't slow down your site.</li>
             <li><strong>100% Free:</strong> No sign-up required, open source.</li>
         </ul>
 
         <h3>Available Styles</h3>
-        <p>Choose from a variety of trendy styles including Aurora, Waves, Liquid, Mesh Gradients, and more. Customize every aspect to match your brand identity.</p>
+        <p>Choose from 24 trendy styles: mesh gradients, aurora, liquid chrome, grain gradients, dot and glow grids, topographic lines, galaxies, synthwave horizons and more. Customize colors and parameters to match your brand identity, then follow the step-by-step guide to add it to your site.</p>
 
         <h2>Generador de Fondos Animados Gratis (Español)</h2>
         <p>Crea fondos animados increíbles para tu sitio web en segundos. Nuestra herramienta gratuita te permite diseñar fondos en movimiento y exportar el código para React, Vue, Angular o HTML/CSS.</p>
@@ -181,7 +181,11 @@
             <div class="logo-text">MMRG</div>
         </div>
         <div class="top-actions">
-            <custom-select id="language-select" compact placeholder="Select…" data-i18n-placeholder="select.placeholder" aria-label="Language" data-i18n-aria="settings.language"></custom-select>
+            <button type="button" id="export-btn" class="cta-btn" data-i18n-title="export.cta.title" title="Get the code for your website (E)">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m18 16 4-4-4-4"/><path d="m6 8-4 4 4 4"/><path d="m14.5 4-5 16"/></svg>
+                <span data-i18n="export.cta">Export</span>
+            </button>
+            <custom-select id="language-select" compact placeholder="Select…" data-i18n-placeholder="select.placeholder" aria-label="Language" data-i18n-aria="language.label"></custom-select>
             <a href="https://github.com/Snakeblack/background-tool" target="_blank" rel="noopener noreferrer" class="icon-btn" id="github-btn" title="GitHub" aria-label="View source code on GitHub" data-i18n-aria="github.aria">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path></svg>
             </a>
@@ -197,94 +201,52 @@
     <!-- Mobile Bottom Sheet -->
     <bottom-sheet id="mobile-sheet"></bottom-sheet>
 
-    <!-- Hidden Content Templates -->
+    <!-- Hidden Content Templates (moved into the floating panel / bottom sheet on demand) -->
     <div id="templates" style="display: none;">
-        
-        <!-- Settings Panel Content -->
-        <div id="content-settings">
-            <div class="control-group">
-                <label class="control-label" data-i18n="settings.shaderType">Shader Type</label>
-                <custom-select id="shader-type" placeholder="Select…" data-i18n-placeholder="select.placeholder"></custom-select>
+
+        <!-- Backgrounds gallery -->
+        <div id="content-gallery" class="panel-section">
+            <div class="panel-heading">
+                <h2 class="panel-title" data-i18n="gallery.title">Backgrounds</h2>
+                <p class="panel-hint" data-i18n="gallery.hint">Use ← → to browse quickly.</p>
             </div>
-            <div class="control-group">
-                <label class="control-label" style="display: flex; align-items: center; justify-content: space-between;">
-                    <span style="display: flex; align-items: center; gap: 6px;">
-                        <span data-i18n="settings.globalSpeed">Global Speed</span>
-                        <span class="info-icon" id="global-speed-info" role="button" tabindex="0" data-i18n-aria="settings.globalSpeed.tooltip">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <circle cx="12" cy="12" r="10"></circle>
-                                <line x1="12" y1="16" x2="12" y2="12"></line>
-                                <line x1="12" y1="8" x2="12.01" y2="8"></line>
-                            </svg>
-                        </span>
-                    </span>
-                </label>
-                <input type="range" id="speed" min="0.0" max="1.0" step="0.001" value="0.5">
-            </div>
-            <div id="shader-controls-content" class="space-y-4">
-                <!-- Dynamic controls -->
-            </div>
+            <div class="gallery-chips" role="group" aria-label="Categories"></div>
+            <div class="gallery-grid"></div>
         </div>
 
-        <!-- Colors Panel Content -->
-        <div id="content-colors">
-            <div class="space-y-4">
-                <color-control color-index="1" label="Color 1" l-value="0.7" c-value="0.25" h-value="330"></color-control>
-                <color-control color-index="2" label="Color 2" l-value="0.6" c-value="0.3" h-value="280"></color-control>
-                <color-control color-index="3" label="Color 3" l-value="0.8" c-value="0.2" h-value="150"></color-control>
-                <color-control color-index="4" label="Color 4" l-value="0.65" c-value="0.28" h-value="60"></color-control>
-            </div>
+        <!-- Settings: current background + sliders (built by UIController) -->
+        <div id="content-settings" class="panel-section">
+            <div id="shader-controls-content"></div>
         </div>
 
-        <!-- Presets Panel Content -->
-        <div id="content-presets">
-            <div class="preset-grid">
-                <button data-preset="sunset" class="preset-btn">
-                    <i data-lucide="sunset" class="preset-icon"></i> <span data-i18n="presets.sunset">Sunset</span>
-                </button>
-                <button data-preset="ocean" class="preset-btn">
-                    <i data-lucide="waves" class="preset-icon"></i> <span data-i18n="presets.ocean">Ocean</span>
-                </button>
-                <button data-preset="forest" class="preset-btn">
-                    <i data-lucide="trees" class="preset-icon"></i> <span data-i18n="presets.forest">Forest</span>
-                </button>
-                <button data-preset="purple" class="preset-btn">
-                    <i data-lucide="gem" class="preset-icon"></i> <span data-i18n="presets.purple">Purple</span>
-                </button>
-                <button data-preset="neon" class="preset-btn">
-                    <i data-lucide="zap" class="preset-icon"></i> <span data-i18n="presets.neon">Neon</span>
-                </button>
-                <button data-preset="fire" class="preset-btn">
-                    <i data-lucide="flame" class="preset-icon"></i> <span data-i18n="presets.fire">Fire</span>
-                </button>
-                <button data-preset="ice" class="preset-btn">
-                    <i data-lucide="snowflake" class="preset-icon"></i> <span data-i18n="presets.ice">Ice</span>
-                </button>
-                <button data-preset="midnight" class="preset-btn">
-                    <i data-lucide="moon" class="preset-icon"></i> <span data-i18n="presets.midnight">Midnight</span>
-                </button>
-            </div>
+        <!-- Colors -->
+        <div id="content-colors" class="panel-section">
+            <color-control color-index="1" label="Color 1" open></color-control>
+            <color-control color-index="2" label="Color 2"></color-control>
+            <color-control color-index="3" label="Color 3"></color-control>
+            <color-control color-index="4" label="Color 4"></color-control>
         </div>
 
-        <!-- Saved Panel Content -->
-        <div id="content-saved">
-            <div class="saved-bg-section">
-                <div class="saved-bg-header">
-                    <label class="control-label" data-i18n="saved.title">Saved backgrounds</label>
-                    <div class="saved-bg-subtitle" data-i18n="saved.subtitle">Names are unique. Saving the same name updates it and increments the version.</div>
-                </div>
-
-                <div class="saved-bg-row saved-bg-row-aux">
-                    <button id="bg-export-btn" class="saved-bg-save-btn saved-bg-primary-btn" type="button" data-i18n="saved.exportCurrent">Export current</button>
-                </div>
-
-                <div class="saved-bg-row">
-                    <input id="bg-save-name" class="saved-bg-input" type="text" inputmode="text" autocomplete="off" placeholder="Name (e.g. Landing Hero)" data-i18n-placeholder="saved.namePlaceholder" />
-                    <button id="bg-save-btn" class="saved-bg-save-btn" type="button" data-i18n="saved.save">Save</button>
-                </div>
-
-                <div id="bg-saved-list" class="saved-bg-list"></div>
+        <!-- Palettes -->
+        <div id="content-presets" class="panel-section">
+            <div class="panel-heading">
+                <h2 class="panel-title" data-i18n="presets.title">Color palettes</h2>
+                <p class="panel-hint" data-i18n="presets.hint">Apply a ready-made palette to the current background.</p>
             </div>
+            <div id="preset-grid" class="preset-grid"></div>
+        </div>
+
+        <!-- Saved backgrounds -->
+        <div id="content-saved" class="panel-section">
+            <div class="panel-heading">
+                <h2 class="panel-title" data-i18n="saved.title">Saved backgrounds</h2>
+                <p class="panel-hint" data-i18n="saved.subtitle">Names are unique. Saving the same name updates it and increments the version.</p>
+            </div>
+            <div class="saved-bg-row">
+                <input id="bg-save-name" class="text-input" type="text" inputmode="text" autocomplete="off" maxlength="48" placeholder="Name (e.g. Landing Hero)" data-i18n-placeholder="saved.namePlaceholder" aria-label="Name" />
+                <button id="bg-save-btn" class="btn" type="button" data-i18n="saved.save">Save</button>
+            </div>
+            <div id="bg-saved-list" class="saved-bg-list"></div>
         </div>
 
     </div>

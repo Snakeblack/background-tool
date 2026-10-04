@@ -48,6 +48,7 @@
  *   qualityScaleFloor: number,
  *   powerPreference: 'low-power' | 'default' | 'high-performance',
  *   antialias: boolean,
+ *   maxFps: number,
  * }} TierProfile
  */
 
@@ -390,12 +391,14 @@ export class GpuDetector {
      * @returns {TierProfile}
      */
     _buildProfile(tier, signals) {
+        // A background is one fullscreen quad: MSAA is never useful (antialias stays off)
+        // and refresh rates above 60 Hz only burn power, so fps is capped per tier.
         /** @type {Record<GpuTier, TierProfile>} */
         const TABLE = {
-            low:   { dprCeiling: 1.0, dprFloor: 0.6, qualityScaleFloor: 0.6, powerPreference: 'low-power',        antialias: false },
-            mid:   { dprCeiling: 1.5, dprFloor: 0.75, qualityScaleFloor: 0.75, powerPreference: 'default',         antialias: false },
-            high:  { dprCeiling: 2.0, dprFloor: 1.0, qualityScaleFloor: 0.85, powerPreference: 'high-performance', antialias: true  },
-            ultra: { dprCeiling: 3.0, dprFloor: 1.0, qualityScaleFloor: 0.9,  powerPreference: 'high-performance', antialias: true  },
+            low:   { dprCeiling: 1.0, dprFloor: 0.6,  qualityScaleFloor: 0.6,  powerPreference: 'low-power',        antialias: false, maxFps: 30 },
+            mid:   { dprCeiling: 1.5, dprFloor: 0.75, qualityScaleFloor: 0.75, powerPreference: 'default',          antialias: false, maxFps: 60 },
+            high:  { dprCeiling: 2.0, dprFloor: 1.0,  qualityScaleFloor: 0.85, powerPreference: 'high-performance', antialias: false, maxFps: 60 },
+            ultra: { dprCeiling: 2.0, dprFloor: 1.0,  qualityScaleFloor: 0.9,  powerPreference: 'high-performance', antialias: false, maxFps: 60 },
         };
 
         // Fallback to mid for unknown tier strings
