@@ -1,0 +1,723 @@
+{
+  "fingerprint": "sha256:f310a5e5f95a6b01326462e403886ef3909c907807b68675810918ffeb3ba6f0",
+  "generated_at": "2026-10-04T18:53:26.9010713Z",
+  "skills": [
+    {
+      "capabilities": [],
+      "compact_rules": [
+        "Give every interactive element a role, an accessible name and keyboard support; prefer native elements over a `\u003cdiv\u003e` or `\u003cspan\u003e` with a click handler.",
+        "Never convey meaning with color alone; pair it with text or an icon.",
+        "Modals trap focus while open, close with `Escape` or an explicit button, and return focus to their trigger (WCAG SC 2.1.2).",
+        "Alt text describes content or purpose, never \"Image of…\"; decorative images get an empty alt.",
+        "Targets are at least 24x24 px on Web and 44x44 pt on Native, with visible high-contrast focus indicators."
+      ],
+      "id": "accessibility",
+      "path": "skills/accessibility/SKILL.md",
+      "triggers": [
+        "accessibility",
+        "a11y",
+        "ARIA",
+        "screen reader",
+        "keyboard navigation",
+        "WCAG."
+      ]
+    },
+    {
+      "capabilities": [],
+      "compact_rules": [
+        "Resources are plural, kebab-case nouns; no verbs in URLs; nest only to express ownership.",
+        "Use status codes semantically: 201 with `Location` on create, 400 or 422 with field details on validation errors, never 200 with an error body.",
+        "Return one error shape everywhere, with a machine-readable `code` and a human `message`.",
+        "Paginate every collection; prefer cursors for large, changing or public datasets.",
+        "Version in the path from the first release; adding fields or optional parameters is not a breaking change."
+      ],
+      "id": "api-design",
+      "path": "skills/api-design/SKILL.md",
+      "triggers": [
+        "designing or reviewing HTTP APIs",
+        "endpoints",
+        "API contracts."
+      ]
+    },
+    {
+      "capabilities": [],
+      "compact_rules": [
+        "**Issue linkage is optional**. If a PR links an issue, verify it is relevant and approved; never fabricate or self-approve an issue.",
+        "**Every PR MUST have exactly one `type:*` label**",
+        "**Automated checks must pass** before merge is possible",
+        "**PRs MUST describe scope and validation**, whether or not an issue is linked.",
+        "**No model/tool attribution** in the PR title, body, or comments — never include",
+        "**Feature branch MUST be created before any project file is edited** — run `git checkout -b \u003ctipo\u003e/\u003cdescripción\u003e main` as Step 0 before writing any code.",
+        "**NEVER edit files or commit directly on the default branch (`main`)** — all changes require a feature branch and PR."
+      ],
+      "id": "branch-pr",
+      "path": "skills/branch-pr/SKILL.md",
+      "triggers": [
+        "creating",
+        "opening",
+        "or preparing PRs for review."
+      ]
+    },
+    {
+      "capabilities": [],
+      "compact_rules": [
+        "Keep technical substance exact: symbols, error text, code, commands, paths.",
+        "Cut filler, hedging and setup; prefer `Thing. Cause. Fix.` in the user's language.",
+        "Never compress persisted artifacts unless asked; drop the style for security warnings and irreversible steps.",
+        "`\u003ctype\u003e(\u003cscope\u003e): \u003cresumen en imperativo\u003e` in Spanish imperative (`añade`, `corrige`), ≤50 characters, never over 72.",
+        "No AI attribution, `Co-Authored-By`, emojis or model names (`rules/no-model-attribution.instructions.md`).",
+        "Body, wrapped at 72, only for a non-obvious why, `BREAKING CHANGE:`, migrations, security fixes or reverts.",
+        "Return only the message in a fenced block; never stage or commit.",
+        "One line per finding, by severity: `\u003cfile\u003e:L\u003cline\u003e: bug|risk|nit|q: \u003cproblem\u003e. \u003cfix\u003e.`",
+        "No praise, diff restating or \"consider\" for required fixes; plain prose for security and design disputes.",
+        "Never fix, approve or run linters unless asked; if clean, say so and name the remaining test risk."
+      ],
+      "id": "caveman",
+      "path": "skills/caveman/SKILL.md",
+      "triggers": [
+        "caveman mode",
+        "talk like caveman",
+        "less tokens",
+        "be brief",
+        "/caveman",
+        "caveman help",
+        "commit message",
+        "/caveman commit",
+        "review the diff",
+        "/caveman review"
+      ]
+    },
+    {
+      "capabilities": [],
+      "compact_rules": [
+        "Split PRs over **400 changed lines** unless a maintainer explicitly accepts `size:exception`.",
+        "Keep each PR reviewable in about **≤60 minutes**.",
+        "Use one deliverable work unit per PR; keep tests/docs with the unit they verify.",
+        "State start, end, prior dependencies, follow-up work, and out-of-scope items in every chained PR.",
+        "Every child PR must include a dependency diagram marking the current PR with `📍`.",
+        "In Feature Branch Chain, create a draft/no-merge tracker PR; child PR #1 targets the tracker branch, later children target the immediate parent branch.",
+        "Treat polluted diffs as base bugs: retarget or rebase until only the current work unit appears.",
+        "Do not mix chain strategies after the user chooses one."
+      ],
+      "id": "chained-pr",
+      "path": "skills/chained-pr/SKILL.md",
+      "triggers": [
+        "PRs over 400 lines",
+        "stacked PRs",
+        "review slices. Split oversized changes into chained PRs that protect review focus."
+      ]
+    },
+    {
+      "capabilities": [],
+      "compact_rules": [
+        "Pattern: Rule",
+        "Lead with the answer: Put the decision, action, or outcome first. Context comes after.",
+        "Progressive disclosure: Start with the happy path, then add details, edge cases, and references.",
+        "Chunking: Group related information into small sections. Keep flat lists short.",
+        "Signposting: Use headings, labels, callouts, and summaries so readers know where they are.",
+        "Recognition over recall: Prefer tables, checklists, examples, and templates over prose that must be remembered.",
+        "Review empathy: Design docs so reviewers can verify intent without reconstructing the whole story."
+      ],
+      "id": "cognitive-doc-design",
+      "path": "skills/cognitive-doc-design/SKILL.md",
+      "triggers": [
+        "writing guides",
+        "READMEs",
+        "RFCs",
+        "onboarding",
+        "architecture",
+        "or review-facing docs."
+      ]
+    },
+    {
+      "capabilities": [],
+      "compact_rules": [],
+      "id": "design-system",
+      "path": "skills/design-system/SKILL.md",
+      "triggers": [
+        "design system",
+        "design tokens",
+        "visual audit",
+        "styling PRs."
+      ]
+    },
+    {
+      "capabilities": [],
+      "compact_rules": [
+        "Domain and use-case layers import only internal types and ports, never ORM models, web framework types or SDK clients.",
+        "Use cases receive explicit input types, never `req`, `res` or queue metadata.",
+        "Use cases return domain or application types; adapters map persistence rows.",
+        "Adapters talk to each other only through use-case ports.",
+        "Wire dependencies in one explicit composition root, without hidden global singletons."
+      ],
+      "id": "hexagonal-architecture",
+      "path": "skills/hexagonal-architecture/SKILL.md",
+      "triggers": [
+        "hexagonal architecture",
+        "ports and adapters",
+        "clean architecture",
+        "domain boundaries."
+      ]
+    },
+    {
+      "capabilities": [],
+      "compact_rules": [
+        "Read only orchestrator-supplied residual evidence per unattributed capability; use relevant injected rules only to interpret those facts, never to expand scope or perform architectural review.",
+        "Add only supported v2 domains in canonical order: `trust`, `runtime`, `evolution`, `efficiency`. Routing signals are not defects; do not emit findings, severity, remediation, or new requirements.",
+        "If residual facts cannot justify attribution, return `classification_status: ambiguous` with `added_domains: []`; do not guess from filenames or select extra lenses just in case.",
+        "Return the existing successful outer envelope with `artifacts: []` and exactly one `decision` containing only `classification_status`, `added_domains`, and closed-grammar `reason`; no free-form reason or additional keys."
+      ],
+      "id": "review-change",
+      "path": "skills/review-change/SKILL.md",
+      "triggers": [
+        "review-change"
+      ]
+    },
+    {
+      "capabilities": [],
+      "compact_rules": [
+        "Read/search only; never write, execute tests, or delegate. Use injected standards solely to interpret the supplied active slice, candidate, correction delta, and targeted evidence.",
+        "Validate every frozen unresolved finding ID exactly once within the supplied active slice against its original acceptance criteria; return only `resolved|unresolved`, never new findings or stronger criteria.",
+        "Accept any correction that meets the frozen criteria, including a simpler alternative to the reviewer's suggestion. New architectural preferences cannot keep a finding unresolved.",
+        "Trace the original trigger through the correction and inspect relevant test assertions or supplied results; a test name or changed line alone does not prove resolution. Do not invent execution results or treat missing essential evidence as proof of resolution.",
+        "Preserve immutable lineage identity, owners, permitted paths, budgets, and dual-schema taxonomy. Reopen a passed slice only with exact impacted-slice IDs and permitted-path causal regression evidence.",
+        "Unrelated observations remain bounded non-blocking follow-ups. Preserve the exact `validation` payload and non-empty `regression.evidence`; never apply discovery-specialist output or request another review sweep."
+      ],
+      "id": "review-correction",
+      "path": "skills/review-correction/SKILL.md",
+      "triggers": [
+        "review-correction"
+      ]
+    },
+    {
+      "capabilities": [],
+      "compact_rules": [
+        "Read/search only within the supplied candidate and assigned lens; do not write, run tests, or delegate. Use injected Project Standards first.",
+        "Apply `skills/_shared/review-judgment.md` (read once if not supplied) for evidence/output; use its canonical `engineering-judgment.md` reference for architectural tradeoffs.",
+        "Support performance findings with a measured result or a code-derived cost tied to evidenced workload bounds; label estimates and never invent timings.",
+        "Every finding needs a precise reference, trigger, causal impact, counterevidence check, and verifiable correction outcome; unsupported suspicion is not a finding.",
+        "Preserve `severity`, `affected_files`, `evidence`, `why_it_matters`, and `owner: efficiency` (v2); bounded findings also need existing `summary` and `acceptance_criteria` fields.",
+        "Keep `BLOCKER|CRITICAL|WARNING|SUGGESTION`, one-shot lineage, and frozen scope. Completed clean findings report: exactly `No findings.`; preserve the required outer envelope and structured `findings: []`. Missing essential evidence is not a clean review."
+      ],
+      "id": "review-efficiency",
+      "path": "skills/review-efficiency/SKILL.md",
+      "triggers": [
+        "review-efficiency"
+      ]
+    },
+    {
+      "capabilities": [],
+      "compact_rules": [
+        "Read/search only within the supplied candidate and assigned lens; do not write, run tests, or delegate. Use injected Project Standards first.",
+        "Apply `skills/_shared/review-judgment.md` (read once if not supplied) for evidence/output; use its canonical `engineering-judgment.md` reference for architectural tradeoffs.",
+        "Tie structural concerns to a concrete change scenario or broken consumer contract; layer count, naming, duplication, and preferred patterns alone are not findings.",
+        "Every finding needs a precise reference, trigger, causal impact, counterevidence check, and verifiable correction outcome; unsupported suspicion is not a finding.",
+        "Preserve `severity`, `affected_files`, `evidence`, `why_it_matters`, and `owner: evolution` (v2); bounded findings also need existing `summary` and `acceptance_criteria` fields.",
+        "Keep `BLOCKER|CRITICAL|WARNING|SUGGESTION`, one-shot lineage, and frozen scope. Completed clean findings report: exactly `No findings.`; preserve the required outer envelope and structured `findings: []`. Missing essential evidence is not a clean review."
+      ],
+      "id": "review-evolution",
+      "path": "skills/review-evolution/SKILL.md",
+      "triggers": [
+        "review-evolution"
+      ]
+    },
+    {
+      "capabilities": [],
+      "compact_rules": [
+        "Read/search only within the supplied candidate and assigned lens; do not write, run tests, or delegate. Use injected Project Standards first.",
+        "Apply `skills/_shared/review-judgment.md` (read once if not supplied) for evidence/output; use its canonical `engineering-judgment.md` reference for architectural tradeoffs.",
+        "Names, nesting, and missing comments need a concrete misunderstanding or change hazard; never emit preference-only findings or enforce an arbitrary nesting threshold.",
+        "Every finding needs a precise reference, trigger, causal impact, counterevidence check, and verifiable correction outcome; unsupported suspicion is not a finding.",
+        "Preserve `severity`, `affected_files`, `evidence`, `why_it_matters`, and `owner: readability` (legacy v1); bounded findings also need existing `summary` and `acceptance_criteria` fields.",
+        "Keep `BLOCKER|CRITICAL|WARNING|SUGGESTION`, one-shot lineage, and frozen scope. Completed clean findings report: exactly `No findings.`; preserve the required outer envelope and structured `findings: []`. Missing essential evidence is not a clean review."
+      ],
+      "id": "review-readability",
+      "path": "skills/review-readability/SKILL.md",
+      "triggers": [
+        "review-readability"
+      ]
+    },
+    {
+      "capabilities": [],
+      "compact_rules": [
+        "Read/search only within the supplied candidate and assigned lens; do not write, run tests, or delegate. Use injected Project Standards first.",
+        "Apply `skills/_shared/review-judgment.md` (read once if not supplied) for evidence/output; use its canonical `engineering-judgment.md` reference for architectural tradeoffs.",
+        "A missing test needs a specific supported failure mode and meaningful consequence; trace actual callers and existing coverage before proposing a test.",
+        "Every finding needs a precise reference, trigger, causal impact, counterevidence check, and verifiable correction outcome; unsupported suspicion is not a finding.",
+        "Preserve `severity`, `affected_files`, `evidence`, `why_it_matters`, and `owner: reliability` (legacy v1); bounded findings also need existing `summary` and `acceptance_criteria` fields.",
+        "Keep `BLOCKER|CRITICAL|WARNING|SUGGESTION`, one-shot lineage, and frozen scope. Completed clean findings report: exactly `No findings.`; preserve the required outer envelope and structured `findings: []`. Missing essential evidence is not a clean review."
+      ],
+      "id": "review-reliability",
+      "path": "skills/review-reliability/SKILL.md",
+      "triggers": [
+        "review-reliability"
+      ]
+    },
+    {
+      "capabilities": [],
+      "compact_rules": [
+        "Read/search only within the supplied candidate and assigned lens; do not write, run tests, or delegate. Use injected Project Standards first.",
+        "Apply `skills/_shared/review-judgment.md` (read once if not supplied) for evidence/output; use its canonical `engineering-judgment.md` reference for architectural tradeoffs.",
+        "Follow an exception or partial failure to the real handling boundary; a missing local try/catch or logging statement alone is not actionable evidence.",
+        "Every finding needs a precise reference, trigger, causal impact, counterevidence check, and verifiable correction outcome; unsupported suspicion is not a finding.",
+        "Preserve `severity`, `affected_files`, `evidence`, `why_it_matters`, and `owner: resilience` (legacy v1); bounded findings also need existing `summary` and `acceptance_criteria` fields.",
+        "Keep `BLOCKER|CRITICAL|WARNING|SUGGESTION`, one-shot lineage, and frozen scope. Completed clean findings report: exactly `No findings.`; preserve the required outer envelope and structured `findings: []`. Missing essential evidence is not a clean review."
+      ],
+      "id": "review-resilience",
+      "path": "skills/review-resilience/SKILL.md",
+      "triggers": [
+        "review-resilience"
+      ]
+    },
+    {
+      "capabilities": [],
+      "compact_rules": [
+        "Read/search only within the supplied candidate and assigned lens; do not write, run tests, or delegate. Use injected Project Standards first.",
+        "Apply `skills/_shared/review-judgment.md` (read once if not supplied) for evidence/output; use its canonical `engineering-judgment.md` reference for architectural tradeoffs.",
+        "Trace elevated privilege, sensitive data, injection, or auth bypass to a supported caller and failed trust boundary, checking actual controls.",
+        "Every finding needs a precise reference, trigger, causal impact, counterevidence check, and verifiable correction outcome; unsupported suspicion is not a finding.",
+        "Preserve `severity`, `affected_files`, `evidence`, `why_it_matters`, and `owner: risk` (legacy v1); bounded findings also need existing `summary` and `acceptance_criteria` fields.",
+        "Keep `BLOCKER|CRITICAL|WARNING|SUGGESTION`, one-shot lineage, and frozen scope. Completed clean findings report: exactly `No findings.`; preserve the required outer envelope and structured `findings: []`. Missing essential evidence is not a clean review."
+      ],
+      "id": "review-risk",
+      "path": "skills/review-risk/SKILL.md",
+      "triggers": [
+        "review-risk"
+      ]
+    },
+    {
+      "capabilities": [],
+      "compact_rules": [
+        "Read/search only within the supplied candidate and assigned lens; do not write, run tests, or delegate. Use injected Project Standards first.",
+        "Apply `skills/_shared/review-judgment.md` (read once if not supplied) for evidence/output; use its canonical `engineering-judgment.md` reference for architectural tradeoffs.",
+        "Trace supported failure sequences and interleavings across callers, retries, and state writes; absence of a local catch or timeout is not a defect by itself.",
+        "Every finding needs a precise reference, trigger, causal impact, counterevidence check, and verifiable correction outcome; unsupported suspicion is not a finding.",
+        "Preserve `severity`, `affected_files`, `evidence`, `why_it_matters`, and `owner: runtime` (v2); bounded findings also need existing `summary` and `acceptance_criteria` fields.",
+        "Keep `BLOCKER|CRITICAL|WARNING|SUGGESTION`, one-shot lineage, and frozen scope. Completed clean findings report: exactly `No findings.`; preserve the required outer envelope and structured `findings: []`. Missing essential evidence is not a clean review."
+      ],
+      "id": "review-runtime",
+      "path": "skills/review-runtime/SKILL.md",
+      "triggers": [
+        "review-runtime"
+      ]
+    },
+    {
+      "capabilities": [],
+      "compact_rules": [
+        "Read/search only within the supplied candidate and assigned lens; do not write, run tests, or delegate. Use injected Project Standards first.",
+        "Apply `skills/_shared/review-judgment.md` (read once if not supplied) for evidence/output; use its canonical `engineering-judgment.md` reference for architectural tradeoffs.",
+        "Trace attacker-controlled input, authority, and sensitive sinks; establish reachability and existing controls before reporting exposure.",
+        "Every finding needs a precise reference, trigger, causal impact, counterevidence check, and verifiable correction outcome; unsupported suspicion is not a finding.",
+        "Preserve `severity`, `affected_files`, `evidence`, `why_it_matters`, and `owner: trust` (v2); bounded findings also need existing `summary` and `acceptance_criteria` fields.",
+        "Keep `BLOCKER|CRITICAL|WARNING|SUGGESTION`, one-shot lineage, and frozen scope. Completed clean findings report: exactly `No findings.`; preserve the required outer envelope and structured `findings: []`. Missing essential evidence is not a clean review."
+      ],
+      "id": "review-trust",
+      "path": "skills/review-trust/SKILL.md",
+      "triggers": [
+        "review-trust"
+      ]
+    },
+    {
+      "capabilities": [],
+      "compact_rules": [
+        "When working in this repo, first follow `references/skill-style-guide.md` as the normative source before creating or updating skills.",
+        "If that guide is unavailable, use the compact inline rules below.",
+        "A skill is a runtime instruction contract for an LLM, not human documentation.",
+        "Do not add a `Keywords` section; preserve essential trigger words in `description`.",
+        "References must point to local files.",
+        "Keep the skill body concise: target 180–450 tokens, recommended max 700, hard max 1000.",
+        "`description` MUST be one physical line, quoted, YAML-safe, and include essential trigger words first.",
+        "`description` SHOULD be \u003c=160 chars and MUST be \u003c=250 chars.",
+        "Frontmatter MUST include `name`, `description`, `license`, `metadata.author`, and `metadata.version`.",
+        "Use imperative instructions, not tutorials or background prose.",
+        "Put supporting material in `assets/` or `references/`, not the main skill body."
+      ],
+      "id": "skill-creator",
+      "path": "skills/skill-creator/SKILL.md",
+      "triggers": [
+        "new skills",
+        "agent instructions",
+        "documenting AI usage patterns. Create LLM-first skills with valid frontmatter."
+      ]
+    },
+    {
+      "capabilities": [
+        "angular"
+      ],
+      "compact_rules": [],
+      "id": "stack-angular",
+      "path": "skills/stack-angular/SKILL.md",
+      "triggers": [
+        "stack-angular"
+      ]
+    },
+    {
+      "capabilities": [
+        "dotnet"
+      ],
+      "compact_rules": [
+        "Any executor sub-agent using this skill must first inspect the workspace structure to auto-detect the project's flavor.",
+        "If MVC controllers are present (e.g., `Controllers/` directory or controller classes), it must use controllers and traditional WebAPI routing.",
+        "If routes are mapped inline in `Program.cs` without controllers, it must follow the Minimal APIs pattern.",
+        "If multiple projects/directories exist representing Clean Architecture/DDD (e.g. Domain, Application, Infrastructure layers), it must respect the layered separation and domain patterns.",
+        "Always enable and enforce nullable reference types (`\u003cNullable\u003eenable\u003c/Nullable\u003e`) to prevent null reference exceptions."
+      ],
+      "id": "stack-dotnet",
+      "path": "skills/stack-dotnet/SKILL.md",
+      "triggers": [
+        "stack-dotnet"
+      ]
+    },
+    {
+      "capabilities": [
+        "go"
+      ],
+      "compact_rules": [
+        "**Simplicity and Clarity**: Favor simple, clear, and predictable Go code. Handle errors immediately and return early. Keep the happy path unindented.",
+        "**Make Zero Value Useful**: Design types (especially with mutexes or buffers) so they are usable without explicit initialization.",
+        "**Accept Interfaces, Return Structs**: Keep interfaces small and define them where they are consumer-needed rather than provider-delivered.",
+        "**Error Handling**: Wrap errors with context (`fmt.Errorf(\"...: %w\", err)`). Never swallow or ignore errors silently.",
+        "**Concurrency Safety**: Coordinate goroutines via errgroups or context. Avoid goroutine leaks by listening to `ctx.Done()`."
+      ],
+      "id": "stack-go",
+      "path": "skills/stack-go/SKILL.md",
+      "triggers": [
+        "stack-go"
+      ]
+    },
+    {
+      "capabilities": [
+        "go"
+      ],
+      "compact_rules": [
+        "Prefer table-driven tests for multiple cases; use `t.Run(tt.name, ...)`.",
+        "Test behavior and state transitions, not implementation trivia.",
+        "Use `t.TempDir()` for filesystem tests; never rely on a real home directory.",
+        "Keep integration tests skippable with `testing.Short()` when they run external commands or slow flows.",
+        "For Bubbletea, test `Model.Update()` directly for state changes; use `teatest` only for interactive flows.",
+        "Golden files must be deterministic; update only through the repo's `-update` path and rerun tests without `-update`.",
+        "Use small mocks/interfaces around system or command execution boundaries."
+      ],
+      "id": "stack-go-testing",
+      "path": "skills/stack-go-testing/SKILL.md",
+      "triggers": [
+        "stack-go-testing"
+      ]
+    },
+    {
+      "capabilities": [
+        "java"
+      ],
+      "compact_rules": [
+        "Any executor sub-agent using this skill must first determine the framework from the build file (e.g., Maven `pom.xml` or Gradle `build.gradle`):",
+        "If build file contains `quarkus` -\u003e apply **[QUARKUS]** conventions.",
+        "If build file contains `spring-boot` -\u003e apply **[SPRING]** conventions.",
+        "If neither is detected -\u003e apply shared conventions only.",
+        "Prefer clarity over cleverness. Java 17+ features (records, sealed classes, pattern matching) should be used where appropriate.",
+        "Minimize shared mutable state; prefer immutability by default.",
+        "Fail fast with meaningful, domain-specific exceptions.",
+        "**[QUARKUS]**: Favor build-time processing over runtime processing. Avoid runtime reflection where possible."
+      ],
+      "id": "stack-java",
+      "path": "skills/stack-java/SKILL.md",
+      "triggers": [
+        "stack-java"
+      ]
+    },
+    {
+      "capabilities": [
+        "kafka"
+      ],
+      "compact_rules": [
+        "**Idempotence**: Always enable producer idempotence (`enable.idempotence=true`) to guarantee exactly-once delivery semantics per partition and prevent duplicate messages.",
+        "**Manual Offset Commit**: Disable auto-committing offsets (`enable.auto.commit=false`) in consumers. Commit offsets manually only after the message has been successfully processed.",
+        "**DLQ and Error Handling**: Implement structured retry policies. When a message fails validation or processing repeatedly, route it to a Dead Letter Queue (DLQ) topic to avoid blocking the partition.",
+        "**Schema Contracts**: Define schemas using Avro or JSON Schema and register them with a central Schema Registry to enforce backwards/forward compatibility contract rules.",
+        "**Partition Ordering**: Ensure message keys are defined appropriately. Messages with the same key are guaranteed to be routed to the same partition and processed in order."
+      ],
+      "id": "stack-kafka",
+      "path": "skills/stack-kafka/SKILL.md",
+      "triggers": [
+        "stack-kafka"
+      ]
+    },
+    {
+      "capabilities": [
+        "kotlin"
+      ],
+      "compact_rules": [
+        "**Null Safety**: Leverage Kotlin's type system (non-nullable by default). Use safe-call (`?.`) and Elvis (`?:`) operators; never use force-unwarp (`!!`).",
+        "**Immutability by Default**: Use `val` for variables, immutable collections, and data class `copy()` for transformations.",
+        "**Sealed Types**: Model restricted hierarchies and results with `sealed class` or `sealed interface` for exhaustive `when` expressions.",
+        "**Structured Concurrency**: Scope async calls using `coroutineScope` or `supervisorScope`. Respect coroutine cancellation via `ensureActive()`.",
+        "**DSL Builders**: Implement type-safe builders using `@DslMarker` and lambda receivers."
+      ],
+      "id": "stack-kotlin",
+      "path": "skills/stack-kotlin/SKILL.md",
+      "triggers": [
+        "stack-kotlin"
+      ]
+    },
+    {
+      "capabilities": [
+        "kotlin"
+      ],
+      "compact_rules": [],
+      "id": "stack-kotlin-coroutines-flows",
+      "path": "skills/stack-kotlin-coroutines-flows/SKILL.md",
+      "triggers": [
+        "stack-kotlin-coroutines-flows"
+      ]
+    },
+    {
+      "capabilities": [
+        "kotlin"
+      ],
+      "compact_rules": [
+        "**Exposed Query Styles**: Use DSL for direct SQL-like expressions (explicit control) and DAO for entity lifecycle management.",
+        "**Transaction Safety**: All database operations must run inside `newSuspendedTransaction` blocks for coroutine safety and atomicity. Explicitly define transaction isolation levels (e.g. `TRANSACTION_READ_COMMITTED`) when required.",
+        "**Connection Pooling**: Always configure connection pooling via HikariCP, setting `isAutoCommit = false` and validating settings.",
+        "**Database Migrations**: Manage database schemas with Flyway versioned migrations (`classpath:db/migration`), running them on application startup.",
+        "**Testing Isolation**: Use an in-memory H2 database (`jdbc:h2:mem:test`) for tests, running them within transactions and deleting all records inside `beforeTest`."
+      ],
+      "id": "stack-kotlin-exposed-patterns",
+      "path": "skills/stack-kotlin-exposed-patterns/SKILL.md",
+      "triggers": [
+        "stack-kotlin-exposed-patterns"
+      ]
+    },
+    {
+      "capabilities": [
+        "kotlin"
+      ],
+      "compact_rules": [
+        "**Clean Route DSL**: Keep route files thin, delegates endpoints using extension functions like `Route.userRoutes()`. Delegate logic to services, not in the route bodies.",
+        "**Content Negotiation**: Use `kotlinx.serialization` for content negotiation, configuring the JSON parser with explicit settings (`ignoreUnknownKeys = true`, `explicitNulls = false`).",
+        "**Robust Error Handling**: Handle exceptions centrally using the `StatusPages` plugin, mapping custom domain exceptions (e.g. `NotFoundException`) to appropriate HTTP status codes.",
+        "**JWT Authentication**: Protect resources by nesting them inside `authenticate(\"jwt\")` blocks. Extract credentials safely using `principal\u003cJWTPrincipal\u003e()`.",
+        "**Dependency Injection**: Initialize services, repositories, and database connection instances using Koin. Inject dependencies into routes using `by inject()`."
+      ],
+      "id": "stack-kotlin-ktor-patterns",
+      "path": "skills/stack-kotlin-ktor-patterns/SKILL.md",
+      "triggers": [
+        "stack-kotlin-ktor-patterns"
+      ]
+    },
+    {
+      "capabilities": [
+        "kotlin"
+      ],
+      "compact_rules": [
+        "**RED-GREEN-REFACTOR Cycle**: Always write a failing test first, then minimal implementation to pass, then refactor.",
+        "**Kotest Spec Styles**: Use standard spec styles (`StringSpec` for simple, `FunSpec` for JUnit-like, `BehaviorSpec` for BDD) consistently across files.",
+        "**MockK Mocking**: Mock interfaces and abstract classes, never data classes. Use `coEvery` / `coVerify` for suspend functions. Clear mocks in `beforeTest`.",
+        "**Coroutine testing**: Wrap tests in `runTest`. For testing time-based flows, use `StandardTestDispatcher` and advance virtual time with `advanceTimeBy` or `advanceUntilIdle`.",
+        "**Kover Code Coverage**: Aim for at least 80% coverage on general code and 100% on critical business logic. Exclude generated code and configuration classes from reports."
+      ],
+      "id": "stack-kotlin-testing",
+      "path": "skills/stack-kotlin-testing/SKILL.md",
+      "triggers": [
+        "stack-kotlin-testing"
+      ]
+    },
+    {
+      "capabilities": [
+        "postgres"
+      ],
+      "compact_rules": [
+        "Never write raw SQL strings with string interpolation; always use parameterized queries to prevent SQL injection.",
+        "Ensure every database schema update is managed via explicit, sequential, version-controlled migration scripts.",
+        "Analyze query execution plans using `EXPLAIN ANALYZE` before creating indexes or writing complex joins.",
+        "Create explicit indexes on foreign keys, highly filtered columns, and join criteria to ensure query performance.",
+        "Limit database connections by configuring a connection pooler like PgBouncer or using client-side connection pooling."
+      ],
+      "id": "stack-postgres",
+      "path": "skills/stack-postgres/SKILL.md",
+      "triggers": [
+        "stack-postgres"
+      ]
+    },
+    {
+      "capabilities": [
+        "python"
+      ],
+      "compact_rules": [
+        "**Readability Counts**: Prioritize clarity over cleverness. Write explicit code and use f-strings and type hints.",
+        "**EAFP Style**: Prefer catching exceptions (`try-except`) rather than checking pre-conditions (`LBYL`), but always target specific exceptions and chain them correctly (`raise ... from e`).",
+        "**Resource Management**: Use context managers (`with` statement) for managing files, database connections, and locks.",
+        "**Data Classes**: Use `@dataclass` for data containers, implementing `__post_init__` for field validations.",
+        "**Memory and Iterators**: Use generators and generator expressions for lazy evaluation of large datasets. Avoid string concatenation inside loops."
+      ],
+      "id": "stack-python",
+      "path": "skills/stack-python/SKILL.md",
+      "triggers": [
+        "stack-python"
+      ]
+    },
+    {
+      "capabilities": [
+        "python"
+      ],
+      "compact_rules": [],
+      "id": "stack-python-testing",
+      "path": "skills/stack-python-testing/SKILL.md",
+      "triggers": [
+        "stack-python-testing"
+      ]
+    },
+    {
+      "capabilities": [
+        "react"
+      ],
+      "compact_rules": [],
+      "id": "stack-react",
+      "path": "skills/stack-react/SKILL.md",
+      "triggers": [
+        "stack-react"
+      ]
+    },
+    {
+      "capabilities": [
+        "react"
+      ],
+      "compact_rules": [],
+      "id": "stack-react-performance",
+      "path": "skills/stack-react-performance/SKILL.md",
+      "triggers": [
+        "stack-react-performance"
+      ]
+    },
+    {
+      "capabilities": [
+        "react"
+      ],
+      "compact_rules": [],
+      "id": "stack-react-testing",
+      "path": "skills/stack-react-testing/SKILL.md",
+      "triggers": [
+        "stack-react-testing"
+      ]
+    },
+    {
+      "capabilities": [
+        "springboot"
+      ],
+      "compact_rules": [],
+      "id": "stack-springboot",
+      "path": "skills/stack-springboot/SKILL.md",
+      "triggers": [
+        "stack-springboot"
+      ]
+    },
+    {
+      "capabilities": [
+        "springboot"
+      ],
+      "compact_rules": [],
+      "id": "stack-springboot-security",
+      "path": "skills/stack-springboot-security/SKILL.md",
+      "triggers": [
+        "stack-springboot-security"
+      ]
+    },
+    {
+      "capabilities": [
+        "springboot"
+      ],
+      "compact_rules": [],
+      "id": "stack-springboot-tdd",
+      "path": "skills/stack-springboot-tdd/SKILL.md",
+      "triggers": [
+        "stack-springboot-tdd"
+      ]
+    },
+    {
+      "capabilities": [
+        "springboot"
+      ],
+      "compact_rules": [],
+      "id": "stack-springboot-verification",
+      "path": "skills/stack-springboot-verification/SKILL.md",
+      "triggers": [
+        "stack-springboot-verification"
+      ]
+    },
+    {
+      "capabilities": [
+        "sqlserver"
+      ],
+      "compact_rules": [
+        "**Index Design**: Clustered index keys should be sequential/monotonically increasing (e.g., identity columns, `NEWSEQUENTIALID()`) to minimize page splits. For non-clustered indexes, use the `INCLUDE` clause to cover queries instead of adding columns to the index key.",
+        "**Concurrency (RCSI)**: Enable Read Committed Snapshot Isolation (RCSI) on the database level to prevent readers from blocking writers and writers from blocking readers.",
+        "**Avoid Cursors**: Perform set-based operations rather than row-by-row operations (cursors, `WHILE` loops with index iteration) to optimize execution engine performance.",
+        "**SARGable Queries**: Write Search Argumentable (SARGable) queries. Do not apply functions or calculations to indexed columns in the `WHERE` or `ON` clauses.",
+        "**Transaction Scope**: Keep transactions as short and narrow as possible to minimize locking, page contention, and deadlocks."
+      ],
+      "id": "stack-sqlserver",
+      "path": "skills/stack-sqlserver/SKILL.md",
+      "triggers": [
+        "stack-sqlserver"
+      ]
+    },
+    {
+      "capabilities": [
+        "starlight"
+      ],
+      "compact_rules": [
+        "**File-Based Content**: Pages live in `src/content/docs/`; folders become URL segments. Every page MUST have `title` in frontmatter — the schema validates and fails the build without it.",
+        "**Config Entry Point**: All site behavior is configured in the `starlight({ ... })` integration inside `astro.config.mjs`. `title` is required; set Astro's `site` to enable sitemap generation.",
+        "**Sidebar Strategy**: Prefer `autogenerate: { directory }` per section over hand-listing slugs; control order/label/visibility per page with the `sidebar` frontmatter field (`order`, `label`, `hidden`, `badge`).",
+        "**Components Need MDX**: Built-in components import from `@astrojs/starlight/components` and only work in `.mdx` (or Markdoc `{% %}` tags). Plain `.md` supports asides (`:::note` … `:::`) and Expressive Code markers — do not put JSX in `.md`.",
+        "**Custom Pages, Not Forks**: For non-docs pages use `src/pages/*.astro` wrapped in `\u003cStarlightPage frontmatter={{ title }}\u003e`; to change built-in UI use the `components` config override map — never copy/patch theme internals.",
+        "**Theming via Custom Properties**: Customize with `customCss` files overriding `--sl-*` custom properties (colors, `--sl-font`); use `logo.light`/`logo.dark` for theme-aware logos. Apply `not-content` class to opt elements out of content styling.",
+        "**Search \u0026 Visibility**: Pagefind search is on by default; exclude a page with `pagefind: false` and keep it out of production builds with `draft: true`.",
+        "**i18n Layout**: Declare `locales`/`defaultLocale` in config; mirror content per locale directory. Untranslated pages fall back to the default locale automatically; translate sidebar labels with `translations`."
+      ],
+      "id": "stack-starlight",
+      "path": "skills/stack-starlight/SKILL.md",
+      "triggers": [
+        "stack-starlight"
+      ]
+    },
+    {
+      "capabilities": [
+        "vite"
+      ],
+      "compact_rules": [
+        "**Dev vs Build Engines**: Dev serves files as native ESM (transpiled on demand via esbuild). Production builds use Rolldown/Rollup. Always smoke-test with `vite preview` before deploying.",
+        "**Type Checking Gap**: Vite build transpiles but does NOT type-check. You must run `tsc --noEmit` in CI or use `vite-plugin-checker`.",
+        "**Environment Security**: Only `VITE_`-prefixed environment variables are exposed to the client. Secrets must NEVER use the prefix. Never pass empty string `loadEnv(mode, cwd, '')` as it leaks server secrets.",
+        "**Performance Aliases**: Avoid hand-rolling aliases. Use `vite-tsconfig-paths` to reuse `tsconfig.json` configurations.",
+        "**Barrel Files**: Avoid importing from index/barrel files in the dev server hot-path as it triggers loading of all re-exported files."
+      ],
+      "id": "stack-vite",
+      "path": "skills/stack-vite/SKILL.md",
+      "triggers": [
+        "stack-vite"
+      ]
+    },
+    {
+      "capabilities": [],
+      "compact_rules": [
+        "Commit by work unit: A commit represents a deliverable behavior, fix, migration, or docs unit.",
+        "Do not commit by file type: Avoid `models`, then `services`, then `tests` if none works alone.",
+        "Keep tests with code: Tests belong in the same commit as the behavior they verify.",
+        "Keep docs with the user-visible change: Docs belong with the feature or workflow they explain.",
+        "Tell a story: A reviewer should understand why each commit exists from its diff and message.",
+        "Future PR-ready: Each commit should be a candidate chained PR when the change grows.",
+        "Spanish imperative message: Keep the Conventional Commit type in English, but write the subject and body in Spanish imperative prose.",
+        "No model attribution: Never add `Co-Authored-By`, a 🤖 footer, or any model/tool name (Claude, GPT, Gemini, Copilot, etc.) to a commit or PR. See `rules/no-model-attribution.instructions.md`.",
+        "SDD workload guard: If SDD tasks forecast a \u003e400-line change, group commits into chained PR slices before implementation."
+      ],
+      "id": "work-unit-commits",
+      "path": "skills/work-unit-commits/SKILL.md",
+      "triggers": [
+        "implementation",
+        "commit splitting",
+        "chained PRs",
+        "or keeping tests and docs with code."
+      ]
+    }
+  ],
+  "version": 2
+}
